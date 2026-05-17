@@ -93,7 +93,7 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
         return true;
     }
 
-    // here we are just doing registration, the actual code execution is delegated to ExprMethodAccess
+    // here we are just doing registration
     @Override
     protected @Nullable TriggerItem walk(Event event) {
         if (event instanceof MethodRegistrationEvent regEvent) {
