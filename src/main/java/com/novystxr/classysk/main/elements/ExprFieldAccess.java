@@ -77,6 +77,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
                 break;
             case REMOVE, ADD:
                 Object[] initialValue = skriptClass.getFieldValue(fieldName);
+                if (initialValue == null) initialValue = new Object[]{};
 
                 if (delta == null) return;
 

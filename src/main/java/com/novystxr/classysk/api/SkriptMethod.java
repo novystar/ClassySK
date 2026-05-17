@@ -6,6 +6,7 @@ import ch.njol.skript.lang.Trigger;
 import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.variables.Variables;
 import com.novystxr.classysk.api.event.MethodRunEvent;
+import com.novystxr.classysk.api.util.Logger;
 import com.novystxr.classysk.main.elements.StructClass;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;

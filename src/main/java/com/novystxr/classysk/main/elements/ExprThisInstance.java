@@ -7,10 +7,14 @@ import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.SkriptClass;
 import com.novystxr.classysk.api.event.MethodRunEvent;
+import com.novystxr.classysk.api.util.Logger;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
 import org.skriptlang.skript.registration.SyntaxRegistry;
+
+import java.util.Arrays;
+import java.util.List;
 
 public class ExprThisInstance extends SimpleExpression<SkriptClass> {
     public static void register(SyntaxRegistry registry) {
@@ -25,7 +29,11 @@ public class ExprThisInstance extends SimpleExpression<SkriptClass> {
 
     @Override
     public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, SkriptParser.ParseResult parseResult) {
-        if (!(getParser().getCurrentStructure() instanceof StructClass)) {
+        Class<? extends Event>[] events = getParser().getCurrentEvents();
+
+        if (events == null) return false;
+
+        if (events[0] != MethodRunEvent.class) {
             Skript.error("This expression can only be used within a method section.");
             return false;
         }
@@ -35,8 +43,8 @@ public class ExprThisInstance extends SimpleExpression<SkriptClass> {
 
     @Override
     protected SkriptClass @Nullable [] get(Event event) {
-        if (event instanceof MethodRunEvent methodEvent) {
-            return new SkriptClass[]{methodEvent.instance};
+        if (event instanceof MethodRunEvent runEvent) {
+            return new SkriptClass[]{runEvent.instance};
         }
 
         return null;

@@ -34,7 +34,7 @@ public class EffField extends Effect {
     private boolean isPrivate;
     private boolean isTyped = false;
     private boolean isStatic = false;
-    private boolean isPlural;
+    private boolean isPlural = false;
 
     private Expression<ClassInfo<?>> exprClassInfo;
     private Expression<Object> exprValue;
@@ -64,8 +64,10 @@ public class EffField extends Effect {
         isStatic = parser.hasTag("static");
         isTyped = parser.hasTag("typed");
 
-        Literal<ClassInfoReference> classInfoReference = (Literal<ClassInfoReference>) ClassInfoReference.wrap(exprClassInfo);
-        isPlural = classInfoReference.getSingle().isPlural().isTrue();
+        if (exprClassInfo != null) {
+            Literal<ClassInfoReference> classInfoReference = (Literal<ClassInfoReference>) ClassInfoReference.wrap(exprClassInfo);
+            isPlural = classInfoReference.getSingle().isPlural().isTrue();
+        }
 
         if (exprs[1] != null) {
             exprValue = (Expression<Object>) exprs[1].getConvertedExpression(Object.class);
@@ -88,7 +90,9 @@ public class EffField extends Effect {
         Object[] defaultValue = null;
 
         if (isPlural) {
-            defaultValue = exprValue.getArray(event);
+            if (exprValue != null) {
+                defaultValue = exprValue.getArray(event);
+            }
         } else if (exprValue != null) {
             if (exprValue.isSingle()) {
                 defaultValue = new Object[]{exprValue.getSingle(event)};

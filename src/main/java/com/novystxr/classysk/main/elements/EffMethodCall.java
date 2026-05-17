@@ -8,6 +8,7 @@ import com.novystxr.classysk.api.MethodParser;
 import com.novystxr.classysk.api.SkriptClass;
 import com.novystxr.classysk.api.SkriptMethod;
 import com.novystxr.classysk.api.SkriptMethod.MethodSignature;
+import com.novystxr.classysk.api.util.Logger;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.common.function.FunctionReference.Argument;
@@ -92,6 +93,7 @@ public class EffMethodCall extends Effect {
             }
 
             arguments = MethodParser.parseReferenceArgs(signature, argsString);
+
             if (hasArgs && arguments == null) {
                 failedParse();
                 return;
