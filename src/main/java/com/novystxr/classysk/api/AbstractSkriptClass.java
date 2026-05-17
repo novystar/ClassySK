@@ -1,0 +1,168 @@
+package com.novystxr.classysk.api;
+
+import java.io.File;
+import java.lang.ref.WeakReference;
+import java.util.*;
+
+import ch.njol.skript.ScriptLoader;
+import com.novystxr.classysk.api.SkriptField.FieldSignature;
+import com.novystxr.classysk.api.util.ConverterUtils;
+import com.novystxr.classysk.main.elements.StructClass;
+import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.lang.script.Script;
+import org.skriptlang.skript.lang.structure.Structure;
+import com.novystxr.classysk.api.SkriptMethod.MethodSignature;
+
+// non instance skript class
+// holds static fields/methods, instances and signature data
+// not to be confused with java abstract classes
+
+public class AbstractSkriptClass extends SkriptClass {
+
+    private Map<String, FieldSignature> fieldSignatures = new HashMap<>();
+    private final Map<String, MethodSignature> methodSignatures = new HashMap<>();
+
+    final List<WeakReference<SkriptClass>> instances = new ArrayList<>();
+
+    private Script script;
+
+    // whether the abstract instance of this class is accessible in scripts
+    // this is set to false when the corresponding structure is unloaded
+    public boolean accessible = true;
+
+    public AbstractSkriptClass(String name, Script script) {
+        super(name);
+
+        this.script = script;
+    }
+
+    public boolean hasFieldSignature(String name) {
+        return fieldSignatures.containsKey(name);
+    }
+
+    public FieldSignature getFieldSignature(String key) {
+        return fieldSignatures.get(key);
+    }
+
+    public boolean hasMethodSignature(String name) {
+        return methodSignatures.containsKey(name);
+    }
+
+    public MethodSignature getMethodSignature(String key) {
+        return methodSignatures.get(key);
+    }
+
+    public @Nullable Script getValidScript() {
+        if (script.valid()) {
+            return script;
+        } else {
+            File file = script.getConfig().getFile();
+            if (file != null) {
+                this.script = ScriptLoader.getScript(file);
+                return this.script;
+            }
+            return null;
+        }
+    }
+
+    public SkriptClass createInstance() {
+        SkriptClass instance = new SkriptClass(name);
+        instances.add(new WeakReference<>(instance));
+        return instance;
+    }
+
+    @Override
+    public String getEffectiveName() {
+        return "["+name+"]";
+    }
+
+    @Override
+    public boolean isInstance() {
+        return false;
+    }
+
+    @Override
+    public AbstractSkriptClass getParent() {
+        return this;
+    }
+
+    public boolean validateStructure() {
+        Script validScript = getValidScript();
+
+        if (validScript != null) {
+            List<Structure> structures = validScript.getStructures();
+            for (Structure structure : structures) {
+                if (structure instanceof StructClass classStruct) {
+                    if (classStruct.getName().equals(name) && classStruct.getParser().getCurrentScript() == validScript) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        ClassManager.removeClass(name);
+        return false;
+    }
+
+    public void initMethodSignatures() {
+        this.methodSignatures.clear();
+    }
+
+    public void putMethodSignature(String key, MethodSignature signature) {
+        methodSignatures.put(key, signature);
+    }
+
+    public void updateFieldSignatureMap(Map<String, FieldSignature> fieldSignatures) {
+        this.fieldSignatures = fieldSignatures;
+
+        // static field validation
+        // attempt to convert, if failed, static context changes or no longer exists, remove field
+
+        getFieldMap().values().removeIf(field -> {
+            FieldSignature signature = fieldSignatures.get(field.signature.name());
+
+            // if signature no longer exists or static context changed, ignore and use existing signature
+            if (signature == null || signature.isStatic() != field.signature.isStatic()) return true;
+
+            if (ConverterUtils.canConvert(field.signature.type().getC(), field.getValue())) {
+                field.signature = signature;
+            } else {
+                return true;
+            }
+
+            return false;
+
+        });
+
+        /*
+        if field value cannot convert to new template, the instance is orphaned
+        this means it will never be checked for field updates, and the abstract class is now unaware of it
+        the instance is still aware of its parent though, and can create newly defined fields regardless
+        */
+        instances.removeIf(reference -> {
+            SkriptClass instance = reference.get();
+            if (instance == null) {
+                return true;
+            }
+
+            for (SkriptField field : instance.getFieldMap().values()) {
+
+                FieldSignature signature = fieldSignatures.get(field.signature.name());
+
+                if (ConverterUtils.canConvert(field.signature.type().getC(), field.getValue())) {
+
+                    // if signature no longer exists or static context changed, ignore and use existing signature
+                    if (signature == null || signature.isStatic() != field.signature.isStatic()) continue;
+
+                    field.signature = signature;
+                } else {
+                    return true;
+                }
+
+            }
+            return false;
+
+        });
+    }
+
+}

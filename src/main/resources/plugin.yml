@@ -1,0 +1,11 @@
+name: classysk
+description: $description
+prefix: ClassySK
+version: '${version}'
+
+main: com.novystxr.classysk.Classysk
+api-version: '1.21.11'
+load: POSTWORLD
+
+authors: [ novanovy ]
+website: https://github.com/novystar
