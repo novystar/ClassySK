@@ -2,7 +2,7 @@ This repo and project are currently a wip!! I have made this public so that i ca
 
 #### [Wiki](https://github.com/novystar/ClassySK/wiki) | [Download](https://github.com/novystar/ClassySK/releases) | [Report a bug](https://github.com/novystar/ClassySK/issues)
 
-**Potential updates**
+**Future ambitions**
 - [ ] Converters: ability to recognize objects of certain types as a class instance, with methods using class values (e.g. class-player)
 - [ ] Method overloading: multiple methods with the same name and different arguments
 - [ ] Inheritance: extending other classes
