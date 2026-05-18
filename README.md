@@ -8,3 +8,4 @@ This repo and project are currently a wip!! I have made this public so that i ca
 - [ ] Class level access modifiers: local, folder/package-private
 - [ ] Reflection: Syntax for getting fields and methods (already somewhat doable using skript-reflect, but a less messy way)
 - [ ] Basic serialization: Map fields to list variables, Map list variables to fields
+- [ ] Final/Constant fields
