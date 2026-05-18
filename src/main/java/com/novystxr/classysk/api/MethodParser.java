@@ -5,13 +5,17 @@ import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.lang.SkriptParser;
+import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.Variable;
+import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.util.LiteralUtils;
 import ch.njol.skript.util.Utils;
+import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.SkriptMethod.MethodSignature;
 import com.novystxr.classysk.api.util.ConverterUtils;
+import org.checkerframework.checker.units.qual.N;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -30,7 +34,10 @@ public class MethodParser {
     private static final Pattern namedArgPattern =
             Pattern.compile("^[^:(){}\\s\",]+:\\s?.+$");
 
-    private static @Nullable List<String> splitArgs(String args) {
+    public static final String methodPattern = "%classs%\\:\\:<(\\w+)>\\([args:<.+>]\\)";
+
+    public static @Nullable List<String> splitArgs(String args) {
+
         List<String> result = new ArrayList<>();
 
         int j = 0;
@@ -53,18 +60,12 @@ public class MethodParser {
      * @see org.skriptlang.skript.common.function.FunctionArgumentParser
      */
 
-    public static @Nullable SequencedMap<String, Expression<?>> parseReferenceArgs(MethodSignature signature, String argsString) {
+    public static @Nullable SequencedMap<String, Expression<?>> parseReferenceArgs(MethodSignature signature, List<String> args) {
 
         SequencedMap<String, Expression<?>> result = new LinkedHashMap<>();
-        List<String> args = splitArgs(argsString);
 
         if (signature.arguments() == null) {
             Skript.error("This method does not have any arguments");
-            return null;
-        }
-
-        if (args == null) {
-            Skript.error("Invalid text/variables/parentheses in method call");
             return null;
         }
 
@@ -202,6 +203,87 @@ public class MethodParser {
         }
 
         return arguments;
+    }
+
+    public static class ArgumentParser {
+        public ArgumentParser(String methodName, @Nullable String args) {
+            this.methodName = methodName;
+
+            if (args == null || args.isEmpty()) {
+                hasArgs = false;
+                return;
+            }
+
+            argsString = args;
+            argStrings = splitArgs(args);
+
+        }
+        private final String methodName;
+        private boolean hasArgs;
+
+        private String argsString;
+        private List<String> argStrings;
+        private SkriptClass skriptClass = null;
+
+        private Kleenean canParse = Kleenean.UNKNOWN;
+
+        public SequencedMap<String, Expression<?>> parsedArgs;
+        public MethodSignature parsedSignature;
+
+        public void parse() {
+            if (!canParse.isUnknown()) return;
+
+            parsedArgs = parseReferenceArgs(parsedSignature, argStrings);
+            canParse = Kleenean.get(parsedArgs != null);
+        }
+
+        private String className(@Nullable SkriptClass skriptClass) {
+            if (skriptClass == null) return "unknown";
+            return skriptClass.getEffectiveName();
+        }
+        private String emptyIfNull(@Nullable String string) {
+            if (string == null) return "";
+            return string;
+        }
+
+        private void illegalAccess() {
+            canParse = Kleenean.FALSE;
+            Skript.warning("Illegal Access Warning! Tried to access non-existent method " + className(skriptClass) + "#" + emptyIfNull(methodName) + "(" + emptyIfNull(argsString) + "), or tried to access it from improper context");
+        }
+
+        private void failedParse() {
+            canParse = Kleenean.FALSE;
+            Skript.warning("Method call failed to parse! '"+className(skriptClass)+ "#" + methodName + "(" + argsString + ")'");
+        }
+
+        public void parseSignature(SkriptClass skriptClass) {
+            this.skriptClass = skriptClass;
+
+            if (skriptClass == null) {
+                illegalAccess();
+                return;
+            }
+            MethodSignature signature = skriptClass.getAccessibleMethod(methodName);
+
+            if (signature == null || !signature.checkAccess(skriptClass)) {
+                illegalAccess();
+                return;
+            }
+            if (hasArgs && argStrings == null) {
+                failedParse();
+                return;
+            }
+            parsedSignature = signature;
+        }
+
+        public boolean validArgs() {
+            if (argStrings == null) Skript.error("Invalid text/variables/parentheses in method call");
+            return argStrings != null;
+        }
+
+        public Kleenean canParse() {
+            return canParse;
+        }
     }
 
 }

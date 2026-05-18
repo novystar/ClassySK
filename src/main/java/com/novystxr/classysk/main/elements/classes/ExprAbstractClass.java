@@ -1,9 +1,8 @@
-package com.novystxr.classysk.main.elements;
+package com.novystxr.classysk.main.elements.classes;
 
 import ch.njol.skript.Skript;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser;
-import ch.njol.skript.lang.function.Functions;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.AbstractSkriptClass;

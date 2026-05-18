@@ -7,7 +7,7 @@ import java.util.*;
 import ch.njol.skript.ScriptLoader;
 import com.novystxr.classysk.api.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.util.ConverterUtils;
-import com.novystxr.classysk.main.elements.StructClass;
+import com.novystxr.classysk.main.elements.classes.StructClass;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.script.Script;
 import org.skriptlang.skript.lang.structure.Structure;

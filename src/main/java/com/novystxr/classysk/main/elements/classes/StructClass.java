@@ -1,14 +1,15 @@
-package com.novystxr.classysk.main.elements;
+package com.novystxr.classysk.main.elements.classes;
 
 import ch.njol.skript.Skript;
 import ch.njol.skript.config.Node;
 import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.lang.*;
-import ch.njol.skript.lang.function.Functions;
 import com.novystxr.classysk.api.AbstractSkriptClass;
 import com.novystxr.classysk.api.ClassManager;
 import com.novystxr.classysk.api.event.FieldRegistrationEvent;
 import com.novystxr.classysk.api.event.MethodRegistrationEvent;
+import com.novystxr.classysk.main.elements.fields.EffField;
+import com.novystxr.classysk.main.elements.methods.SecMethod;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.UnknownNullability;
 import org.skriptlang.skript.lang.entry.EntryContainer;

@@ -1,4 +1,4 @@
-package com.novystxr.classysk.main.elements;
+package com.novystxr.classysk.main.elements.classes;
 
 import ch.njol.skript.Skript;
 import ch.njol.skript.lang.Expression;
@@ -7,14 +7,10 @@ import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.SkriptClass;
 import com.novystxr.classysk.api.event.MethodRunEvent;
-import com.novystxr.classysk.api.util.Logger;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
 import org.skriptlang.skript.registration.SyntaxRegistry;
-
-import java.util.Arrays;
-import java.util.List;
 
 public class ExprThisInstance extends SimpleExpression<SkriptClass> {
     public static void register(SyntaxRegistry registry) {

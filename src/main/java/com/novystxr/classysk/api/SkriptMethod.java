@@ -6,8 +6,7 @@ import ch.njol.skript.lang.Trigger;
 import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.variables.Variables;
 import com.novystxr.classysk.api.event.MethodRunEvent;
-import com.novystxr.classysk.api.util.Logger;
-import com.novystxr.classysk.main.elements.StructClass;
+import com.novystxr.classysk.main.elements.classes.StructClass;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 
@@ -38,7 +37,9 @@ public class SkriptMethod {
         @Nullable ClassInfo<?> returnType,
         boolean returnPlural
     ) {
-        public boolean checkAccess(SkriptClass skriptClass, ParserInstance parser) {
+        public boolean checkAccess(SkriptClass skriptClass) {
+            ParserInstance parser = ParserInstance.get();
+
             if (accessType == AccessType.PRIVATE) {
                 if (parser.getCurrentStructure() instanceof StructClass structClass) {
                     return structClass.getName().equals(skriptClass.name);

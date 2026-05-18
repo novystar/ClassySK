@@ -1,16 +1,14 @@
-package com.novystxr.classysk.main.elements;
+package com.novystxr.classysk.main.elements.fields;
 
 import ch.njol.skript.classes.Changer;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser;
-import ch.njol.skript.lang.function.Functions;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import ch.njol.util.coll.CollectionUtils;
 import com.novystxr.classysk.api.SkriptClass;
 import com.novystxr.classysk.api.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.util.ClassyUtils;
-import com.novystxr.classysk.api.util.ConverterUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
@@ -120,7 +118,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
 
     private void attemptSetValue(SkriptClass skriptClass, FieldSignature signature, Object[] value) {
 
-        if (ConverterUtils.canConvert(signature, value)) {
+        if (signature.canConvert(value)) {
             skriptClass.getField(fieldName).setValue(value);
         } else {
             error("Field " + skriptClass.getEffectiveName() + "#" + fieldName + " expects type " + signature.type().getName()+" but got " + ClassyUtils.formatList(value));

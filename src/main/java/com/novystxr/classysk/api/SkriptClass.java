@@ -7,7 +7,7 @@ import java.util.Objects;
 import ch.njol.skript.lang.parser.ParserInstance;
 import com.novystxr.classysk.api.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.SkriptMethod.MethodSignature;
-import com.novystxr.classysk.main.elements.StructClass;
+import com.novystxr.classysk.main.elements.classes.StructClass;
 import org.jetbrains.annotations.Nullable;
 
 public class SkriptClass {

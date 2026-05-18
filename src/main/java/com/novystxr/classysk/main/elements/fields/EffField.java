@@ -1,16 +1,15 @@
-package com.novystxr.classysk.main.elements;
+package com.novystxr.classysk.main.elements.fields;
 
 import ch.njol.skript.Skript;
 import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.lang.*;
 import ch.njol.skript.lang.parser.ParserInstance;
-import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.util.ClassInfoReference;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.AccessType;
 import com.novystxr.classysk.api.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.event.FieldRegistrationEvent;
-import com.novystxr.classysk.api.util.ConverterUtils;
+import com.novystxr.classysk.main.elements.classes.StructClass;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.SyntaxInfo;
@@ -23,7 +22,7 @@ public class EffField extends Effect {
         registry.register(
                 SyntaxRegistry.EFFECT,
                 SyntaxInfo.builder(EffField.class)
-                        .addPattern("[public|:private] [:static] [typed:%-classinfo%] field <(\\w+)> [= %-objects%]")
+                        .addPattern("[:private] [:static] field <(\\w+)>\\: %-classinfo% [=[ ]%-objects%]")
                         .supplier(EffField::new)
                         .build()
         );
@@ -83,7 +82,10 @@ public class EffField extends Effect {
         ClassInfo<?> type = null;
         if (exprClassInfo != null) type = exprClassInfo.getSingle(event);
 
-        if (type == null) type = Classes.getExactClassInfo(Object.class);
+        if (type == null) {
+            Skript.error("Could not resolve field type");
+            return null;
+        }
 
         AccessType accessType = (isPrivate) ? AccessType.PRIVATE : AccessType.PUBLIC;
 
@@ -105,7 +107,7 @@ public class EffField extends Effect {
 
         FieldSignature signature = new FieldSignature(fieldName, type, defaultValue, accessType, isStatic, isPlural);
 
-        if (!ConverterUtils.canConvert(signature, defaultValue)) {
+        if (!signature.canConvert(defaultValue)) {
 
             Skript.error("Illegal field definition! Default value is not of required type: " + type.getName());
             return null;

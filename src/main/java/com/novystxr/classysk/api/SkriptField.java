@@ -21,6 +21,14 @@ public class SkriptField {
             return defaultValue.toArray();
         }
 
+        public boolean canConvert(Object[] values) {
+
+            if (values == null) return true;
+            if (values.length != 1 && isPlural) return false;
+
+            return ConverterUtils.canConvert(type.getC(), values);
+        }
+
         // constructor with array for convenience
         public FieldSignature(String name, ClassInfo<?> type, Object[] defaultValue, AccessType accessType, boolean isStatic, boolean isPlural) {
             List<Object> listValue = null;
@@ -45,11 +53,6 @@ public class SkriptField {
 
     public @Nullable Object[] getValue() {
         return this.value;
-    }
-
-    public boolean canConvert(@Nullable Object... values) {
-        return ConverterUtils.canConvert(this.signature, values);
-
     }
 
 }

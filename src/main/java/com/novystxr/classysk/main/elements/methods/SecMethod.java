@@ -1,4 +1,4 @@
-package com.novystxr.classysk.main.elements;
+package com.novystxr.classysk.main.elements.methods;
 
 import ch.njol.skript.Skript;
 import ch.njol.skript.classes.ClassInfo;
@@ -13,6 +13,7 @@ import com.novystxr.classysk.api.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.SkriptMethod.MethodSignature;
 import com.novystxr.classysk.api.event.MethodRegistrationEvent;
 import com.novystxr.classysk.api.event.MethodRunEvent;
+import com.novystxr.classysk.main.elements.classes.StructClass;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.SyntaxInfo;
@@ -95,7 +96,7 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
 
     // here we are just doing registration
     @Override
-    protected @Nullable TriggerItem walk(Event event) {
+    public @Nullable TriggerItem walk(Event event) {
         if (event instanceof MethodRegistrationEvent regEvent) {
 
             AbstractSkriptClass skriptClass = regEvent.skriptClass;
