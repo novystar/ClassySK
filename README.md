@@ -1,6 +1,6 @@
 This repo and project are currently a wip!! I have made this public so that i can work on the wiki, check back soon
 
-### [Wiki](https://github.com/novystar/ClassySK/wiki)
+#### [Wiki](https://github.com/novystar/ClassySK/wiki) | [Download](https://github.com/novystar/ClassySK/releases) | [Report a bug](https://github.com/novystar/ClassySK/issues)
 
 **Potential updates**
 - [ ] Converters: ability to recognize objects of certain types as a class instance, with methods using class values (e.g. class-player)
