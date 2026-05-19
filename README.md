@@ -11,4 +11,4 @@ Nothing here is set in stone but these are my future ambitions regarding the pro
 - [ ] Reflection: Syntax for getting fields and methods (already somewhat doable using skript-reflect, but a less messy way)
 - [ ] Serialization: Map fields to list variables, Map list variables to fields
 - [ ] Final/Constant fields
-- [ ] Tables: structureless "classes" that contain untyped fields (like lua tables)
+- [ ] Tables: unstructured "classes" that contain untyped fields
