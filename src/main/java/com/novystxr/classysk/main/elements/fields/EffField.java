@@ -9,6 +9,7 @@ import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.AccessType;
 import com.novystxr.classysk.api.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.event.FieldRegistrationEvent;
+import com.novystxr.classysk.api.util.ClassyUtils;
 import com.novystxr.classysk.main.elements.classes.StructClass;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
@@ -50,13 +51,7 @@ public class EffField extends Effect {
             return false;
         }
 
-        fieldName = parser.regexes.getFirst().group(0);
-        if (fieldName == null) {
-            Skript.error("Field name cannot be empty");
-            return false;
-        }
-
-        fieldName = fieldName.trim().toLowerCase(Locale.ENGLISH);
+        fieldName = ClassyUtils.getLowerCase(parser.regexes.getFirst());
         exprClassInfo = (Expression<ClassInfo<?>>) exprs[0];
 
         isPrivate = parser.hasTag("private");

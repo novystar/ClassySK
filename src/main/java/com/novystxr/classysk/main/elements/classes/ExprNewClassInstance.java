@@ -9,6 +9,7 @@ import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.AbstractSkriptClass;
 import com.novystxr.classysk.api.ClassManager;
 import com.novystxr.classysk.api.SkriptClass;
+import com.novystxr.classysk.api.util.ClassyUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
@@ -38,14 +39,11 @@ public class ExprNewClassInstance extends SimpleExpression<SkriptClass> {
     @SuppressWarnings("unchecked")
     @Override
     public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, SkriptParser.ParseResult parseResult) {
-        String name;
-
         if (matchedPattern == 0) {
             abstractSkriptClassExpr = (Expression<AbstractSkriptClass>) expressions[0];
             return true;
         } else {
-            MatchResult regex = parseResult.regexes.getFirst();
-            name = regex.group(1).trim().toLowerCase(Locale.ENGLISH);
+            String name = ClassyUtils.getLowerCase(parseResult.regexes.getFirst());
 
             if (!ClassManager.isAccessible(name)) {
                 Skript.error("Class named " + name + " does not exist");

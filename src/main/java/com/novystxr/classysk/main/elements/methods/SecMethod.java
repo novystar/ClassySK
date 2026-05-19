@@ -13,6 +13,7 @@ import com.novystxr.classysk.api.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.SkriptMethod.MethodSignature;
 import com.novystxr.classysk.api.event.MethodRegistrationEvent;
 import com.novystxr.classysk.api.event.MethodRunEvent;
+import com.novystxr.classysk.api.util.ClassyUtils;
 import com.novystxr.classysk.main.elements.classes.StructClass;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
@@ -56,12 +57,7 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
             return false;
         }
 
-        methodName = parseResult.regexes.get(0).group(0);
-
-        if (methodName == null) {
-            Skript.error("Method name cannot be empty");
-            return false;
-        }
+        methodName = ClassyUtils.getLowerCase(parseResult.regexes.get(0));
 
         // validate and parse method arguments
         if (parseResult.hasTag("args")) {
@@ -87,7 +83,6 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
             trigger = loadCode(sectionNode, "method body", MethodRunEvent.class);
         }
 
-        methodName = methodName.trim().toLowerCase(Locale.ENGLISH);
         accessType = parseResult.hasTag("private") ? AccessType.PRIVATE : AccessType.PUBLIC;
         isStatic = parseResult.hasTag("static");
 
