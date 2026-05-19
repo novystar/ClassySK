@@ -8,6 +8,7 @@ import com.novystxr.classysk.api.AbstractSkriptClass;
 import com.novystxr.classysk.api.ClassManager;
 import com.novystxr.classysk.api.event.FieldRegistrationEvent;
 import com.novystxr.classysk.api.event.MethodRegistrationEvent;
+import com.novystxr.classysk.api.util.ClassyUtils;
 import com.novystxr.classysk.main.elements.fields.EffField;
 import com.novystxr.classysk.main.elements.methods.SecMethod;
 import org.bukkit.event.Event;
@@ -47,15 +48,18 @@ public class StructClass extends Structure {
     public boolean init(Literal<?>[] args, int matchedPattern, SkriptParser.ParseResult parseResult, @UnknownNullability EntryContainer entryContainer) {
 
         this.entryContainer = entryContainer;
-        MatchResult regex = parseResult.regexes.getFirst();
-        name = regex.group(1).trim().toLowerCase(Locale.ENGLISH);
+        name = ClassyUtils.getLowerCase(parseResult.regexes.getFirst());
+
+        if (name.equals("instance")) {
+            Skript.error("A class can't be named 'instance' as this would create conflicts");
+            return false;
+        }
 
         return true;
     }
 
     @Override
     public boolean preLoad() {
-
         Script script = getParser().getCurrentScript();
 
         AbstractSkriptClass abstractSkriptClass = null;
