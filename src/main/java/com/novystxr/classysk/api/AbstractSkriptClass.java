@@ -72,11 +72,6 @@ public class AbstractSkriptClass extends SkriptClass {
     }
 
     @Override
-    public String getEffectiveName() {
-        return "["+name+"]";
-    }
-
-    @Override
     public boolean isInstance() {
         return false;
     }

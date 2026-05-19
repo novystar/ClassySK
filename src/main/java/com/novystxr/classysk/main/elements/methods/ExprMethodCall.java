@@ -7,20 +7,21 @@ import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.MethodParser;
 import com.novystxr.classysk.api.MethodParser.ArgumentParser;
 import com.novystxr.classysk.api.SkriptClass;
+import com.novystxr.classysk.api.util.ClassyUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
+import org.skriptlang.skript.registration.SyntaxInfo;
 import org.skriptlang.skript.registration.SyntaxRegistry;
-
-import java.util.Locale;
 
 public class ExprMethodCall extends SimpleExpression<Object> {
     public static void register(SyntaxRegistry registry) {
         registry.register(
                 SyntaxRegistry.EXPRESSION,
                 DefaultSyntaxInfos.Expression.builder(ExprMethodCall.class, Object.class)
-                        .addPattern(MethodParser.methodPattern)
+                        .addPatterns(MethodParser.methodPattern, MethodParser.staticMethodPattern)
                         .supplier(ExprMethodCall::new)
+                        .priority(SyntaxInfo.PATTERN_MATCHES_EVERYTHING)
                         .build()
         );
     }
@@ -31,27 +32,29 @@ public class ExprMethodCall extends SimpleExpression<Object> {
     @SuppressWarnings("unchecked")
     @Override
     public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
-        String methodName = parseResult.regexes.get(0).group(0).trim().toLowerCase(Locale.ENGLISH);
-        String argsString = null;
+        String methodName = ClassyUtils.getLowerCase(parseResult.regexes.get(matchedPattern));
+        String argsString = (parseResult.hasTag("args")) ? ClassyUtils.getLowerCase(parseResult.regexes.get(matchedPattern+1)) : null;
 
-        if (parseResult.hasTag("args")) argsString = parseResult.regexes.get(1).group(0);
-        argsParser = new ArgumentParser(methodName, argsString);
+        argsParser = new ArgumentParser(methodName, argsString, true);
+        if (matchedPattern == 1) {
+            String className = ClassyUtils.getLowerCase(parseResult.regexes.getFirst());
+            argsParser.parseSignature(className);
+            argsParser.parse();
+
+            return argsParser.canParse().isTrue();
+        }
         classExpr = (Expression<SkriptClass>) expressions[0];
-
         return true;
     }
 
     @Override
     protected Object @Nullable [] get(Event event) {
-        SkriptClass skriptClass = classExpr.getSingle(event);
-
         if (argsParser.canParse().isUnknown()) {
-            argsParser.parseSignature(skriptClass);
+            argsParser.parseSignature(classExpr.getSingle(event));
             argsParser.parse();
         }
         if (!argsParser.canParse().isTrue()) return null;
-
-        return argsParser.parsedSignature.run(event, skriptClass, argsParser.parsedArgs);
+        return argsParser.parsedSignature.run(event, argsParser.skriptClass, argsParser.parsedArgs);
     }
 
     @Override

@@ -5,9 +5,7 @@ import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.lang.SkriptParser;
-import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.Variable;
-import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.util.LiteralUtils;
 import ch.njol.skript.util.Utils;
@@ -15,7 +13,7 @@ import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.SkriptMethod.MethodSignature;
 import com.novystxr.classysk.api.util.ConverterUtils;
-import org.checkerframework.checker.units.qual.N;
+import com.novystxr.classysk.api.util.Logger;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -35,6 +33,7 @@ public class MethodParser {
             Pattern.compile("^[^:(){}\\s\",]+:\\s?.+$");
 
     public static final String methodPattern = "%classs%\\:\\:<(\\w+)>\\([args:<.+>]\\)";
+    public static final String staticMethodPattern = "<(\\w+)>\\:\\:<(\\w+)>\\([args:<.+>]\\)";
 
     public static @Nullable List<String> splitArgs(String args) {
 
@@ -206,29 +205,36 @@ public class MethodParser {
     }
 
     public static class ArgumentParser {
-        public ArgumentParser(String methodName, @Nullable String args) {
+        public ArgumentParser(String methodName, @Nullable String args, boolean expectsReturn) {
             this.methodName = methodName;
+            this.expectsReturn = expectsReturn;
 
             if (args == null || args.isEmpty()) {
-                hasArgs = false;
+                noArgs = true;
                 return;
             }
 
             argsString = args;
             argStrings = splitArgs(args);
 
+            if (argStrings == null) {
+                failedParse();
+            }
+
         }
         private final String methodName;
-        private boolean hasArgs;
 
         private String argsString;
         private List<String> argStrings;
-        private SkriptClass skriptClass = null;
+        public SkriptClass skriptClass = null;
 
+        boolean noArgs = false;
         private Kleenean canParse = Kleenean.UNKNOWN;
 
         public SequencedMap<String, Expression<?>> parsedArgs;
         public MethodSignature parsedSignature;
+
+        private boolean expectsReturn;
 
         public void parse() {
             if (!canParse.isUnknown()) return;
@@ -256,8 +262,18 @@ public class MethodParser {
             Skript.warning("Method call failed to parse! '"+className(skriptClass)+ "#" + methodName + "(" + argsString + ")'");
         }
 
+        public void parseSignature(String className) {
+            if (!ClassManager.classExists(className)) {
+                Skript.error("Cannot resolve class '%s'", className);
+                canParse = Kleenean.FALSE;
+            }
+
+            parseSignature(ClassManager.getClass(className));
+        }
+
         public void parseSignature(SkriptClass skriptClass) {
             this.skriptClass = skriptClass;
+            if (!canParse.isUnknown()) return;
 
             if (skriptClass == null) {
                 illegalAccess();
@@ -269,16 +285,24 @@ public class MethodParser {
                 illegalAccess();
                 return;
             }
-            if (hasArgs && argStrings == null) {
-                failedParse();
+
+            if (expectsReturn && signature.returnType() == null) {
+                Skript.error("This method can't return anything");
+                canParse = Kleenean.FALSE;
                 return;
             }
-            parsedSignature = signature;
-        }
 
-        public boolean validArgs() {
-            if (argStrings == null) Skript.error("Invalid text/variables/parentheses in method call");
-            return argStrings != null;
+            if (noArgs) {
+                if (signature.arguments() != null) {
+                    Skript.error("Method has arguments but none provided");
+                    canParse = Kleenean.FALSE;
+                    return;
+                } else {
+                    canParse = Kleenean.TRUE;
+                }
+            }
+
+            parsedSignature = signature;
         }
 
         public Kleenean canParse() {

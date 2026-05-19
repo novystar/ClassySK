@@ -40,7 +40,9 @@ public class ExprThisInstance extends SimpleExpression<SkriptClass> {
     @Override
     protected SkriptClass @Nullable [] get(Event event) {
         if (event instanceof MethodRunEvent runEvent) {
-            return new SkriptClass[]{runEvent.instance};
+            if (runEvent.instance.isInstance()) {
+                return new SkriptClass[]{runEvent.instance};
+            }
         }
 
         return null;

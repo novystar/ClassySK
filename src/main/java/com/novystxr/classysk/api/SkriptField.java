@@ -16,6 +16,7 @@ public class SkriptField {
             boolean isStatic,
             boolean isPlural
     ) {
+
         public @Nullable Object[] getDefaultValueArray() {
             if (defaultValue == null) return null;
             return defaultValue.toArray();

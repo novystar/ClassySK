@@ -1,12 +1,16 @@
 package com.novystxr.classysk.main.elements.methods;
 
+import ch.njol.skript.Skript;
 import ch.njol.skript.lang.Effect;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.util.Kleenean;
+import com.novystxr.classysk.api.AbstractSkriptClass;
+import com.novystxr.classysk.api.ClassManager;
 import com.novystxr.classysk.api.MethodParser;
 import com.novystxr.classysk.api.MethodParser.ArgumentParser;
 import com.novystxr.classysk.api.SkriptClass;
+import com.novystxr.classysk.api.util.ClassyUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.SyntaxInfo;
@@ -19,8 +23,9 @@ public class EffMethodCall extends Effect {
         registry.register(
                 SyntaxRegistry.EFFECT,
                 SyntaxInfo.builder(EffMethodCall.class)
-                        .addPattern(MethodParser.methodPattern)
+                        .addPatterns(MethodParser.methodPattern, MethodParser.staticMethodPattern)
                         .supplier(EffMethodCall::new)
+                        .priority(SyntaxInfo.PATTERN_MATCHES_EVERYTHING)
                         .build()
         );
     }
@@ -31,27 +36,29 @@ public class EffMethodCall extends Effect {
     @SuppressWarnings("unchecked")
     @Override
     public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
-        String methodName = parseResult.regexes.get(0).group(0).trim().toLowerCase(Locale.ENGLISH);
-        String argsString = null;
+        String methodName = ClassyUtils.getLowerCase(parseResult.regexes.get(matchedPattern));
+        String argsString = (parseResult.hasTag("args")) ? ClassyUtils.getLowerCase(parseResult.regexes.get(matchedPattern+1)) : null;
 
-        if (parseResult.hasTag("args")) argsString = parseResult.regexes.get(1).group(0);
-        argsParser = new ArgumentParser(methodName, argsString);
+        argsParser = new ArgumentParser(methodName, argsString, false);
+        if (matchedPattern == 1) {
+            String className = ClassyUtils.getLowerCase(parseResult.regexes.getFirst());
+            argsParser.parseSignature(className);
+            argsParser.parse();
+
+            return argsParser.canParse().isTrue();
+        }
         classExpr = (Expression<SkriptClass>) expressions[0];
-
         return true;
     }
 
     @Override
     protected void execute(Event event) {
-        SkriptClass skriptClass = classExpr.getSingle(event);
-
         if (argsParser.canParse().isUnknown()) {
-            argsParser.parseSignature(skriptClass);
+            argsParser.parseSignature(classExpr.getSingle(event));
             argsParser.parse();
         }
         if (!argsParser.canParse().isTrue()) return;
-
-        argsParser.parsedSignature.run(event, skriptClass, argsParser.parsedArgs);
+        argsParser.parsedSignature.run(event, argsParser.skriptClass, argsParser.parsedArgs);
     }
 
     @Override

@@ -19,7 +19,7 @@ public class ExprAbstractClass extends SimpleExpression<AbstractSkriptClass> {
     public static void register(SyntaxRegistry registry) {
         registry.register(SyntaxRegistry.EXPRESSION,
                 DefaultSyntaxInfos.Expression.builder(ExprAbstractClass.class, AbstractSkriptClass.class)
-                        .addPattern("\\[<(\\w+)>\\]")
+                        .addPattern("abstract instance of [class] <(\\w+)>")
                         .supplier(ExprAbstractClass::new)
                         .build()
         );

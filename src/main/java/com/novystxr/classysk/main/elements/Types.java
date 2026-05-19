@@ -35,7 +35,7 @@ public class Types {
 
         Classes.registerClass(
                 new ClassInfo<>(SkriptClass.class, "class")
-                        .user("^class(es)?$")
+                        .user("^class (instance)?(es)?$")
                         .name("Class")
                         .description("Instance version of a class, holds non-static methods and fields, representing a created instance of a class.")
                         .parser(new Parser<>() {
