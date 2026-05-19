@@ -9,5 +9,6 @@ Nothing here is set in stone but these are my future ambitions regarding the pro
 - [ ] Inheritance: extending other classes
 - [ ] Class level access modifiers: local, folder/package-private
 - [ ] Reflection: Syntax for getting fields and methods (already somewhat doable using skript-reflect, but a less messy way)
-- [ ] Basic serialization: Map fields to list variables, Map list variables to fields
+- [ ] Serialization: Map fields to list variables, Map list variables to fields
 - [ ] Final/Constant fields
+- [ ] Tables: structureless "classes" that contain untyped fields (like lua tables)
