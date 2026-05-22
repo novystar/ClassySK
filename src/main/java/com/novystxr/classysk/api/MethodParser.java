@@ -13,7 +13,6 @@ import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.SkriptMethod.MethodSignature;
 import com.novystxr.classysk.api.util.ConverterUtils;
-import com.novystxr.classysk.api.util.Logger;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;

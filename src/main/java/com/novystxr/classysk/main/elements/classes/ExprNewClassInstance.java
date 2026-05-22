@@ -15,9 +15,6 @@ import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
-import java.util.Locale;
-import java.util.regex.MatchResult;
-
 public class ExprNewClassInstance extends SimpleExpression<SkriptClass> {
 
     public static void register(SyntaxRegistry registry) {

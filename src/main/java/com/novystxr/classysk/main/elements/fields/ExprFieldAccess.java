@@ -7,7 +7,6 @@ import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import ch.njol.util.coll.CollectionUtils;
-import com.google.common.hash.HashCode;
 import com.novystxr.classysk.api.AbstractSkriptClass;
 import com.novystxr.classysk.api.ClassManager;
 import com.novystxr.classysk.api.SkriptClass;
@@ -113,9 +112,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
             case REMOVE, ADD:
                 Object[] initialValue = skriptClass.getFieldValue(fieldName);
                 if (initialValue == null) initialValue = new Object[]{};
-
                 if (delta == null) return;
-
                 Object[] result = null;
 
                 if (signature.isPlural()) {

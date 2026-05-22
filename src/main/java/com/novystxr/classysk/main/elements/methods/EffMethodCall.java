@@ -1,12 +1,9 @@
 package com.novystxr.classysk.main.elements.methods;
 
-import ch.njol.skript.Skript;
 import ch.njol.skript.lang.Effect;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.util.Kleenean;
-import com.novystxr.classysk.api.AbstractSkriptClass;
-import com.novystxr.classysk.api.ClassManager;
 import com.novystxr.classysk.api.MethodParser;
 import com.novystxr.classysk.api.MethodParser.ArgumentParser;
 import com.novystxr.classysk.api.SkriptClass;
@@ -15,8 +12,6 @@ import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.SyntaxInfo;
 import org.skriptlang.skript.registration.SyntaxRegistry;
-
-import java.util.Locale;
 
 public class EffMethodCall extends Effect {
     public static void register(SyntaxRegistry registry) {

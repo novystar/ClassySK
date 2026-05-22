@@ -1,4 +1,4 @@
-name: classysk
+name: ClassySK
 description: $description
 prefix: ClassySK
 version: '${version}'
@@ -8,4 +8,4 @@ api-version: '1.21.11'
 load: POSTWORLD
 
 authors: [ novanovy ]
-website: https://github.com/novystar
+website: https://github.com/novystar/ClassySK

@@ -22,7 +22,6 @@ import org.skriptlang.skript.registration.SyntaxRegistry;
 import com.novystxr.classysk.api.SkriptField.FieldSignature;
 
 import java.util.*;
-import java.util.regex.MatchResult;
 
 public class StructClass extends Structure {
     public static void register(SyntaxRegistry registry) {
@@ -49,6 +48,18 @@ public class StructClass extends Structure {
 
         this.entryContainer = entryContainer;
         name = ClassyUtils.getLowerCase(parseResult.regexes.getFirst());
+
+        boolean stop = false;
+        for (Structure structure : getParser().getCurrentScript().getStructures()) {
+            if (structure instanceof StructClass structClass) {
+                if (structClass.name.equals(name)) stop = true;
+            }
+        }
+
+        if (ClassManager.classExists(name) || stop) {
+            Skript.error("A class structure with named '%s' already exists in a script", name);
+            return false;
+        }
 
         if (name.equals("instance")) {
             Skript.error("A class can't be named 'instance' as this would create conflicts");
