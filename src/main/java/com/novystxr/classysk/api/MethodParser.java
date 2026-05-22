@@ -233,7 +233,7 @@ public class MethodParser {
         public SequencedMap<String, Expression<?>> parsedArgs;
         public MethodSignature parsedSignature;
 
-        private boolean expectsReturn;
+        private final boolean expectsReturn;
 
         public void parse() {
             if (!canParse.isUnknown()) return;
