@@ -7,15 +7,16 @@ import java.util.*;
 import ch.njol.skript.ScriptLoader;
 import com.novystxr.classysk.api.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.util.ConverterUtils;
+import com.novystxr.classysk.api.util.Logger;
 import com.novystxr.classysk.main.elements.classes.StructClass;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.script.Script;
 import org.skriptlang.skript.lang.structure.Structure;
 import com.novystxr.classysk.api.SkriptMethod.MethodSignature;
 
-// non instance skript class
-// holds static fields/methods, instances and signature data
-// not to be confused with java abstract classes
+/** non instance skript class <br>
+* holds static fields/methods, instances and signature data <br>
+* not to be confused with java abstract classes **/
 
 public class AbstractSkriptClass extends SkriptClass {
 
@@ -53,13 +54,19 @@ public class AbstractSkriptClass extends SkriptClass {
     }
 
     public @Nullable Script getValidScript() {
+        if (script == null) return null;
         if (script.valid()) {
             return script;
         } else {
             File file = script.getConfig().getFile();
             if (file != null) {
-                this.script = ScriptLoader.getScript(file);
-                return this.script;
+                Script newScript = ScriptLoader.getScript(file);
+                if (newScript == null) {
+                    return null;
+                } else {
+                    this.script = newScript;
+                    return this.script;
+                }
             }
             return null;
         }
@@ -81,16 +88,20 @@ public class AbstractSkriptClass extends SkriptClass {
         return this;
     }
 
+    /**
+     * Determines if the underlying class structure still exists in it's designated script
+     */
     public boolean validateStructure() {
-        Script validScript = getValidScript();
+        Script script = this.script;
 
-        if (validScript != null) {
-            List<Structure> structures = validScript.getStructures();
-            for (Structure structure : structures) {
-                if (structure instanceof StructClass classStruct) {
-                    if (classStruct.getName().equals(name) && classStruct.getParser().getCurrentScript() == validScript) {
-                        return true;
-                    }
+        if (script == null) return false;
+
+        List<Structure> structures = script.getStructures();
+        for (Structure structure : structures) {
+            if (structure instanceof StructClass classStruct) {
+                Script structScript = classStruct.getParser().getCurrentScript();
+                if (classStruct.getName().equals(name) && structScript.nameAndPath().equals(script.nameAndPath())) {
+                    return true;
                 }
             }
         }

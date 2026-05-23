@@ -9,6 +9,7 @@ import com.novystxr.classysk.api.ClassManager;
 import com.novystxr.classysk.api.event.FieldRegistrationEvent;
 import com.novystxr.classysk.api.event.MethodRegistrationEvent;
 import com.novystxr.classysk.api.util.ClassyUtils;
+import com.novystxr.classysk.api.util.Logger;
 import com.novystxr.classysk.main.elements.fields.EffField;
 import com.novystxr.classysk.main.elements.methods.SecMethod;
 import org.bukkit.event.Event;
@@ -49,14 +50,7 @@ public class StructClass extends Structure {
         this.entryContainer = entryContainer;
         name = ClassyUtils.getLowerCase(parseResult.regexes.getFirst());
 
-        boolean stop = false;
-        for (Structure structure : getParser().getCurrentScript().getStructures()) {
-            if (structure instanceof StructClass structClass) {
-                if (structClass.name.equals(name)) stop = true;
-            }
-        }
-
-        if (ClassManager.classExists(name) || stop) {
+        if (classAlreadyExists()) {
             Skript.error("A class structure with named '%s' already exists in a script", name);
             return false;
         }
@@ -72,7 +66,6 @@ public class StructClass extends Structure {
     @Override
     public boolean preLoad() {
         Script script = getParser().getCurrentScript();
-
         AbstractSkriptClass abstractSkriptClass = null;
 
         // check for existing class and validate
@@ -135,6 +128,26 @@ public class StructClass extends Structure {
         }
 
         return true;
+    }
+
+    private boolean classAlreadyExists() {
+
+        boolean exists = false;
+
+        for (Structure structure : getParser().getCurrentScript().getStructures()) {
+            if (structure instanceof StructClass structClass) {
+                if (structClass == this) continue;
+                if (!structClass.name.equals(name)) continue;
+                exists = true;
+
+            }
+        }
+
+        if (ClassManager.classExists(name)) {
+            if (ClassManager.getClass(name).getValidScript() == getParser().getCurrentScript()) exists = true;
+        }
+
+        return exists;
     }
 
     @Override
