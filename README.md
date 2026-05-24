@@ -11,4 +11,4 @@ Nothing here is set in stone but these are my future ambitions regarding the pro
 - [ ] Reflection: Syntax for getting fields and methods
 - [ ] Serialization: Map fields to list variables, Map list variables to fields
 - [ ] Final/Constant fields
-- [ ] Tables: unstructured "classes" that contain untyped fields
+- [ ] Tables: unstructured "classes" that contain untyped fields (ideally serializable)
