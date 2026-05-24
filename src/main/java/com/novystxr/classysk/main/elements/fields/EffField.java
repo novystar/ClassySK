@@ -30,7 +30,6 @@ public class EffField extends Effect {
     private String fieldName;
 
     private boolean isPrivate;
-    private boolean isTyped = false;
     private boolean isStatic = false;
     private boolean isPlural = false;
 
@@ -54,7 +53,6 @@ public class EffField extends Effect {
 
         isPrivate = parser.hasTag("private");
         isStatic = parser.hasTag("static");
-        isTyped = parser.hasTag("typed");
 
         if (exprClassInfo != null) {
             Literal<ClassInfoReference> classInfoReference = (Literal<ClassInfoReference>) ClassInfoReference.wrap(exprClassInfo);
@@ -117,27 +115,13 @@ public class EffField extends Effect {
     @Override
     public String toString(@Nullable Event event, boolean debug) {
         SyntaxStringBuilder builder = new SyntaxStringBuilder(event, debug);
-        if (isPrivate) {
-            builder.append("private");
-        } else {
-            builder.append("public");
-        }
 
-        if (isStatic) {
-            builder.append("static");
-        }
-
-        if (isTyped) {
-            builder.append(exprClassInfo.getSingle(event).toString());
-        }
-
+        builder.appendIf(isPrivate, "private");
+        builder.appendIf(isStatic, "static");
+        builder.append(exprClassInfo);
         builder.append("field");
-
         builder.append(fieldName);
-
-        if (exprValue != null) {
-            builder.append("= " + exprValue.getSingle(event).toString());
-        }
+        builder.appendIf(exprValue != null, exprValue);
 
         return builder.toString();
     }

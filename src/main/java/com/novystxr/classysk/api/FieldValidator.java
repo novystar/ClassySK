@@ -18,7 +18,12 @@ public class FieldValidator {
         this.fieldName = fieldName;
     }
 
-    public void validateSignature(@Nullable SkriptClass skriptClass) {
+    public void validate(@Nullable SkriptClass skriptClass) {
+        validateSignature(skriptClass);
+        checkAccess();
+    }
+
+    private void validateSignature(@Nullable SkriptClass skriptClass) {
         if (skriptClass == null) {
             isValid = Kleenean.FALSE;
             return;
@@ -33,7 +38,7 @@ public class FieldValidator {
         this.skriptClass = skriptClass;
     }
 
-    public void checkAccess() {
+    private void checkAccess() {
         if (skriptClass == null) {
             isValid = Kleenean.FALSE;
             Skript.error("Illegal Access! This class does not exist");

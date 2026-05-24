@@ -57,8 +57,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
             AbstractSkriptClass skriptClass = ClassManager.getClass(className);
 
             // parse time validation for static access
-            fieldValidator.validateSignature(skriptClass);
-            fieldValidator.checkAccess();
+            fieldValidator.validate(skriptClass);
             return (fieldValidator.isValid().isTrue());
         }
 
@@ -71,8 +70,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
     @Override
     protected Object @Nullable [] get(Event event) {
         if (fieldValidator.isValid().isUnknown()) {
-            fieldValidator.validateSignature(skriptClassExpr.getSingle(event));
-            fieldValidator.checkAccess();
+            fieldValidator.validate(skriptClassExpr.getSingle(event));
         }
         if (!fieldValidator.isValid().isTrue()) return null;
         return fieldValidator.get();
@@ -81,8 +79,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
     @Override
     public void change(Event event, Object @Nullable [] delta, Changer.ChangeMode mode) {
         if (fieldValidator.isValid().isUnknown()) {
-            fieldValidator.validateSignature(skriptClassExpr.getSingle(event));
-            fieldValidator.checkAccess();
+            fieldValidator.validate(skriptClassExpr.getSingle(event));
         }
         if (!fieldValidator.isValid().isTrue()) return;
         if (!ConverterUtils.canConvert(fieldValidator.signature().type().getC(), delta)) return;
@@ -107,12 +104,10 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
 
     @Override
     public Class<?> @Nullable [] acceptChange(Changer.ChangeMode mode) {
-
         boolean result = switch (mode) {
             case SET, RESET, DELETE, REMOVE, ADD -> true;
             default -> false;
         };
-
         if (result) {
             if (fieldValidator.signature() != null) {
                 return CollectionUtils.array(fieldValidator.signature().type().getC());
@@ -122,7 +117,6 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
         return null;
 
     }
-
 
     @Override
     public Class<?> getReturnType() {
