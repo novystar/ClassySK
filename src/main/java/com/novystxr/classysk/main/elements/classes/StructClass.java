@@ -8,8 +8,7 @@ import com.novystxr.classysk.api.AbstractSkriptClass;
 import com.novystxr.classysk.api.ClassManager;
 import com.novystxr.classysk.api.event.FieldRegistrationEvent;
 import com.novystxr.classysk.api.event.MethodRegistrationEvent;
-import com.novystxr.classysk.api.util.ClassyUtils;
-import com.novystxr.classysk.api.util.Logger;
+import com.novystxr.classysk.api.util.StringUtils;
 import com.novystxr.classysk.main.elements.fields.EffField;
 import com.novystxr.classysk.main.elements.methods.SecMethod;
 import org.bukkit.event.Event;
@@ -48,7 +47,7 @@ public class StructClass extends Structure {
     public boolean init(Literal<?>[] args, int matchedPattern, SkriptParser.ParseResult parseResult, @UnknownNullability EntryContainer entryContainer) {
 
         this.entryContainer = entryContainer;
-        name = ClassyUtils.getLowerCase(parseResult.regexes.getFirst());
+        name = StringUtils.getLowerCase(parseResult.regexes.getFirst());
 
         if (classAlreadyExists()) {
             Skript.error("A class structure with named '%s' already exists in a script", name);

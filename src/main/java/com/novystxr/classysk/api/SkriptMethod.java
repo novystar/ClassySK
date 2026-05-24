@@ -88,5 +88,12 @@ public class SkriptMethod {
 
             return null;
         }
+
+        public static String getEffectiveName(SkriptClass parentClass, @Nullable String methodName, @Nullable String args) {
+            if (args == null) args = "";
+            if (methodName == null) methodName = "";
+            return parentClass.getEffectiveName()+"::"+methodName+"("+args+")";
+        }
+
     }
 }

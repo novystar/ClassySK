@@ -7,7 +7,7 @@ import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.MethodParser;
 import com.novystxr.classysk.api.MethodParser.ArgumentParser;
 import com.novystxr.classysk.api.SkriptClass;
-import com.novystxr.classysk.api.util.ClassyUtils;
+import com.novystxr.classysk.api.util.StringUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.SyntaxInfo;
@@ -31,12 +31,12 @@ public class EffMethodCall extends Effect {
     @SuppressWarnings("unchecked")
     @Override
     public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
-        String methodName = ClassyUtils.getLowerCase(parseResult.regexes.get(matchedPattern));
-        String argsString = (parseResult.hasTag("args")) ? ClassyUtils.getLowerCase(parseResult.regexes.get(matchedPattern+1)) : null;
+        String methodName = StringUtils.getLowerCase(parseResult.regexes.get(matchedPattern));
+        String argsString = (parseResult.hasTag("args")) ? StringUtils.getLowerCase(parseResult.regexes.get(matchedPattern+1)) : null;
 
         argsParser = new ArgumentParser(methodName, argsString, false);
         if (matchedPattern == 1) {
-            String className = ClassyUtils.getLowerCase(parseResult.regexes.getFirst());
+            String className = StringUtils.getLowerCase(parseResult.regexes.getFirst());
             argsParser.parseSignature(className);
             argsParser.parse();
 

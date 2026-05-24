@@ -2,10 +2,7 @@ package com.novystxr.classysk.api;
 
 import org.skriptlang.skript.lang.script.Script;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ClassManager {
 
@@ -42,6 +39,10 @@ public class ClassManager {
             }
         }
         return result;
+    }
+
+    public static Collection<AbstractSkriptClass> getClasses() {
+        return classMap.values();
     }
 
     public static List<String> getNames() {

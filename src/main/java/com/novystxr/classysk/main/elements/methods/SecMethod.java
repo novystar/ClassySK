@@ -13,7 +13,7 @@ import com.novystxr.classysk.api.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.SkriptMethod.MethodSignature;
 import com.novystxr.classysk.api.event.MethodRegistrationEvent;
 import com.novystxr.classysk.api.event.MethodRunEvent;
-import com.novystxr.classysk.api.util.ClassyUtils;
+import com.novystxr.classysk.api.util.StringUtils;
 import com.novystxr.classysk.main.elements.classes.StructClass;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
@@ -57,7 +57,7 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
             return false;
         }
 
-        methodName = ClassyUtils.getLowerCase(parseResult.regexes.get(0));
+        methodName = StringUtils.getLowerCase(parseResult.regexes.get(0));
 
         // validate and parse method arguments
         if (parseResult.hasTag("args")) {

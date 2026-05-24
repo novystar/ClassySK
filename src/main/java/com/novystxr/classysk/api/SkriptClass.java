@@ -46,10 +46,12 @@ public class SkriptClass {
         return value;
     }
 
-    public boolean checkAccess(ParserInstance parserInstance, String fieldName) {
+    public boolean checkFieldAccess(String fieldName) {
 
         AbstractSkriptClass parent = getParent();
         FieldSignature signature = parent.getFieldSignature(fieldName);
+
+        ParserInstance parserInstance = ParserInstance.get();
 
         if (signature == null) return false;
 
@@ -94,7 +96,7 @@ public class SkriptClass {
     }
 
     public String getEffectiveName() {
-        return name;
+        return "%"+name+"%";
     }
 
     Map<String, SkriptField> getFieldMap() {

@@ -9,7 +9,7 @@ import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.AbstractSkriptClass;
 import com.novystxr.classysk.api.ClassManager;
 import com.novystxr.classysk.api.SkriptClass;
-import com.novystxr.classysk.api.util.ClassyUtils;
+import com.novystxr.classysk.api.util.StringUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
@@ -40,7 +40,7 @@ public class ExprNewClassInstance extends SimpleExpression<SkriptClass> {
             abstractSkriptClassExpr = (Expression<AbstractSkriptClass>) expressions[0];
             return true;
         } else {
-            String name = ClassyUtils.getLowerCase(parseResult.regexes.getFirst());
+            String name = StringUtils.getLowerCase(parseResult.regexes.getFirst());
 
             if (!ClassManager.isAccessible(name)) {
                 Skript.error("Class named " + name + " does not exist");

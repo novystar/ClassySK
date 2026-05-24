@@ -9,14 +9,12 @@ import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.AccessType;
 import com.novystxr.classysk.api.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.event.FieldRegistrationEvent;
-import com.novystxr.classysk.api.util.ClassyUtils;
+import com.novystxr.classysk.api.util.StringUtils;
 import com.novystxr.classysk.main.elements.classes.StructClass;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.SyntaxInfo;
 import org.skriptlang.skript.registration.SyntaxRegistry;
-
-import java.util.Locale;
 
 public class EffField extends Effect {
     public static void register(SyntaxRegistry registry) {
@@ -51,7 +49,7 @@ public class EffField extends Effect {
             return false;
         }
 
-        fieldName = ClassyUtils.getLowerCase(parser.regexes.getFirst());
+        fieldName = StringUtils.getLowerCase(parser.regexes.getFirst());
         exprClassInfo = (Expression<ClassInfo<?>>) exprs[0];
 
         isPrivate = parser.hasTag("private");

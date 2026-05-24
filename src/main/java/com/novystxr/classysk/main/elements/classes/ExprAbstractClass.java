@@ -7,7 +7,7 @@ import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.AbstractSkriptClass;
 import com.novystxr.classysk.api.ClassManager;
-import com.novystxr.classysk.api.util.ClassyUtils;
+import com.novystxr.classysk.api.util.StringUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
@@ -28,7 +28,7 @@ public class ExprAbstractClass extends SimpleExpression<AbstractSkriptClass> {
     @Override
     public boolean init(Expression<?>[] expr, int matchedPattern, Kleenean isDelayed, SkriptParser.ParseResult parseResult) {
 
-        String name = ClassyUtils.getLowerCase(parseResult.regexes.getFirst());
+        String name = StringUtils.getLowerCase(parseResult.regexes.getFirst());
 
         if (!ClassManager.isAccessible(name)) {
             Skript.error("Class named " + name + " does not exist");

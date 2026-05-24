@@ -3,7 +3,7 @@ package com.novystxr.classysk.api.util;
 import java.util.Locale;
 import java.util.regex.MatchResult;
 
-public class ClassyUtils {
+public class StringUtils {
     public static String formatList(Object... objects) {
         StringBuilder builder = new StringBuilder();
 

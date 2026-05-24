@@ -88,6 +88,11 @@ public class AbstractSkriptClass extends SkriptClass {
         return this;
     }
 
+    @Override
+    public String getEffectiveName() {
+        return name;
+    }
+
     /**
      * Determines if the underlying class structure still exists in it's designated script
      */

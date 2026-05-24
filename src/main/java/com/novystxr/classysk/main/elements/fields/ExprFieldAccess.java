@@ -1,6 +1,5 @@
 package com.novystxr.classysk.main.elements.fields;
 
-import ch.njol.skript.Skript;
 import ch.njol.skript.classes.Changer;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser;
@@ -9,9 +8,12 @@ import ch.njol.util.Kleenean;
 import ch.njol.util.coll.CollectionUtils;
 import com.novystxr.classysk.api.AbstractSkriptClass;
 import com.novystxr.classysk.api.ClassManager;
+import com.novystxr.classysk.api.FieldValidator;
 import com.novystxr.classysk.api.SkriptClass;
-import com.novystxr.classysk.api.SkriptField.FieldSignature;
-import com.novystxr.classysk.api.util.ClassyUtils;
+import com.novystxr.classysk.api.util.ConverterUtils;
+import com.novystxr.classysk.api.util.ExpressionUtils;
+import com.novystxr.classysk.api.util.Logger;
+import com.novystxr.classysk.api.util.StringUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
@@ -39,150 +41,68 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
     }
 
     private Expression<SkriptClass> skriptClassExpr;
-    private AbstractSkriptClass abstractSkriptClass;
-    private FieldSignature abstractSignature;
-    private String fieldName;
-
-    private boolean isMatchedInstance;
+    private FieldValidator fieldValidator;
 
     @SuppressWarnings("unchecked")
     @Override
     public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, SkriptParser.ParseResult parseResult) {
+        String fieldName = StringUtils.getLowerCase(parseResult.regexes.get(matchedPattern));
+        fieldValidator = new FieldValidator(fieldName);
+
         if (matchedPattern == 0) {
-            isMatchedInstance = true;
-
             skriptClassExpr = (Expression<SkriptClass>) expressions[0];
-            fieldName = ClassyUtils.getLowerCase(parseResult.regexes.getFirst());
 
-        } else { // parse time validation if static reference
-            isMatchedInstance = false;
+        } else {
+            String className = StringUtils.getLowerCase(parseResult.regexes.getFirst());
+            AbstractSkriptClass skriptClass = ClassManager.getClass(className);
 
-            String className = ClassyUtils.getLowerCase(parseResult.regexes.get(0));
-            fieldName = ClassyUtils.getLowerCase(parseResult.regexes.get(1));
-
-            abstractSkriptClass = ClassManager.getClass(className);
-            if (checkIllegalAccess(abstractSkriptClass)) {
-                illegalAccess(abstractSkriptClass, true);
-                return false;
-            }
-            abstractSignature = abstractSkriptClass.getParent().getFieldSignature(fieldName);
-            if (abstractSignature == null) {
-                Skript.error("Unable to resolve static field signature "+className+"::"+fieldName);
-                return false;
-            }
+            // parse time validation for static access
+            fieldValidator.validateSignature(skriptClass);
+            fieldValidator.checkAccess();
+            return (fieldValidator.isValid().isTrue());
         }
 
         return true;
     }
 
+    // currently holds onto the first class it receives at runtime
+    // proper dynamic access will be added with reflective expressions down the line
+    // TODO: revalidate if parent class changed
     @Override
     protected Object @Nullable [] get(Event event) {
-        SkriptClass skriptClass = getMatchedInstance(event);
-        if (skriptClass == null) return null;
-
-        return skriptClass.getFieldValue(fieldName);
+        if (fieldValidator.isValid().isUnknown()) {
+            fieldValidator.validateSignature(skriptClassExpr.getSingle(event));
+            fieldValidator.checkAccess();
+        }
+        if (!fieldValidator.isValid().isTrue()) return null;
+        return fieldValidator.get();
     }
 
     @Override
     public void change(Event event, Object @Nullable [] delta, Changer.ChangeMode mode) {
-        SkriptClass skriptClass = getMatchedInstance(event);
-        FieldSignature signature;
-
-        if (skriptClass == null) return;
-
-        if (isMatchedInstance) {
-            signature = skriptClass.getParent().getFieldSignature(fieldName);
-            if (signature == null) return;
-
-        } else {
-            signature = abstractSignature; // runtime access check for safety if class is reloaded
-            if (checkIllegalAccess(skriptClass)) {
-                illegalAccess(skriptClass, false);
-                return;
-            }
+        if (fieldValidator.isValid().isUnknown()) {
+            fieldValidator.validateSignature(skriptClassExpr.getSingle(event));
+            fieldValidator.checkAccess();
         }
+        if (!fieldValidator.isValid().isTrue()) return;
+        if (!ConverterUtils.canConvert(fieldValidator.signature().type().getC(), delta)) return;
 
         switch (mode) {
             case SET:
-                attemptSetValue(skriptClass, signature, delta);
-                break;
+                fieldValidator.attemptSetValue(delta);
             case RESET, DELETE:
-                skriptClass.removeField(fieldName);
-                break;
+                fieldValidator.skriptClass().removeField(fieldValidator.fieldName());
             case REMOVE, ADD:
-                Object[] initialValue = skriptClass.getFieldValue(fieldName);
-                if (initialValue == null) initialValue = new Object[]{};
                 if (delta == null) return;
-                Object[] result = null;
+                if (!ConverterUtils.canConvert(fieldValidator.signature().type().getC(), delta)) return;
 
-                if (signature.isPlural()) {
-                    List<Object> initialValueList = new ArrayList<>(Arrays.asList(initialValue));
-                    if (mode == Changer.ChangeMode.ADD) {
-                        initialValueList.addAll(List.of(delta));
-                    } else {
-                        initialValueList.removeAll(List.of(delta));
-                    }
-
-                    result = initialValueList.toArray();
-
-                } else if (delta.length == 1) {
-                    if (delta[0] instanceof Number deltaNumber && initialValue[0] instanceof Number initialNumber) {
-
-                        if (mode == Changer.ChangeMode.ADD) {
-                            result = new Object[]{
-                                    initialNumber.doubleValue() + deltaNumber.doubleValue()
-                            };
-                        } else {
-
-                            result = new Object[]{
-                                    initialNumber.doubleValue() - deltaNumber.doubleValue()
-                            };
-                        }
-
-                    }
+                Object[] initialValue = fieldValidator.skriptClass().getFieldValue(fieldValidator.fieldName());
+                if (fieldValidator.signature().isPlural()) {
+                    fieldValidator.attemptSetValue(ExpressionUtils.mutatePlural(initialValue, delta, mode));
+                    return;
                 }
-
-                if (result == null) return;
-
-                attemptSetValue(skriptClass, signature, result);
-
-                break;
+                fieldValidator.attemptSetValue(ExpressionUtils.mutatePlural(initialValue, delta, mode));
         }
-    }
-
-    private @Nullable SkriptClass getMatchedInstance(Event event) {
-        if (isMatchedInstance) {
-            SkriptClass skriptClass = skriptClassExpr.getSingle(event);
-            if (checkIllegalAccess(skriptClass)) return null;
-            return skriptClass;
-        } else {
-            return abstractSkriptClass;
-        }
-    }
-
-    private void attemptSetValue(SkriptClass skriptClass, FieldSignature signature, Object[] value) {
-
-        if (signature.canConvert(value)) {
-            skriptClass.getField(fieldName).setValue(value);
-        } else {
-            error("Field " + skriptClass.getEffectiveName() + "::" + fieldName + " expects type " + signature.type().getName()+" but got " + ClassyUtils.formatList(value));
-        }
-    }
-
-    private boolean checkIllegalAccess(@Nullable SkriptClass skriptClass) {
-
-        if (skriptClass == null) return true;
-        return !skriptClass.checkAccess(getParser(), fieldName);
-    }
-
-    private void illegalAccess(@Nullable SkriptClass skriptClass, boolean throwError) {
-        String effectiveName = "unknown";
-        if (skriptClass != null) effectiveName = skriptClass.getEffectiveName();
-
-        String text = "Illegal Access Warning! Tried to access non-existent field " + effectiveName + "#" + fieldName + ", or tried to access it from improper context";
-
-        if (throwError) error(text);
-        else warning(text);
     }
 
     @Override
@@ -193,7 +113,13 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
             default -> false;
         };
 
-        return (result) ? CollectionUtils.array(Object.class) : null;
+        if (result) {
+            if (fieldValidator.signature() != null) {
+                return CollectionUtils.array(fieldValidator.signature().type().getC());
+            }
+            return CollectionUtils.array(Object.class);
+        }
+        return null;
 
     }
 

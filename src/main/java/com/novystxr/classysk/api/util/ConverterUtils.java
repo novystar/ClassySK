@@ -1,10 +1,12 @@
 package com.novystxr.classysk.api.util;
 
+import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.converter.Converters;
 
 public class ConverterUtils {
 
-    public static boolean canConvert(Class<?> toClass, Object[] values) {
+    public static boolean canConvert(Class<?> toClass, Object @Nullable [] values) {
+        if (values == null) return true;
         for (Object value : values) {
 
             Class<?> fromClass = value.getClass();

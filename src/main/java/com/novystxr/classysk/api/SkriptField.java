@@ -40,6 +40,10 @@ public class SkriptField {
 
     }
 
+    public static String getEffectiveName(SkriptClass parentClass, String fieldName) {
+        return parentClass.getEffectiveName()+"::"+fieldName;
+    }
+
     FieldSignature signature;
     private Object[] value;
 
