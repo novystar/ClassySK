@@ -64,13 +64,12 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
         return true;
     }
 
-    // currently holds onto the first class it receives at runtime
-    // proper dynamic access will be added with reflective expressions down the line
-    // TODO: revalidate if parent class changed
     @Override
     protected Object @Nullable [] get(Event event) {
         if (fieldValidator.isValid().isUnknown()) {
             fieldValidator.validate(skriptClassExpr.getSingle(event));
+        } else {
+            fieldValidator.updateInstance(skriptClassExpr, event);
         }
         if (!fieldValidator.isValid().isTrue()) return null;
         return fieldValidator.get();
@@ -80,6 +79,8 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
     public void change(Event event, Object @Nullable [] delta, Changer.ChangeMode mode) {
         if (fieldValidator.isValid().isUnknown()) {
             fieldValidator.validate(skriptClassExpr.getSingle(event));
+        } else {
+            fieldValidator.updateInstance(skriptClassExpr, event);
         }
         if (!fieldValidator.isValid().isTrue()) return;
         if (!ConverterUtils.canConvert(fieldValidator.signature().type().getC(), delta)) return;

@@ -1,9 +1,11 @@
 package com.novystxr.classysk.api;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.lang.Expression;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.util.ConverterUtils;
+import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 
 public class FieldValidator {
@@ -19,11 +21,6 @@ public class FieldValidator {
     }
 
     public void validate(@Nullable SkriptClass skriptClass) {
-        validateSignature(skriptClass);
-        checkAccess();
-    }
-
-    private void validateSignature(@Nullable SkriptClass skriptClass) {
         if (skriptClass == null) {
             isValid = Kleenean.FALSE;
             return;
@@ -36,6 +33,8 @@ public class FieldValidator {
             return;
         }
         this.skriptClass = skriptClass;
+
+        checkAccess();
     }
 
     private void checkAccess() {
@@ -52,6 +51,21 @@ public class FieldValidator {
         }
 
         isValid = Kleenean.TRUE;
+    }
+
+    public void updateInstance(@Nullable Expression<SkriptClass> skriptClassExpr, Event event) {
+        // static access
+        if (skriptClassExpr == null) {
+            return;
+        }
+        SkriptClass newClass = skriptClassExpr.getSingle(event);
+        if (newClass == null) {
+            isValid = Kleenean.FALSE;
+            return;
+        }
+        if (newClass.getParent() != this.skriptClass.getParent()) {
+            validate(newClass);
+        }
     }
 
     public void attemptSetValue(@Nullable Object[] delta) {
