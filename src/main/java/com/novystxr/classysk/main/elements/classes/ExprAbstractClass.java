@@ -27,7 +27,6 @@ public class ExprAbstractClass extends SimpleExpression<AbstractSkriptClass> {
 
     @Override
     public boolean init(Expression<?>[] expr, int matchedPattern, Kleenean isDelayed, SkriptParser.ParseResult parseResult) {
-
         String name = StringUtils.getLowerCase(parseResult.regexes.getFirst());
 
         if (!ClassManager.isAccessible(name)) {
@@ -36,7 +35,6 @@ public class ExprAbstractClass extends SimpleExpression<AbstractSkriptClass> {
         }
 
         abstractSkriptClass = ClassManager.getClass(name);
-
         return true;
     }
 

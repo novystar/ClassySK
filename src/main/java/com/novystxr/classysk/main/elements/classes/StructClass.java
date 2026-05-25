@@ -88,7 +88,6 @@ public class StructClass extends Structure {
         abstractSkriptClass.initMethodSignatures();
 
         for (Node node : this.entryContainer.getUnhandledNodes()) {
-
             if (node instanceof SectionNode sectionNode) {
 
                 if (node.getKey() == null) continue;
@@ -102,11 +101,9 @@ public class StructClass extends Structure {
                 }
 
             } else if (node.getKey() != null) {
-
                 Effect effect = Effect.parse(node.getKey(), "Invalid field declaration");
 
                 if (effect instanceof EffField fieldEffect) {
-
                     FieldSignature signature = fieldEffect.getSignature(new FieldRegistrationEvent(abstractSkriptClass));
 
                     if (fieldSignatures.containsValue(signature)) {

@@ -41,12 +41,10 @@ public class ExprNewClassInstance extends SimpleExpression<SkriptClass> {
             return true;
         } else {
             String name = StringUtils.getLowerCase(parseResult.regexes.getFirst());
-
             if (!ClassManager.isAccessible(name)) {
                 Skript.error("Class named " + name + " does not exist");
                 return false;
             }
-
             abstractSkriptClass = ClassManager.getClass(name);
         }
 
@@ -57,11 +55,9 @@ public class ExprNewClassInstance extends SimpleExpression<SkriptClass> {
     protected SkriptClass @Nullable [] get(Event event) {
         AbstractSkriptClass parent = abstractSkriptClass;
         if (parent == null) parent = abstractSkriptClassExpr.getSingle(event);
-
         assert parent != null;
 
         SkriptClass skriptClass = parent.createInstance();
-
         return new SkriptClass[]{skriptClass};
     }
 
@@ -78,14 +74,12 @@ public class ExprNewClassInstance extends SimpleExpression<SkriptClass> {
     @Override
     public String toString(@Nullable Event event, boolean debug) {
         SyntaxStringBuilder builder = new SyntaxStringBuilder(event, debug);
-
         builder.append("new class instance of");
         if (abstractSkriptClass == null) {
             builder.append(abstractSkriptClassExpr);
         } else {
             builder.append(abstractSkriptClass);
         }
-
         return builder.toString();
 
     }
