@@ -1,5 +1,7 @@
 package com.novystxr.classysk.api.util;
 
+import ch.njol.skript.SkriptConfig;
+
 import java.util.Locale;
 import java.util.regex.MatchResult;
 
@@ -17,6 +19,9 @@ public class StringUtils {
     }
 
     public static String getLowerCase(MatchResult matchResult) {
+        if (SkriptConfig.caseInsensitiveVariables.value()) {
+            return matchResult.group(0).trim();
+        }
         return matchResult.group(0).trim().toLowerCase(Locale.ENGLISH);
     }
 }
