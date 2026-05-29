@@ -2,7 +2,7 @@ class testMethods:
 	private field privateField: string = "im private"
 	private static field privateStaticField: string = "im private and static"
 
-	public field publicMethodFired: boolean = false
+	field publicMethodFired: boolean = false
 
 	method publicMethod():
 		set instance::publicMethodFired to true
