@@ -1,0 +1,17 @@
+class testFields:
+	private field privateField: string = "im private"
+	field publicField: string = "im public"
+
+	static field publicStaticField: string = "im public and static"
+	private static field privateStaticField: string = "im private and static"
+
+test "ClassySK - Fields":
+	set {_instance} to new instance of testFields
+
+	assert {_instance}::publicStaticField is not set with "Attempt to access static field from instance"
+	assert testFields::publicStaticField is "im public and static" with "public access (static)"
+	assert testFields::privateStaticField is not set with "Attempt to access private field from outside class structure (static)"
+
+	assert testFields::publicField is not set with "Attempt to access instance field from static context"
+	assert {_instance}::publicField is "im public" with "public access (instance)"
+	assert {_instance}::privateField is not set with "Attempt to access private field from outside class structure (instance)"

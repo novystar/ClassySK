@@ -1,0 +1,31 @@
+class testMethods:
+	private field privateField: "im private"
+	private static field privateStaticField: "im private and static"
+
+	public field publicMethodFired: boolean = false
+
+	method publicMethod():
+		set instance::publicMethodFired
+
+	method publicMethodReturn() :: boolean:
+		return true
+
+	method publicMethodArgs(arg1: string, arg2: boolean) :: string:
+		return "arg1: %{_arg1}%, arg2: %{_arg2}%"
+
+	method privateAccessTest() :: boolean:
+		if instance::privateField is "im private":
+			testMethods::privateStaticField is "im private and static"
+			return true
+
+test "ClassySK - Methods":
+	set {_instance} to new instance of testMethods
+
+	{_instance}::publicMethod()
+
+	assert {_instance}::publicMethodFired is true
+	assert {_instance}::publicMethodReturn() is true
+	assert {_instance}::publicMethodArgs("test", true) is "arg1: test, arg2: true"
+	assert {_instance}::publicMethodArgs("test") is not set
+	assert {_instance}::publicMethodArgs("test", true, false) is not set
+	assert {_instance}::privateAccessTest() is true
