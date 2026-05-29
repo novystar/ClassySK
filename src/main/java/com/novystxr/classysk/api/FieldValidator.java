@@ -63,7 +63,7 @@ public class FieldValidator {
             isValid = Kleenean.FALSE;
             return;
         }
-        if (newClass.getParent() != this.skriptClass.getParent()) {
+        if (this.skriptClass == null || newClass.getParent() != this.skriptClass.getParent()) {
             validate(newClass);
         }
     }
