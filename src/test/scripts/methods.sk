@@ -5,7 +5,7 @@ class testMethods:
 	public field publicMethodFired: boolean = false
 
 	method publicMethod():
-		set instance::publicMethodFired
+		set instance::publicMethodFired to true
 
 	method publicMethodReturn() :: boolean:
 		return true
@@ -15,17 +15,19 @@ class testMethods:
 
 	method privateAccessTest() :: boolean:
 		if instance::privateField is "im private":
-			testMethods::privateStaticField is "im private and static"
-			return true
+			if testMethods::privateStaticField is "im private and static":
+				return true
 
 test "ClassySK - Methods":
 	set {_instance} to new instance of testMethods
 
 	{_instance}::publicMethod()
 
-	assert {_instance}::publicMethodFired is true
-	assert {_instance}::publicMethodReturn() is true
-	assert {_instance}::publicMethodArgs("test", true) is "arg1: test, arg2: true"
+	assert {_instance}::publicMethodFired is true with "method void"
+	assert {_instance}::publicMethodReturn() is true with "method return"
+
+	assert {_instance}::publicMethodArgs("test", true) is "arg1: test, arg2: true" with "method valid args"
+
 	assert {_instance}::publicMethodArgs("test") is not set
 	assert {_instance}::publicMethodArgs("test", true, false) is not set
 	assert {_instance}::privateAccessTest() is true
