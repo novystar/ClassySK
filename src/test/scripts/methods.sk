@@ -1,6 +1,6 @@
 class testMethods:
-	private field privateField: "im private"
-	private static field privateStaticField: "im private and static"
+	private field privateField: string = "im private"
+	private static field privateStaticField: string = "im private and static"
 
 	public field publicMethodFired: boolean = false
 
@@ -30,4 +30,4 @@ test "ClassySK - Methods":
 
 	assert {_instance}::publicMethodArgs("test") is not set
 	assert {_instance}::publicMethodArgs("test", true, false) is not set
-	assert {_instance}::privateAccessTest() is true
+	assert {_instance}::privateAccessTest() is true with "private access from method"
