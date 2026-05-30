@@ -28,7 +28,6 @@ public class SkriptMethod {
 
     public record MethodSignature(
         String name,
-        Trigger trigger,
 
         @Nullable SequencedMap<String, MethodArgument> arguments,
         AccessType accessType,
@@ -49,51 +48,65 @@ public class SkriptMethod {
             return true;
         }
 
-        public @Nullable Object[] run(Event event, SkriptClass skriptClass, @Nullable Map<String, Expression<?>> argExprs) {
+    }
 
-            Map<String, Object[]> args;
+    public SkriptMethod(MethodSignature signature) {
+        this.signature = signature;
+    }
 
-            if (argExprs != null) {
-                args = new HashMap<>();
-                for (Map.Entry<String, Expression<?>> entry : argExprs.entrySet()) {
-                    args.put(entry.getKey(), entry.getValue().getArray(event));
+    private Trigger trigger;
+    public final MethodSignature signature;
 
-                }
-            } else {
-                args = null;
+    public void setTrigger(Trigger trigger) {
+        this.trigger = trigger;
+    }
+
+    public Object @Nullable [] run(Event event, SkriptClass skriptClass, @Nullable Map<String, Expression<?>> argExprs) {
+
+        if (trigger == null) return null;
+
+        Map<String, Object[]> args;
+
+        if (argExprs != null) {
+            args = new HashMap<>();
+            for (Map.Entry<String, Expression<?>> entry : argExprs.entrySet()) {
+                args.put(entry.getKey(), entry.getValue().getArray(event));
+
             }
+        } else {
+            args = null;
+        }
 
-            MethodRunEvent runEvent = new MethodRunEvent(skriptClass, args);
-            if (args != null && arguments != null) {
-                for (Entry<String, Object[]> arg : args.entrySet()) {
+        MethodRunEvent runEvent = new MethodRunEvent(skriptClass, args);
+        if (args != null && signature.arguments != null) {
+            for (Entry<String, Object[]> arg : args.entrySet()) {
 
-                    Object[] values = arg.getValue();
-                    String key = arg.getKey();
+                Object[] values = arg.getValue();
+                String key = arg.getKey();
 
-                    if (!arguments.get(key).isPlural) {
-                        Variables.setVariable(key, values[0], runEvent, true);
-                    } else {
-                        int i = 0;
-                        for (Object value : values) {
-                            i++;
-                            Variables.setVariable(key+"::"+i, value, runEvent, true);
-                        }
+                if (!signature.arguments.get(key).isPlural) {
+                    Variables.setVariable(key, values[0], runEvent, true);
+                } else {
+                    int i = 0;
+                    for (Object value : values) {
+                        i++;
+                        Variables.setVariable(key+"::"+i, value, runEvent, true);
                     }
                 }
             }
-
-            if (trigger.execute(runEvent)) {
-                return runEvent.returnObject;
-            }
-
-            return null;
         }
 
-        public static String getEffectiveName(SkriptClass parentClass, @Nullable String methodName, @Nullable String args) {
-            if (args == null) args = "";
-            if (methodName == null) methodName = "";
-            return parentClass.getEffectiveName()+"::"+methodName+"("+args+")";
+        if (trigger.execute(runEvent)) {
+            return runEvent.returnObject;
         }
 
+        return null;
     }
+
+    public static String getEffectiveName(SkriptClass parentClass, @Nullable String methodName, @Nullable String args) {
+        if (args == null) args = "";
+        if (methodName == null) methodName = "";
+        return parentClass.getEffectiveName()+"::"+methodName+"("+args+")";
+    }
+
 }

@@ -9,6 +9,7 @@ import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.AbstractSkriptClass;
 import com.novystxr.classysk.api.AccessType;
 import com.novystxr.classysk.api.MethodParser;
+import com.novystxr.classysk.api.SkriptMethod;
 import com.novystxr.classysk.api.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.SkriptMethod.MethodSignature;
 import com.novystxr.classysk.api.event.MethodRegistrationEvent;
@@ -45,9 +46,9 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
     private String methodName;
     private SequencedMap<String, MethodArgument> arguments = null;
 
-    private Object[] returnObject;
-
     private Expression<ClassInfo<?>> classInfoExpr;
+    private SectionNode sectionNode;
+    private SkriptMethod skriptMethod;
 
     @SuppressWarnings("unchecked")
     @Override
@@ -73,14 +74,11 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
         }
 
         // get return type, check plurality
+        this.sectionNode = sectionNode;
         classInfoExpr = (Expression<ClassInfo<?>>) expressions[0];
         if (classInfoExpr != null) {
             Literal<ClassInfoReference> classInfoReference = (Literal<ClassInfoReference>) ClassInfoReference.wrap(classInfoExpr);
             returnPlural = classInfoReference.getSingle().isPlural().isTrue();
-
-            trigger = loadReturnableSectionCode(sectionNode, "method body", new Class[]{MethodRunEvent.class});
-        } else {
-            trigger = loadCode(sectionNode, "method body", MethodRunEvent.class);
         }
 
         accessType = parseResult.hasTag("private") ? AccessType.PRIVATE : AccessType.PUBLIC;
@@ -98,12 +96,25 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
             ClassInfo<?> returnType = null;
             if (classInfoExpr != null) returnType = classInfoExpr.getSingle(event);
 
-            MethodSignature signature = new MethodSignature(methodName, trigger, arguments, accessType, isStatic, returnType, returnPlural);
-            skriptClass.putMethodSignature(methodName, signature);
+            MethodSignature signature = new MethodSignature(methodName, arguments, accessType, isStatic, returnType, returnPlural);
+            skriptMethod = new SkriptMethod(signature);
+
+            skriptClass.putMethod(methodName, skriptMethod);
 
         }
 
         return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    public void evaluateTrigger() {
+        if (classInfoExpr != null) {
+            trigger = loadReturnableSectionCode(sectionNode, "method body", new Class[]{MethodRunEvent.class});
+        } else {
+            trigger = loadCode(sectionNode, "method body", MethodRunEvent.class);
+        }
+
+        skriptMethod.setTrigger(trigger);
     }
 
     @Override

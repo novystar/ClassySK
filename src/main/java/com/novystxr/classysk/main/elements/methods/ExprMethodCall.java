@@ -7,15 +7,12 @@ import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.MethodParser;
 import com.novystxr.classysk.api.MethodParser.ArgumentParser;
 import com.novystxr.classysk.api.SkriptClass;
-import com.novystxr.classysk.api.util.Logger;
 import com.novystxr.classysk.api.util.StringUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
 import org.skriptlang.skript.registration.SyntaxInfo;
 import org.skriptlang.skript.registration.SyntaxRegistry;
-
-import java.util.List;
 
 public class ExprMethodCall extends SimpleExpression<Object> {
     public static void register(SyntaxRegistry registry) {
@@ -41,8 +38,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
         argsParser = new ArgumentParser(methodName, argsString, true);
         if (matchedPattern == 1) {
             String className = StringUtils.getLowerCase(parseResult.regexes.getFirst());
-            argsParser.parseSignature(className);
-            argsParser.parse();
+            argsParser.parse(className);
 
             return argsParser.canParse().isTrue();
         }
@@ -53,11 +49,10 @@ public class ExprMethodCall extends SimpleExpression<Object> {
     @Override
     protected Object @Nullable [] get(Event event) {
         if (argsParser.canParse().isUnknown()) {
-            argsParser.parseSignature(classExpr.getSingle(event));
-            argsParser.parse();
+            argsParser.parse(classExpr.getSingle(event));
         }
         if (!argsParser.canParse().isTrue()) return null;
-        return argsParser.parsedSignature.run(event, argsParser.skriptClass, argsParser.parsedArgs);
+        return argsParser.parsedMethod.run(event, argsParser.skriptClass, argsParser.parsedArgs);
     }
 
     @Override

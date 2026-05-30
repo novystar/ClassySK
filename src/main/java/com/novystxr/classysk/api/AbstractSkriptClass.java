@@ -7,7 +7,6 @@ import java.util.*;
 import ch.njol.skript.ScriptLoader;
 import com.novystxr.classysk.api.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.util.ConverterUtils;
-import com.novystxr.classysk.api.util.Logger;
 import com.novystxr.classysk.main.elements.classes.StructClass;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.script.Script;
@@ -21,7 +20,7 @@ import com.novystxr.classysk.api.SkriptMethod.MethodSignature;
 public class AbstractSkriptClass extends SkriptClass {
 
     private Map<String, FieldSignature> fieldSignatures = new HashMap<>();
-    private final Map<String, MethodSignature> methodSignatures = new HashMap<>();
+    private final Map<String, SkriptMethod> methods = new HashMap<>();
 
     final List<WeakReference<SkriptClass>> instances = new ArrayList<>();
 
@@ -45,12 +44,11 @@ public class AbstractSkriptClass extends SkriptClass {
         return fieldSignatures.get(key);
     }
 
-    public boolean hasMethodSignature(String name) {
-        return methodSignatures.containsKey(name);
+    public boolean hasMethod(String name) {
+        return methods.containsKey(name);
     }
-
-    public MethodSignature getMethodSignature(String key) {
-        return methodSignatures.get(key);
+    public SkriptMethod getMethod(String key) {
+        return methods.get(key);
     }
 
     public @Nullable Script getValidScript() {
@@ -115,12 +113,12 @@ public class AbstractSkriptClass extends SkriptClass {
         return false;
     }
 
-    public void initMethodSignatures() {
-        this.methodSignatures.clear();
+    public void initMethodRegistry() {
+        this.methods.clear();
     }
 
-    public void putMethodSignature(String key, MethodSignature signature) {
-        methodSignatures.put(key, signature);
+    public void putMethod(String key, SkriptMethod method) {
+        methods.put(key, method);
     }
 
     public void updateFieldSignatureMap(Map<String, FieldSignature> fieldSignatures) {

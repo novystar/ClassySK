@@ -6,6 +6,7 @@ import java.util.Objects;
 
 import ch.njol.skript.lang.parser.ParserInstance;
 import com.novystxr.classysk.api.SkriptField.FieldSignature;
+import com.novystxr.classysk.api.SkriptMethod;
 import com.novystxr.classysk.api.SkriptMethod.MethodSignature;
 import com.novystxr.classysk.main.elements.classes.StructClass;
 import org.jetbrains.annotations.Nullable;
@@ -83,16 +84,22 @@ public class SkriptClass {
         return field;
     }
 
-    public @Nullable MethodSignature getAccessibleMethod(String name) {
+    public @Nullable SkriptMethod getAccessibleMethod(String name) {
         AbstractSkriptClass parent = getParent();
 
         if (parent == null) return null;
-        if (!parent.hasMethodSignature(name)) return null;
+        if (!parent.hasMethod(name)) return null;
 
-        MethodSignature signature = parent.getMethodSignature(name);
-        if (signature.isStatic() == isInstance()) return null;
+        SkriptMethod method = parent.getMethod(name);
+        if (method.signature.isStatic() == isInstance()) return null;
 
-        return signature;
+        return method;
+    }
+
+    public @Nullable MethodSignature getAccessibleMethodSignature(String name) {
+        SkriptMethod method = getAccessibleMethod(name);
+        if (method == null) return null;
+        return method.signature;
     }
 
     public String getEffectiveName() {

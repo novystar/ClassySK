@@ -12,6 +12,7 @@ import ch.njol.skript.util.Utils;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.SkriptMethod.MethodSignature;
+import com.novystxr.classysk.api.SkriptMethod;
 import com.novystxr.classysk.api.util.ConverterUtils;
 import org.jetbrains.annotations.Nullable;
 
@@ -58,7 +59,9 @@ public class MethodParser {
      * @see org.skriptlang.skript.common.function.FunctionArgumentParser
      */
 
-    public static @Nullable SequencedMap<String, Expression<?>> parseReferenceArgs(MethodSignature signature, List<String> args) {
+    public static @Nullable SequencedMap<String, Expression<?>> parseReferenceArgs(SkriptMethod method, List<String> args) {
+
+        MethodSignature signature = method.signature;
 
         SequencedMap<String, Expression<?>> result = new LinkedHashMap<>();
 
@@ -231,16 +234,9 @@ public class MethodParser {
         private Kleenean canParse = Kleenean.UNKNOWN;
 
         public SequencedMap<String, Expression<?>> parsedArgs;
-        public MethodSignature parsedSignature;
+        public SkriptMethod parsedMethod;
 
         private final boolean expectsReturn;
-
-        public void parse() {
-            if (!canParse.isUnknown()) return;
-
-            parsedArgs = parseReferenceArgs(parsedSignature, argStrings);
-            canParse = Kleenean.get(parsedArgs != null);
-        }
 
         private String className(@Nullable SkriptClass skriptClass) {
             if (skriptClass == null) return "unknown";
@@ -261,16 +257,16 @@ public class MethodParser {
             Skript.warning("Method call failed to parse! '"+className(skriptClass)+ "#" + methodName + "(" + argsString + ")'");
         }
 
-        public void parseSignature(String className) {
+        public void parse(String className) {
             if (!ClassManager.classExists(className)) {
                 Skript.error("Cannot resolve class '%s'", className);
                 canParse = Kleenean.FALSE;
             }
 
-            parseSignature(ClassManager.getClass(className));
+            parse(ClassManager.getClass(className));
         }
 
-        public void parseSignature(SkriptClass skriptClass) {
+        public void parse(SkriptClass skriptClass) {
             this.skriptClass = skriptClass;
             if (!canParse.isUnknown()) return;
 
@@ -278,12 +274,13 @@ public class MethodParser {
                 illegalAccess();
                 return;
             }
-            MethodSignature signature = skriptClass.getAccessibleMethod(methodName);
 
-            if (signature == null || !signature.checkAccess(skriptClass)) {
+            SkriptMethod method = skriptClass.getAccessibleMethod(methodName);
+            if (method == null || !method.signature.checkAccess(skriptClass)) {
                 illegalAccess();
                 return;
             }
+            MethodSignature signature = method.signature;
 
             if (expectsReturn && signature.returnType() == null) {
                 Skript.error("This method can't return anything");
@@ -301,7 +298,10 @@ public class MethodParser {
                 }
             }
 
-            parsedSignature = signature;
+            parsedMethod = method;
+
+            parsedArgs = parseReferenceArgs(parsedMethod, argStrings);
+            canParse = Kleenean.get(parsedArgs != null);
         }
 
         public Kleenean canParse() {

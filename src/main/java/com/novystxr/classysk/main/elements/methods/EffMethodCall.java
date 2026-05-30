@@ -37,8 +37,7 @@ public class EffMethodCall extends Effect {
         argsParser = new ArgumentParser(methodName, argsString, false);
         if (matchedPattern == 1) {
             String className = StringUtils.getLowerCase(parseResult.regexes.getFirst());
-            argsParser.parseSignature(className);
-            argsParser.parse();
+            argsParser.parse(className);
 
             return argsParser.canParse().isTrue();
         }
@@ -49,11 +48,10 @@ public class EffMethodCall extends Effect {
     @Override
     protected void execute(Event event) {
         if (argsParser.canParse().isUnknown()) {
-            argsParser.parseSignature(classExpr.getSingle(event));
-            argsParser.parse();
+            argsParser.parse(classExpr.getSingle(event));
         }
         if (!argsParser.canParse().isTrue()) return;
-        argsParser.parsedSignature.run(event, argsParser.skriptClass, argsParser.parsedArgs);
+        argsParser.parsedMethod.run(event, argsParser.skriptClass, argsParser.parsedArgs);
     }
 
     @Override
