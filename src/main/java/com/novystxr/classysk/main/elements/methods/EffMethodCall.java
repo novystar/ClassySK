@@ -33,9 +33,9 @@ public class EffMethodCall extends Effect {
     public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
         String methodName = StringUtils.getLowerCase(parseResult.regexes.get(matchedPattern));
         String argsString = (parseResult.hasTag("args")) ? StringUtils.getLowerCase(parseResult.regexes.get(matchedPattern+1)) : null;
-
         argsParser = new ArgumentParser(methodName, argsString, false);
         if (matchedPattern == 1) {
+            argsParser.setStatic();
             String className = StringUtils.getLowerCase(parseResult.regexes.getFirst());
             argsParser.parse(className);
 

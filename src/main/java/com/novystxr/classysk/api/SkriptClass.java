@@ -6,15 +6,11 @@ import java.util.Objects;
 
 import ch.njol.skript.lang.parser.ParserInstance;
 import com.novystxr.classysk.api.SkriptField.FieldSignature;
-import com.novystxr.classysk.api.SkriptMethod;
-import com.novystxr.classysk.api.SkriptMethod.MethodSignature;
-import com.novystxr.classysk.main.elements.classes.StructClass;
+import com.novystxr.classysk.api.util.Logger;
 import org.jetbrains.annotations.Nullable;
 
 public class SkriptClass {
-
     public final String name;
-
     private final Map<String, SkriptField> fieldMap = new HashMap<>();
 
     SkriptClass(String name) {
@@ -47,32 +43,9 @@ public class SkriptClass {
         return value;
     }
 
-    public boolean checkFieldAccess(String fieldName) {
-
-        AbstractSkriptClass parent = getParent();
-        FieldSignature signature = parent.getFieldSignature(fieldName);
-
-        ParserInstance parserInstance = ParserInstance.get();
-
-        if (signature == null) return false;
-
-        if (signature.isStatic() == isInstance()) return false;
-
-        if (signature.accessType() == AccessType.PRIVATE) {
-            if (parserInstance.getCurrentStructure() instanceof StructClass structClass) {
-                return structClass.getName().equals(name);
-            }
-            return false;
-        }
-
-        return true;
-    }
-
     // if field does not yet exist, instantiates one
     public SkriptField getField(String name) {
-
         SkriptField field = fieldMap.get(name);
-
         if (field != null) return field;
 
         AbstractSkriptClass parent = getParent();
@@ -94,12 +67,6 @@ public class SkriptClass {
         if (method.signature.isStatic() == isInstance()) return null;
 
         return method;
-    }
-
-    public @Nullable MethodSignature getAccessibleMethodSignature(String name) {
-        SkriptMethod method = getAccessibleMethod(name);
-        if (method == null) return null;
-        return method.signature;
     }
 
     public String getEffectiveName() {

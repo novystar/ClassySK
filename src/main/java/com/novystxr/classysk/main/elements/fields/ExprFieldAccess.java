@@ -47,17 +47,19 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
     @Override
     public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, SkriptParser.ParseResult parseResult) {
         String fieldName = StringUtils.getLowerCase(parseResult.regexes.get(matchedPattern));
-        fieldValidator = new FieldValidator(fieldName);
 
         if (matchedPattern == 0) {
+            fieldValidator = new FieldValidator(fieldName, false);
             skriptClassExpr = (Expression<SkriptClass>) expressions[0];
 
         } else {
+            fieldValidator = new FieldValidator(fieldName, true);
             String className = StringUtils.getLowerCase(parseResult.regexes.getFirst());
             AbstractSkriptClass skriptClass = ClassManager.getClass(className);
 
             // parse time validation for static access
             fieldValidator.validate(skriptClass);
+            fieldValidator.checkAccess(getParser());
             return (fieldValidator.isValid().isTrue());
         }
 
@@ -68,6 +70,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
     protected Object @Nullable [] get(Event event) {
         if (fieldValidator.isValid().isUnknown()) {
             fieldValidator.validate(skriptClassExpr.getSingle(event));
+            fieldValidator.checkAccess(event);
         } else {
             fieldValidator.updateInstance(skriptClassExpr, event);
         }
@@ -79,6 +82,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
     public void change(Event event, Object @Nullable [] delta, Changer.ChangeMode mode) {
         if (fieldValidator.isValid().isUnknown()) {
             fieldValidator.validate(skriptClassExpr.getSingle(event));
+            fieldValidator.checkAccess(event);
         } else {
             fieldValidator.updateInstance(skriptClassExpr, event);
         }

@@ -37,6 +37,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
 
         argsParser = new ArgumentParser(methodName, argsString, true);
         if (matchedPattern == 1) {
+            argsParser.setStatic();
             String className = StringUtils.getLowerCase(parseResult.regexes.getFirst());
             argsParser.parse(className);
 

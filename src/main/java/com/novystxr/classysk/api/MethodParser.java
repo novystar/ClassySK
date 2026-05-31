@@ -6,14 +6,15 @@ import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.Variable;
+import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.util.LiteralUtils;
 import ch.njol.skript.util.Utils;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.SkriptMethod.MethodSignature;
-import com.novystxr.classysk.api.SkriptMethod;
 import com.novystxr.classysk.api.util.ConverterUtils;
+import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -62,7 +63,6 @@ public class MethodParser {
     public static @Nullable SequencedMap<String, Expression<?>> parseReferenceArgs(SkriptMethod method, List<String> args) {
 
         MethodSignature signature = method.signature;
-
         SequencedMap<String, Expression<?>> result = new LinkedHashMap<>();
 
         if (signature.arguments() == null) {
@@ -225,6 +225,7 @@ public class MethodParser {
 
         }
         private final String methodName;
+        private boolean isStatic = false;
 
         private String argsString;
         private List<String> argStrings;
@@ -236,7 +237,12 @@ public class MethodParser {
         public SequencedMap<String, Expression<?>> parsedArgs;
         public SkriptMethod parsedMethod;
 
+        private MethodSignature signature;
         private final boolean expectsReturn;
+
+        public void setStatic() {
+            isStatic = true;
+        }
 
         private String className(@Nullable SkriptClass skriptClass) {
             if (skriptClass == null) return "unknown";
@@ -261,6 +267,7 @@ public class MethodParser {
             if (!ClassManager.classExists(className)) {
                 Skript.error("Cannot resolve class '%s'", className);
                 canParse = Kleenean.FALSE;
+                return;
             }
 
             parse(ClassManager.getClass(className));
@@ -268,7 +275,7 @@ public class MethodParser {
 
         public void parse(SkriptClass skriptClass) {
             this.skriptClass = skriptClass;
-            if (!canParse.isUnknown()) return;
+            canParse = Kleenean.UNKNOWN;
 
             if (skriptClass == null) {
                 illegalAccess();
@@ -276,11 +283,11 @@ public class MethodParser {
             }
 
             SkriptMethod method = skriptClass.getAccessibleMethod(methodName);
-            if (method == null || !method.signature.checkAccess(skriptClass)) {
+            if (method == null) {
                 illegalAccess();
                 return;
             }
-            MethodSignature signature = method.signature;
+            signature = method.signature;
 
             if (expectsReturn && signature.returnType() == null) {
                 Skript.error("This method can't return anything");
@@ -292,16 +299,33 @@ public class MethodParser {
                 if (signature.arguments() != null) {
                     Skript.error("Method has arguments but none provided");
                     canParse = Kleenean.FALSE;
-                    return;
-                } else {
-                    canParse = Kleenean.TRUE;
                 }
+                return;
             }
 
             parsedMethod = method;
+            if (canParse.isUnknown()) {
+                parsedArgs = parseReferenceArgs(parsedMethod, argStrings);
+                if (parsedArgs == null) canParse = Kleenean.FALSE;
+            }
+        }
 
-            parsedArgs = parseReferenceArgs(parsedMethod, argStrings);
-            canParse = Kleenean.get(parsedArgs != null);
+        public void checkAccess(Event event) {
+            if (canParse.isFalse()) return;
+            if (!signature.isAccessible(event, isStatic)) {
+                canParse = Kleenean.FALSE;
+                return;
+            }
+            canParse = Kleenean.TRUE;
+        }
+
+        public void checkAccess(ParserInstance parser) {
+            if (canParse == Kleenean.FALSE) return;
+            if (!signature.isAccessible(parser, isStatic)) {
+                canParse = Kleenean.FALSE;
+                return;
+            }
+            canParse = Kleenean.TRUE;
         }
 
         public Kleenean canParse() {

@@ -6,10 +6,7 @@ import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.lang.*;
 import ch.njol.skript.util.ClassInfoReference;
 import ch.njol.util.Kleenean;
-import com.novystxr.classysk.api.AbstractSkriptClass;
-import com.novystxr.classysk.api.AccessType;
-import com.novystxr.classysk.api.MethodParser;
-import com.novystxr.classysk.api.SkriptMethod;
+import com.novystxr.classysk.api.*;
 import com.novystxr.classysk.api.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.SkriptMethod.MethodSignature;
 import com.novystxr.classysk.api.event.MethodRegistrationEvent;
@@ -37,9 +34,7 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
 
     // TODO: functionNamePattern to allow snake case
 
-    private Trigger trigger;
-
-    private AccessType accessType;
+    private AccessModifiable.AccessType accessType;
     private boolean isStatic;
     private boolean returnPlural = false;
 
@@ -50,14 +45,15 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
     private SectionNode sectionNode;
     private SkriptMethod skriptMethod;
 
+    private AbstractSkriptClass skriptClass;
+
     @SuppressWarnings("unchecked")
     @Override
     public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, SkriptParser.ParseResult parseResult, SectionNode sectionNode, List<TriggerItem> triggerItems) {
-        if (!(getParser().getCurrentStructure() instanceof StructClass)) {
+        if (!(getParser().getCurrentStructure() instanceof StructClass structClass)) {
             Skript.error("Method declaration can only be used within a class structure.");
             return false;
         }
-
         methodName = StringUtils.getLowerCase(parseResult.regexes.get(0));
 
         // validate and parse method arguments
@@ -81,7 +77,7 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
             returnPlural = classInfoReference.getSingle().isPlural().isTrue();
         }
 
-        accessType = parseResult.hasTag("private") ? AccessType.PRIVATE : AccessType.PUBLIC;
+        accessType = parseResult.hasTag("private") ? AccessModifiable.AccessType.PRIVATE : AccessModifiable.AccessType.PUBLIC;
         isStatic = parseResult.hasTag("static");
 
         return true;
@@ -96,7 +92,7 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
             ClassInfo<?> returnType = null;
             if (classInfoExpr != null) returnType = classInfoExpr.getSingle(event);
 
-            MethodSignature signature = new MethodSignature(methodName, arguments, accessType, isStatic, returnType, returnPlural);
+            MethodSignature signature = new MethodSignature(methodName, arguments, accessType, isStatic, returnType, returnPlural, skriptClass);
             skriptMethod = new SkriptMethod(signature);
 
             skriptClass.putMethod(methodName, skriptMethod);
@@ -108,6 +104,7 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
 
     @SuppressWarnings("unchecked")
     public void evaluateTrigger() {
+        Trigger trigger;
         if (classInfoExpr != null) {
             trigger = loadReturnableSectionCode(sectionNode, "method body", new Class[]{MethodRunEvent.class});
         } else {

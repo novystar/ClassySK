@@ -6,7 +6,7 @@ import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.lang.*;
 import com.novystxr.classysk.api.AbstractSkriptClass;
 import com.novystxr.classysk.api.ClassManager;
-import com.novystxr.classysk.api.SkriptMethod;
+import com.novystxr.classysk.api.ParserClassData;
 import com.novystxr.classysk.api.event.FieldRegistrationEvent;
 import com.novystxr.classysk.api.event.MethodRegistrationEvent;
 import com.novystxr.classysk.api.util.StringUtils;
@@ -51,7 +51,7 @@ public class StructClass extends Structure {
         name = StringUtils.getLowerCase(parseResult.regexes.getFirst());
 
         if (classAlreadyExists()) {
-            Skript.error("A class structure with named '%s' already exists in a script", name);
+            Skript.error("A class structure named '%s' already exists in a script", name);
             return false;
         }
 
@@ -86,14 +86,14 @@ public class StructClass extends Structure {
         }
 
         Map<String, FieldSignature> fieldSignatures = new HashMap<>();
-        List<SecMethod> unparsedMethods = new ArrayList<>();
+        List<SecMethod> methods = new ArrayList<>();
         abstractSkriptClass.initMethodRegistry();
 
         List<Node> nodes = this.entryContainer.getUnhandledNodes();
 
         // parse fields
         for (Node node : nodes) {
-            if (node.getKey() != null) {
+            if (!(node instanceof SectionNode) && node.getKey() != null) {
                 Effect effect = Effect.parse(node.getKey(), "Invalid field declaration");
 
                 if (effect instanceof EffField fieldEffect) {
@@ -110,7 +110,6 @@ public class StructClass extends Structure {
                 }
             }
         }
-
         // parse methods
         for (Node node : nodes) {
             if (node instanceof SectionNode sectionNode) {
@@ -120,23 +119,25 @@ public class StructClass extends Structure {
 
                 if (section instanceof SecMethod secMethod) {
                     secMethod.walk(new MethodRegistrationEvent(abstractSkriptClass));
-                    unparsedMethods.add(secMethod);
+                    methods.add(secMethod);
                 } else {
                     Skript.error("Invalid Method Declaration");
                 }
             }
         }
+        // evaluate method triggers after initial registration so it will always know about other methods within a class
+        // requires extra parser data for context class during parse time access validation
+        ParserClassData data = getParser().getData(ParserClassData.class);
+        data.skriptClass = abstractSkriptClass;
 
-        // evaluate method triggers after initial registration
-        // so that methods will always know about other methods within a class
-        for (SecMethod secMethod : unparsedMethods) {
+        for (SecMethod secMethod : methods) {
             secMethod.evaluateTrigger();
         }
+        data.skriptClass = null;
 
         if (!fieldSignatures.isEmpty()) {
             abstractSkriptClass.updateFieldSignatureMap(fieldSignatures);
         }
-
         return true;
     }
 
@@ -151,7 +152,6 @@ public class StructClass extends Structure {
 
             }
         }
-
         if (ClassManager.classExists(name)) {
             if (ClassManager.getClass(name).getValidScript() == getParser().getCurrentScript()) exists = true;
         }

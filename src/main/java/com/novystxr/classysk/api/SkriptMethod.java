@@ -3,10 +3,8 @@ package com.novystxr.classysk.api;
 import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.Trigger;
-import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.variables.Variables;
 import com.novystxr.classysk.api.event.MethodRunEvent;
-import com.novystxr.classysk.main.elements.classes.StructClass;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 
@@ -34,20 +32,21 @@ public class SkriptMethod {
         boolean isStatic,
 
         @Nullable ClassInfo<?> returnType,
-        boolean returnPlural
-    ) {
-        public boolean checkAccess(SkriptClass skriptClass) {
-            ParserInstance parser = ParserInstance.get();
+        boolean returnPlural,
+        AbstractSkriptClass parentClass
 
-            if (accessType == AccessType.PRIVATE) {
-                if (parser.getCurrentStructure() instanceof StructClass structClass) {
-                    return structClass.getName().equals(skriptClass.name);
-                }
-            }
+    ) implements AccessModifiable {
+        @Override
+        public boolean checkAccess(@Nullable AbstractSkriptClass contextClass) {
+            if (accessType == AccessType.PRIVATE && contextClass != parentClass) return false;
 
             return true;
         }
 
+        @Override
+        public boolean checkContext(boolean isStatic) {
+            return isStatic == this.isStatic;
+        }
     }
 
     public SkriptMethod(MethodSignature signature) {

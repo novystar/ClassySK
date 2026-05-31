@@ -2,6 +2,7 @@ package com.novystxr.classysk.api;
 
 import ch.njol.skript.Skript;
 import ch.njol.skript.lang.Expression;
+import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.util.ConverterUtils;
@@ -15,14 +16,17 @@ public class FieldValidator {
 
     Kleenean isValid = Kleenean.UNKNOWN;
     FieldSignature signature;
+    boolean isStatic;
 
-    public FieldValidator(String fieldName) {
+    public FieldValidator(String fieldName, boolean isStatic) {
         this.fieldName = fieldName;
+        this.isStatic = isStatic;
     }
 
     public void validate(@Nullable SkriptClass skriptClass) {
         if (skriptClass == null) {
             isValid = Kleenean.FALSE;
+            Skript.error("Illegal Access! This class does not exist");
             return;
         }
 
@@ -33,24 +37,19 @@ public class FieldValidator {
             return;
         }
         this.skriptClass = skriptClass;
-
-        checkAccess();
     }
 
-    private void checkAccess() {
-        if (skriptClass == null) {
-            isValid = Kleenean.FALSE;
-            Skript.error("Illegal Access! This class does not exist");
-            return;
-        }
+    public void checkAccess(Event event) {
+        if (!signature.isAccessible(event, isStatic)) illegalAccess();
+    }
 
-        if (!skriptClass.checkFieldAccess(fieldName)) {
-            isValid = Kleenean.FALSE;
-            Skript.error("Illegal Access! Tried to access non-existent field '%s' or tried to access it from improper context", SkriptField.getEffectiveName(skriptClass, fieldName));
-            return;
-        }
+    public void checkAccess(ParserInstance parser) {
+        if (!signature.isAccessible(parser, isStatic)) illegalAccess();
+    }
 
-        isValid = Kleenean.TRUE;
+    private void illegalAccess() {
+        isValid = Kleenean.FALSE;
+        Skript.error("Illegal Access! Tried to access non-existent field '%s' or tried to access it from improper context", SkriptField.getEffectiveName(skriptClass, fieldName));
     }
 
     public void updateInstance(@Nullable Expression<SkriptClass> skriptClassExpr, Event event) {

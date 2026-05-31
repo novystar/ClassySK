@@ -7,15 +7,29 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 public class SkriptField {
-    public record FieldSignature(
+    public record FieldSignature (
             String name,
             ClassInfo<?> type,
             @Nullable List<Object> defaultValue,
 
             AccessType accessType,
             boolean isStatic,
-            boolean isPlural
-    ) {
+            boolean isPlural,
+
+            AbstractSkriptClass parentClass
+
+    ) implements AccessModifiable {
+
+        @Override
+        public boolean checkAccess(@Nullable AbstractSkriptClass contextClass) {
+            if (accessType == AccessType.PRIVATE && parentClass != contextClass) return false;
+            return true;
+        }
+
+        @Override
+        public boolean checkContext(boolean isStatic) {
+            return isStatic == this.isStatic;
+        }
 
         public @Nullable Object[] getDefaultValueArray() {
             if (defaultValue == null) return null;
@@ -31,11 +45,11 @@ public class SkriptField {
         }
 
         // constructor with array for convenience
-        public FieldSignature(String name, ClassInfo<?> type, Object[] defaultValue, AccessType accessType, boolean isStatic, boolean isPlural) {
+        public FieldSignature(String name, ClassInfo<?> type, Object[] defaultValue, AccessType accessType, boolean isStatic, boolean isPlural, AbstractSkriptClass parentClass) {
             List<Object> listValue = null;
             if (defaultValue != null) listValue = List.of(defaultValue);
 
-            this(name, type, listValue, accessType, isStatic, isPlural);
+            this(name, type, listValue, accessType, isStatic, isPlural, parentClass);
         }
 
     }

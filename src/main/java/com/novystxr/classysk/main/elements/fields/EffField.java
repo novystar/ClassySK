@@ -6,7 +6,7 @@ import ch.njol.skript.lang.*;
 import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.util.ClassInfoReference;
 import ch.njol.util.Kleenean;
-import com.novystxr.classysk.api.AccessType;
+import com.novystxr.classysk.api.AccessModifiable.AccessType;
 import com.novystxr.classysk.api.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.event.FieldRegistrationEvent;
 import com.novystxr.classysk.api.util.StringUtils;
@@ -96,7 +96,7 @@ public class EffField extends Effect {
         }
 
 
-        FieldSignature signature = new FieldSignature(fieldName, type, defaultValue, accessType, isStatic, isPlural);
+        FieldSignature signature = new FieldSignature(fieldName, type, defaultValue, accessType, isStatic, isPlural, event.skriptClass);
 
         if (!signature.canConvert(defaultValue)) {
 
