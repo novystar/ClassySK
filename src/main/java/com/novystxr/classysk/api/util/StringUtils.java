@@ -19,7 +19,7 @@ public class StringUtils {
     }
 
     public static String getLowerCase(MatchResult matchResult) {
-        if (SkriptConfig.caseInsensitiveVariables.value()) {
+        if (!SkriptConfig.caseInsensitiveVariables.value()) {
             return matchResult.group(0).trim();
         }
         return matchResult.group(0).trim().toLowerCase(Locale.ENGLISH);
