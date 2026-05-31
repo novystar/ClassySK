@@ -40,10 +40,12 @@ public class FieldValidator {
     }
 
     public void checkAccess(Event event) {
+        if (isValid.isFalse()) return;
         if (!signature.isAccessible(event, isStatic)) illegalAccess();
     }
 
     public void checkAccess(ParserInstance parser) {
+        if (isValid.isFalse()) return;
         if (!signature.isAccessible(parser, isStatic)) illegalAccess();
     }
 
