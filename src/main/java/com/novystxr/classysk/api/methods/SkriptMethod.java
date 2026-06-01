@@ -1,9 +1,11 @@
-package com.novystxr.classysk.api;
+package com.novystxr.classysk.api.methods;
 
-import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.Trigger;
 import ch.njol.skript.variables.Variables;
+import com.novystxr.classysk.api.AccessModifiable;
+import com.novystxr.classysk.api.classes.AbstractSkriptClass;
+import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.event.MethodRunEvent;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
@@ -17,7 +19,7 @@ public class SkriptMethod {
 
     public record MethodArgument(
             String name,
-            ClassInfo<?> type,
+            Class<?> type,
 
             @Nullable Expression<?> defaultValue,
             boolean isPlural
@@ -31,7 +33,7 @@ public class SkriptMethod {
         AccessType accessType,
         boolean isStatic,
 
-        @Nullable ClassInfo<?> returnType,
+        @Nullable Class<?> returnType,
         boolean returnPlural,
         AbstractSkriptClass parentClass
 
@@ -102,10 +104,15 @@ public class SkriptMethod {
         return null;
     }
 
-    public static String getEffectiveName(SkriptClass parentClass, @Nullable String methodName, @Nullable String args) {
+    public static String getEffectiveName(@Nullable SkriptClass parentClass, @Nullable String methodName, @Nullable String args) {
         if (args == null) args = "";
         if (methodName == null) methodName = "";
-        return parentClass.getEffectiveName()+"::"+methodName+"("+args+")";
+
+        String className;
+        if (parentClass != null) className = parentClass.getEffectiveName();
+        else className = "unknown";
+
+        return className+"::"+methodName+"("+args+")";
     }
 
 }

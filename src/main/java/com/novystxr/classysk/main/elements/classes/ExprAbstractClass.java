@@ -5,9 +5,9 @@ import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
-import com.novystxr.classysk.api.AbstractSkriptClass;
-import com.novystxr.classysk.api.ClassManager;
-import com.novystxr.classysk.api.util.StringUtils;
+import com.novystxr.classysk.api.classes.AbstractSkriptClass;
+import com.novystxr.classysk.api.classes.ClassManager;
+import com.novystxr.classysk.api.util.ClassyStringUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
@@ -27,7 +27,7 @@ public class ExprAbstractClass extends SimpleExpression<AbstractSkriptClass> {
 
     @Override
     public boolean init(Expression<?>[] expr, int matchedPattern, Kleenean isDelayed, SkriptParser.ParseResult parseResult) {
-        String name = StringUtils.getLowerCase(parseResult.regexes.getFirst());
+        String name = ClassyStringUtils.getLowerCase(parseResult.regexes.getFirst());
 
         if (!ClassManager.isAccessible(name)) {
             Skript.error("Class named " + name + " does not exist");

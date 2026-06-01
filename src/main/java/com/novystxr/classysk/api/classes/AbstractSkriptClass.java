@@ -1,17 +1,18 @@
-package com.novystxr.classysk.api;
+package com.novystxr.classysk.api.classes;
 
 import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.*;
 
 import ch.njol.skript.ScriptLoader;
-import com.novystxr.classysk.api.SkriptField.FieldSignature;
+import com.novystxr.classysk.api.fields.SkriptField;
+import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
+import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.api.util.ConverterUtils;
 import com.novystxr.classysk.main.elements.classes.StructClass;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.script.Script;
 import org.skriptlang.skript.lang.structure.Structure;
-import com.novystxr.classysk.api.SkriptMethod.MethodSignature;
 
 /** non instance skript class <br>
 * holds static fields/methods, instances and signature data <br>
@@ -133,7 +134,7 @@ public class AbstractSkriptClass extends SkriptClass {
             // if signature no longer exists or static context changed, ignore and use existing signature
             if (signature == null || signature.isStatic() != field.signature.isStatic()) return true;
 
-            if (ConverterUtils.canConvert(field.signature.type().getC(), field.getValue())) {
+            if (ConverterUtils.canConvert(field.signature.type(), field.getValue())) {
                 field.signature = signature;
             } else {
                 return true;
@@ -158,7 +159,7 @@ public class AbstractSkriptClass extends SkriptClass {
 
                 FieldSignature signature = fieldSignatures.get(field.signature.name());
 
-                if (ConverterUtils.canConvert(field.signature.type().getC(), field.getValue())) {
+                if (ConverterUtils.canConvert(field.signature.type(), field.getValue())) {
 
                     // if signature no longer exists or static context changed, ignore and use existing signature
                     if (signature == null || signature.isStatic() != field.signature.isStatic()) continue;

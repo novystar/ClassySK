@@ -4,12 +4,12 @@ import ch.njol.skript.Skript;
 import ch.njol.skript.config.Node;
 import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.lang.*;
-import com.novystxr.classysk.api.AbstractSkriptClass;
-import com.novystxr.classysk.api.ClassManager;
-import com.novystxr.classysk.api.ParserClassData;
+import com.novystxr.classysk.api.classes.AbstractSkriptClass;
+import com.novystxr.classysk.api.classes.ClassManager;
+import com.novystxr.classysk.api.classes.ParserClassData;
 import com.novystxr.classysk.api.event.FieldRegistrationEvent;
 import com.novystxr.classysk.api.event.MethodRegistrationEvent;
-import com.novystxr.classysk.api.util.StringUtils;
+import com.novystxr.classysk.api.util.ClassyStringUtils;
 import com.novystxr.classysk.main.elements.fields.EffField;
 import com.novystxr.classysk.main.elements.methods.SecMethod;
 import org.bukkit.event.Event;
@@ -20,7 +20,7 @@ import org.skriptlang.skript.lang.structure.Structure;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
 import org.skriptlang.skript.registration.SyntaxInfo;
 import org.skriptlang.skript.registration.SyntaxRegistry;
-import com.novystxr.classysk.api.SkriptField.FieldSignature;
+import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 
 import java.util.*;
 
@@ -48,7 +48,7 @@ public class StructClass extends Structure {
     public boolean init(Literal<?>[] args, int matchedPattern, SkriptParser.ParseResult parseResult, @UnknownNullability EntryContainer entryContainer) {
 
         this.entryContainer = entryContainer;
-        name = StringUtils.getLowerCase(parseResult.regexes.getFirst());
+        name = ClassyStringUtils.getLowerCase(parseResult.regexes.getFirst());
 
         if (classAlreadyExists()) {
             Skript.error("A class structure named '%s' already exists in a script", name);
@@ -91,7 +91,7 @@ public class StructClass extends Structure {
 
         List<Node> nodes = this.entryContainer.getUnhandledNodes();
 
-        // parse fields
+        // validate fields
         for (Node node : nodes) {
             if (!(node instanceof SectionNode) && node.getKey() != null) {
                 Effect effect = Effect.parse(node.getKey(), "Invalid field declaration");
@@ -110,7 +110,7 @@ public class StructClass extends Structure {
                 }
             }
         }
-        // parse methods
+        // validate methods
         for (Node node : nodes) {
             if (node instanceof SectionNode sectionNode) {
                 if (node.getKey() == null) continue;
@@ -126,7 +126,7 @@ public class StructClass extends Structure {
             }
         }
         // evaluate method triggers after initial registration so it will always know about other methods within a class
-        // requires extra parser data for context class during parse time access validation
+        // requires extra parser data for context class during validate time access validation
         ParserClassData data = getParser().getData(ParserClassData.class);
         data.skriptClass = abstractSkriptClass;
 

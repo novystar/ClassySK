@@ -1,4 +1,4 @@
-package com.novystxr.classysk.api;
+package com.novystxr.classysk.api.classes;
 
 import ch.njol.skript.lang.parser.ParserInstance;
 

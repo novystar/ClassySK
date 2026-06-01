@@ -1,13 +1,11 @@
 package com.novystxr.classysk.api.event;
 
-import com.novystxr.classysk.api.SkriptClass;
-import com.novystxr.classysk.api.SkriptMethod.MethodArgument;
+import com.novystxr.classysk.api.classes.SkriptClass;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
 import java.util.Map;
 
 public class MethodRunEvent extends Event {

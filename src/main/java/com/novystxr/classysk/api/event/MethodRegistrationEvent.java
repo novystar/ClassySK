@@ -1,6 +1,6 @@
 package com.novystxr.classysk.api.event;
 
-import com.novystxr.classysk.api.AbstractSkriptClass;
+import com.novystxr.classysk.api.classes.AbstractSkriptClass;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;

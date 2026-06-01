@@ -6,23 +6,18 @@ import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import ch.njol.util.coll.CollectionUtils;
-import com.novystxr.classysk.api.AbstractSkriptClass;
-import com.novystxr.classysk.api.ClassManager;
-import com.novystxr.classysk.api.FieldValidator;
-import com.novystxr.classysk.api.SkriptClass;
+import com.novystxr.classysk.api.classes.AbstractSkriptClass;
+import com.novystxr.classysk.api.classes.ClassManager;
+import com.novystxr.classysk.api.fields.FieldValidator;
+import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.util.ConverterUtils;
 import com.novystxr.classysk.api.util.ExpressionUtils;
-import com.novystxr.classysk.api.util.Logger;
-import com.novystxr.classysk.api.util.StringUtils;
+import com.novystxr.classysk.api.util.ClassyStringUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
 import org.skriptlang.skript.registration.SyntaxInfo;
 import org.skriptlang.skript.registration.SyntaxRegistry;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public class ExprFieldAccess extends SimpleExpression<Object> {
     public static void register(SyntaxRegistry registry) {
@@ -46,7 +41,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
     @SuppressWarnings("unchecked")
     @Override
     public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, SkriptParser.ParseResult parseResult) {
-        String fieldName = StringUtils.getLowerCase(parseResult.regexes.get(matchedPattern));
+        String fieldName = ClassyStringUtils.getLowerCase(parseResult.regexes.get(matchedPattern));
 
         if (matchedPattern == 0) {
             fieldValidator = new FieldValidator(fieldName, false);
@@ -54,10 +49,10 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
 
         } else {
             fieldValidator = new FieldValidator(fieldName, true);
-            String className = StringUtils.getLowerCase(parseResult.regexes.getFirst());
+            String className = ClassyStringUtils.getLowerCase(parseResult.regexes.getFirst());
             AbstractSkriptClass skriptClass = ClassManager.getClass(className);
 
-            // parse time validation for static access
+            // validate time validation for static access
             fieldValidator.validate(skriptClass);
             fieldValidator.checkAccess(getParser());
             return (fieldValidator.isValid().isTrue());
@@ -87,7 +82,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
             fieldValidator.updateInstance(skriptClassExpr, event);
         }
         if (!fieldValidator.isValid().isTrue()) return;
-        if (!ConverterUtils.canConvert(fieldValidator.signature().type().getC(), delta)) return;
+        if (!ConverterUtils.canConvert(fieldValidator.signature().type(), delta)) return;
 
         switch (mode) {
             case SET:
@@ -96,7 +91,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
                 fieldValidator.skriptClass().removeField(fieldValidator.fieldName());
             case REMOVE, ADD:
                 if (delta == null) return;
-                if (!ConverterUtils.canConvert(fieldValidator.signature().type().getC(), delta)) return;
+                if (!ConverterUtils.canConvert(fieldValidator.signature().type(), delta)) return;
 
                 Object[] initialValue = fieldValidator.skriptClass().getFieldValue(fieldValidator.fieldName());
                 if (fieldValidator.signature().isPlural()) {
@@ -115,7 +110,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
         };
         if (result) {
             if (fieldValidator.signature() != null) {
-                return CollectionUtils.array(fieldValidator.signature().type().getC());
+                return CollectionUtils.array(fieldValidator.signature().type());
             }
             return CollectionUtils.array(Object.class);
         }

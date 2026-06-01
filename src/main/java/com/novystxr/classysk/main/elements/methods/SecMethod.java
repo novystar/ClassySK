@@ -7,11 +7,14 @@ import ch.njol.skript.lang.*;
 import ch.njol.skript.util.ClassInfoReference;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.*;
-import com.novystxr.classysk.api.SkriptMethod.MethodArgument;
-import com.novystxr.classysk.api.SkriptMethod.MethodSignature;
+import com.novystxr.classysk.api.methods.SkriptMethod;
+import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
+import com.novystxr.classysk.api.methods.SkriptMethod.MethodSignature;
+import com.novystxr.classysk.api.classes.AbstractSkriptClass;
 import com.novystxr.classysk.api.event.MethodRegistrationEvent;
 import com.novystxr.classysk.api.event.MethodRunEvent;
-import com.novystxr.classysk.api.util.StringUtils;
+import com.novystxr.classysk.api.methods.ArgumentParser;
+import com.novystxr.classysk.api.util.ClassyStringUtils;
 import com.novystxr.classysk.main.elements.classes.StructClass;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
@@ -54,14 +57,14 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
             Skript.error("Method declaration can only be used within a class structure.");
             return false;
         }
-        methodName = StringUtils.getLowerCase(parseResult.regexes.get(0));
+        methodName = ClassyStringUtils.getLowerCase(parseResult.regexes.get(0));
 
-        // validate and parse method arguments
+        // validate and validate method arguments
         if (parseResult.hasTag("args")) {
             String argsString = parseResult.regexes.get(1).group();
 
             if (!argsString.isEmpty()) {
-                arguments = MethodParser.getParsedArgs(argsString);
+                arguments = ArgumentParser.parseArgs(argsString);
 
                 if (arguments == null) {
                     return false;
@@ -89,8 +92,10 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
         if (event instanceof MethodRegistrationEvent regEvent) {
 
             AbstractSkriptClass skriptClass = regEvent.skriptClass;
-            ClassInfo<?> returnType = null;
-            if (classInfoExpr != null) returnType = classInfoExpr.getSingle(event);
+            Class<?> returnType = null;
+            ClassInfo<?> classInfo = null;
+            if (classInfoExpr != null) classInfo = classInfoExpr.getSingle(event);
+            if (classInfo != null) returnType = classInfo.getC();
 
             MethodSignature signature = new MethodSignature(methodName, arguments, accessType, isStatic, returnType, returnPlural, skriptClass);
             skriptMethod = new SkriptMethod(signature);

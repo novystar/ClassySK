@@ -1,6 +1,8 @@
-package com.novystxr.classysk.api;
+package com.novystxr.classysk.api.fields;
 
-import ch.njol.skript.classes.ClassInfo;
+import com.novystxr.classysk.api.AccessModifiable;
+import com.novystxr.classysk.api.classes.AbstractSkriptClass;
+import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.util.ConverterUtils;
 import org.jetbrains.annotations.Nullable;
 
@@ -9,7 +11,7 @@ import java.util.List;
 public class SkriptField {
     public record FieldSignature (
             String name,
-            ClassInfo<?> type,
+            Class<?> type,
             @Nullable List<Object> defaultValue,
 
             AccessType accessType,
@@ -41,11 +43,11 @@ public class SkriptField {
             if (values == null) return true;
             if (values.length != 1 && isPlural) return false;
 
-            return ConverterUtils.canConvert(type.getC(), values);
+            return ConverterUtils.canConvert(type, values);
         }
 
         // constructor with array for convenience
-        public FieldSignature(String name, ClassInfo<?> type, Object[] defaultValue, AccessType accessType, boolean isStatic, boolean isPlural, AbstractSkriptClass parentClass) {
+        public FieldSignature(String name, Class<?> type, Object[] defaultValue, AccessType accessType, boolean isStatic, boolean isPlural, AbstractSkriptClass parentClass) {
             List<Object> listValue = null;
             if (defaultValue != null) listValue = List.of(defaultValue);
 
@@ -58,10 +60,10 @@ public class SkriptField {
         return parentClass.getEffectiveName()+"::"+fieldName;
     }
 
-    FieldSignature signature;
+    public FieldSignature signature;
     private Object[] value;
 
-    SkriptField(FieldSignature signature) {
+    public SkriptField(FieldSignature signature) {
         this.signature = signature;
         this.value = signature.getDefaultValueArray();
     }

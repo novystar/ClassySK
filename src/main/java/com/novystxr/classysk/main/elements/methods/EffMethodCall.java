@@ -4,10 +4,10 @@ import ch.njol.skript.lang.Effect;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.util.Kleenean;
-import com.novystxr.classysk.api.MethodParser;
-import com.novystxr.classysk.api.MethodParser.ArgumentParser;
-import com.novystxr.classysk.api.SkriptClass;
-import com.novystxr.classysk.api.util.StringUtils;
+import com.novystxr.classysk.api.methods.ArgumentParser;
+import com.novystxr.classysk.api.methods.ArgumentValidator;
+import com.novystxr.classysk.api.classes.SkriptClass;
+import com.novystxr.classysk.api.util.ClassyStringUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.SyntaxInfo;
@@ -18,7 +18,7 @@ public class EffMethodCall extends Effect {
         registry.register(
                 SyntaxRegistry.EFFECT,
                 SyntaxInfo.builder(EffMethodCall.class)
-                        .addPatterns(MethodParser.methodPattern, MethodParser.staticMethodPattern)
+                        .addPatterns(ArgumentParser.methodPattern, ArgumentParser.staticMethodPattern)
                         .supplier(EffMethodCall::new)
                         .priority(SyntaxInfo.PATTERN_MATCHES_EVERYTHING)
                         .build()
@@ -26,20 +26,22 @@ public class EffMethodCall extends Effect {
     }
 
     private Expression<SkriptClass> classExpr;
-    private ArgumentParser argsParser;
+    private ArgumentValidator argValidator;
 
     @SuppressWarnings("unchecked")
     @Override
     public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
-        String methodName = StringUtils.getLowerCase(parseResult.regexes.get(matchedPattern));
-        String argsString = (parseResult.hasTag("args")) ? StringUtils.getLowerCase(parseResult.regexes.get(matchedPattern+1)) : null;
-        argsParser = new ArgumentParser(methodName, argsString, false);
+        String methodName = ClassyStringUtils.getLowerCase(parseResult.regexes.get(matchedPattern));
+        String argsString = (parseResult.hasTag("args")) ? ClassyStringUtils.getLowerCase(parseResult.regexes.get(matchedPattern+1)) : null;
         if (matchedPattern == 1) {
-            argsParser.setStatic();
-            String className = StringUtils.getLowerCase(parseResult.regexes.getFirst());
-            argsParser.parse(className);
+            argValidator = new ArgumentValidator(methodName, argsString, false, true);
+            String className = ClassyStringUtils.getLowerCase(parseResult.regexes.getFirst());
+            argValidator.validate(className);
+            argValidator.checkAccess(getParser());
 
-            return argsParser.canParse().isTrue();
+            return argValidator.isValid().isTrue();
+        } else {
+            argValidator = new ArgumentValidator(methodName, argsString, false, false);
         }
         classExpr = (Expression<SkriptClass>) expressions[0];
         return true;
@@ -47,11 +49,14 @@ public class EffMethodCall extends Effect {
 
     @Override
     protected void execute(Event event) {
-        if (argsParser.canParse().isUnknown()) {
-            argsParser.parse(classExpr.getSingle(event));
+        if (argValidator.isValid().isUnknown()) {
+            argValidator.validate(classExpr.getSingle(event));
+            argValidator.checkAccess(event);
+        } else {
+            argValidator.updateInstance(classExpr, event);
         }
-        if (!argsParser.canParse().isTrue()) return;
-        argsParser.parsedMethod.run(event, argsParser.skriptClass, argsParser.parsedArgs);
+        if (!argValidator.isValid().isTrue()) return;
+        argValidator.parsedMethod.run(event, argValidator.skriptClass, argValidator.parsedArgs);
     }
 
     @Override

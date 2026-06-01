@@ -1,12 +1,11 @@
-package com.novystxr.classysk.api;
+package com.novystxr.classysk.api.classes;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import ch.njol.skript.lang.parser.ParserInstance;
-import com.novystxr.classysk.api.SkriptField.FieldSignature;
-import com.novystxr.classysk.api.util.Logger;
+import com.novystxr.classysk.api.fields.SkriptField;
+import com.novystxr.classysk.api.methods.SkriptMethod;
 import org.jetbrains.annotations.Nullable;
 
 public class SkriptClass {

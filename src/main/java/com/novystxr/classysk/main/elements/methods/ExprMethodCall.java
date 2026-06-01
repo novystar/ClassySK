@@ -4,10 +4,10 @@ import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
-import com.novystxr.classysk.api.MethodParser;
-import com.novystxr.classysk.api.MethodParser.ArgumentParser;
-import com.novystxr.classysk.api.SkriptClass;
-import com.novystxr.classysk.api.util.StringUtils;
+import com.novystxr.classysk.api.methods.ArgumentParser;
+import com.novystxr.classysk.api.methods.ArgumentValidator;
+import com.novystxr.classysk.api.classes.SkriptClass;
+import com.novystxr.classysk.api.util.ClassyStringUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
@@ -19,7 +19,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
         registry.register(
                 SyntaxRegistry.EXPRESSION,
                 DefaultSyntaxInfos.Expression.builder(ExprMethodCall.class, Object.class)
-                        .addPatterns(MethodParser.methodPattern, MethodParser.staticMethodPattern)
+                        .addPatterns(ArgumentParser.methodPattern, ArgumentParser.staticMethodPattern)
                         .supplier(ExprMethodCall::new)
                         .priority(SyntaxInfo.PATTERN_MATCHES_EVERYTHING)
                         .build()
@@ -27,21 +27,23 @@ public class ExprMethodCall extends SimpleExpression<Object> {
     }
 
     private Expression<SkriptClass> classExpr;
-    private ArgumentParser argsParser;
+    private ArgumentValidator argValidator;
 
     @SuppressWarnings("unchecked")
     @Override
     public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
-        String methodName = StringUtils.getLowerCase(parseResult.regexes.get(matchedPattern));
-        String argsString = (parseResult.hasTag("args")) ? StringUtils.getLowerCase(parseResult.regexes.get(matchedPattern+1)) : null;
+        String methodName = ClassyStringUtils.getLowerCase(parseResult.regexes.get(matchedPattern));
+        String argsString = (parseResult.hasTag("args")) ? ClassyStringUtils.getLowerCase(parseResult.regexes.get(matchedPattern+1)) : null;
 
-        argsParser = new ArgumentParser(methodName, argsString, true);
         if (matchedPattern == 1) {
-            argsParser.setStatic();
-            String className = StringUtils.getLowerCase(parseResult.regexes.getFirst());
-            argsParser.parse(className);
+            argValidator = new ArgumentValidator(methodName, argsString, true, true);
+            String className = ClassyStringUtils.getLowerCase(parseResult.regexes.getFirst());
+            argValidator.validate(className);
+            argValidator.checkAccess(getParser());
 
-            return argsParser.canParse().isTrue();
+            return argValidator.isValid().isTrue();
+        } else {
+            argValidator = new ArgumentValidator(methodName, argsString, true, false);
         }
         classExpr = (Expression<SkriptClass>) expressions[0];
         return true;
@@ -49,11 +51,14 @@ public class ExprMethodCall extends SimpleExpression<Object> {
 
     @Override
     protected Object @Nullable [] get(Event event) {
-        if (argsParser.canParse().isUnknown()) {
-            argsParser.parse(classExpr.getSingle(event));
+        if (argValidator.isValid().isUnknown()) {
+            argValidator.validate(classExpr.getSingle(event));
+            argValidator.checkAccess(event);
+        } else {
+            argValidator.updateInstance(classExpr, event);
         }
-        if (!argsParser.canParse().isTrue()) return null;
-        return argsParser.parsedMethod.run(event, argsParser.skriptClass, argsParser.parsedArgs);
+        if (!argValidator.isValid().isTrue()) return null;
+        return argValidator.parsedMethod.run(event, argValidator.skriptClass, argValidator.parsedArgs);
     }
 
     @Override
@@ -66,6 +71,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
         return true;
     }
 
+    // TODO: dynamic return type
     @Override
     public Class<?> getReturnType() {
         return Object.class;

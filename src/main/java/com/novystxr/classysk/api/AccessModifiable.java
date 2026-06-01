@@ -1,6 +1,8 @@
 package com.novystxr.classysk.api;
 
 import ch.njol.skript.lang.parser.ParserInstance;
+import com.novystxr.classysk.api.classes.AbstractSkriptClass;
+import com.novystxr.classysk.api.classes.ParserClassData;
 import com.novystxr.classysk.api.event.MethodRunEvent;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;

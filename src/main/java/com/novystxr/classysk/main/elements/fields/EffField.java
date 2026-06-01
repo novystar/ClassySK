@@ -7,9 +7,9 @@ import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.util.ClassInfoReference;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.AccessModifiable.AccessType;
-import com.novystxr.classysk.api.SkriptField.FieldSignature;
+import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.event.FieldRegistrationEvent;
-import com.novystxr.classysk.api.util.StringUtils;
+import com.novystxr.classysk.api.util.ClassyStringUtils;
 import com.novystxr.classysk.main.elements.classes.StructClass;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
@@ -48,7 +48,7 @@ public class EffField extends Effect {
             return false;
         }
 
-        fieldName = StringUtils.getLowerCase(parser.regexes.getFirst());
+        fieldName = ClassyStringUtils.getLowerCase(parser.regexes.getFirst());
         exprClassInfo = (Expression<ClassInfo<?>>) exprs[0];
 
         isPrivate = parser.hasTag("private");
@@ -69,7 +69,6 @@ public class EffField extends Effect {
     // I want to return while still using skript's syntax validation
     // so we get this weird effect that should never actually be executed (✿◡‿◡)
     public @Nullable FieldSignature getSignature(FieldRegistrationEvent event) {
-
         ClassInfo<?> type = null;
         if (exprClassInfo != null) type = exprClassInfo.getSingle(event);
 
@@ -77,9 +76,7 @@ public class EffField extends Effect {
             Skript.error("Could not resolve field type");
             return null;
         }
-
         AccessType accessType = (isPrivate) ? AccessType.PRIVATE : AccessType.PUBLIC;
-
         Object[] defaultValue = null;
 
         if (isPlural) {
@@ -94,16 +91,12 @@ public class EffField extends Effect {
                 return null;
             }
         }
-
-
-        FieldSignature signature = new FieldSignature(fieldName, type, defaultValue, accessType, isStatic, isPlural, event.skriptClass);
+        FieldSignature signature = new FieldSignature(fieldName, type.getC(), defaultValue, accessType, isStatic, isPlural, event.skriptClass);
 
         if (!signature.canConvert(defaultValue)) {
-
             Skript.error("Illegal field definition! Default value is not of required type: " + type.getName());
             return null;
         }
-
         return signature;
     }
 
@@ -114,15 +107,13 @@ public class EffField extends Effect {
 
     @Override
     public String toString(@Nullable Event event, boolean debug) {
-        SyntaxStringBuilder builder = new SyntaxStringBuilder(event, debug);
-
-        builder.appendIf(isPrivate, "private");
-        builder.appendIf(isStatic, "static");
-        builder.append(exprClassInfo);
-        builder.append("field");
-        builder.append(fieldName);
-        builder.appendIf(exprValue != null, exprValue);
-
-        return builder.toString();
+        return new SyntaxStringBuilder(event, debug)
+            .appendIf(isPrivate, "private")
+            .appendIf(isStatic, "static")
+            .append(exprClassInfo)
+            .append("field")
+            .append(fieldName)
+            .appendIf(exprValue != null, exprValue)
+            .toString();
     }
 }

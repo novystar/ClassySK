@@ -1,10 +1,11 @@
-package com.novystxr.classysk.api;
+package com.novystxr.classysk.api.fields;
 
 import ch.njol.skript.Skript;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.util.Kleenean;
-import com.novystxr.classysk.api.SkriptField.FieldSignature;
+import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
+import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.util.ConverterUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
@@ -66,6 +67,7 @@ public class FieldValidator {
         }
         if (this.skriptClass == null || newClass.getParent() != this.skriptClass.getParent()) {
             validate(newClass);
+            checkAccess(event);
         }
     }
 
@@ -86,7 +88,7 @@ public class FieldValidator {
     }
 
     public boolean canConvert(Object @Nullable [] delta) {
-        return ConverterUtils.canConvert(signature.type().getC(), delta);
+        return ConverterUtils.canConvert(signature.type(), delta);
     }
 
     public String fieldName() {

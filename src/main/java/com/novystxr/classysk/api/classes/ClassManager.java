@@ -1,4 +1,4 @@
-package com.novystxr.classysk.api;
+package com.novystxr.classysk.api.classes;
 
 import org.skriptlang.skript.lang.script.Script;
 
