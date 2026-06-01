@@ -63,6 +63,7 @@ public class ArgumentValidator {
             illegalAccess();
             return;
         }
+        parsedMethod = method;
         MethodSignature signature = method.signature;
         if (expectsReturn && signature.returnType() == null) {
             Skript.error("This method can't return anything");
@@ -76,7 +77,6 @@ public class ArgumentValidator {
             }
             return;
         }
-        parsedMethod = method;
         if (isValid.isUnknown()) {
             parsedArgs = ArgumentParser.parseReferenceArgs(signature, argStrings);
             if (parsedArgs == null) isValid = Kleenean.FALSE;
@@ -92,7 +92,7 @@ public class ArgumentValidator {
         isValid = Kleenean.TRUE;
     }
     public void checkAccess(ParserInstance parser) {
-        if (isValid == Kleenean.FALSE) return;
+        if (isValid.isFalse()) return;
         if (!parsedMethod.signature.isAccessible(parser, isStatic)) {
             isValid = Kleenean.FALSE;
             return;
