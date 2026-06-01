@@ -110,6 +110,11 @@ public class StructClass extends Structure {
                 }
             }
         }
+
+        if (!fieldSignatures.isEmpty()) {
+            abstractSkriptClass.updateFieldSignatureMap(fieldSignatures);
+        }
+
         // validate methods
         for (Node node : nodes) {
             if (node instanceof SectionNode sectionNode) {
@@ -134,10 +139,6 @@ public class StructClass extends Structure {
             secMethod.evaluateTrigger();
         }
         data.skriptClass = null;
-
-        if (!fieldSignatures.isEmpty()) {
-            abstractSkriptClass.updateFieldSignatureMap(fieldSignatures);
-        }
         return true;
     }
 

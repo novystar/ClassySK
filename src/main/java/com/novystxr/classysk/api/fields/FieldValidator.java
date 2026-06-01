@@ -26,28 +26,32 @@ public class FieldValidator {
 
     public void validate(@Nullable SkriptClass skriptClass) {
         if (skriptClass == null) {
-            isValid = Kleenean.FALSE;
             Skript.error("Illegal Access! This class does not exist");
-            return;
+            isValid = Kleenean.FALSE; return;
         }
 
         signature = skriptClass.getParent().getFieldSignature(fieldName);
         if (signature == null) {
             Skript.error("Unable to resolve field signature '%s'", SkriptField.getEffectiveName(skriptClass, fieldName));
-            isValid = Kleenean.FALSE;
-            return;
+            isValid = Kleenean.FALSE; return;
         }
         this.skriptClass = skriptClass;
     }
 
     public void checkAccess(Event event) {
         if (isValid.isFalse()) return;
-        if (!signature.isAccessible(event, isStatic)) illegalAccess();
+        if (!signature.isAccessible(event, isStatic)) {
+            illegalAccess(); return;
+        }
+        isValid = Kleenean.TRUE;
     }
 
     public void checkAccess(ParserInstance parser) {
         if (isValid.isFalse()) return;
-        if (!signature.isAccessible(parser, isStatic)) illegalAccess();
+        if (!signature.isAccessible(parser, isStatic)) {
+            illegalAccess(); return;
+        }
+        isValid = Kleenean.TRUE;
     }
 
     private void illegalAccess() {
@@ -82,7 +86,6 @@ public class FieldValidator {
     }
 
     public Object[] get() {
-        if (!isValid.isTrue()) return null;
         if (!skriptClass.getParent().accessible) return null;
         return skriptClass.getFieldValue(fieldName);
     }
