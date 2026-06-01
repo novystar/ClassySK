@@ -6,7 +6,6 @@ import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.lang.*;
 import com.novystxr.classysk.api.classes.AbstractSkriptClass;
 import com.novystxr.classysk.api.classes.ClassManager;
-import com.novystxr.classysk.api.classes.ParserClassData;
 import com.novystxr.classysk.api.event.FieldRegistrationEvent;
 import com.novystxr.classysk.api.event.MethodRegistrationEvent;
 import com.novystxr.classysk.api.util.ClassyStringUtils;
@@ -46,7 +45,6 @@ public class StructClass extends Structure {
 
     @Override
     public boolean init(Literal<?>[] args, int matchedPattern, SkriptParser.ParseResult parseResult, @UnknownNullability EntryContainer entryContainer) {
-
         this.entryContainer = entryContainer;
         name = ClassyStringUtils.getLowerCase(parseResult.regexes.getFirst());
 
@@ -54,12 +52,10 @@ public class StructClass extends Structure {
             Skript.error("A class structure named '%s' already exists in a script", name);
             return false;
         }
-
         if (name.equals("instance")) {
             Skript.error("A class can't be named 'instance' as this would create conflicts");
             return false;
         }
-
         return true;
     }
 
@@ -110,19 +106,14 @@ public class StructClass extends Structure {
                 }
             }
         }
-
-        if (!fieldSignatures.isEmpty()) {
-            abstractSkriptClass.updateFieldSignatureMap(fieldSignatures);
-        }
-
         // validate methods
         for (Node node : nodes) {
             if (node instanceof SectionNode sectionNode) {
                 if (node.getKey() == null) continue;
-
                 Section section = Section.parse(node.getKey(), null, sectionNode, null);
 
                 if (section instanceof SecMethod secMethod) {
+                    secMethod.contextClass = abstractSkriptClass;
                     secMethod.walk(new MethodRegistrationEvent(abstractSkriptClass));
                     methods.add(secMethod);
                 } else {
@@ -131,14 +122,13 @@ public class StructClass extends Structure {
             }
         }
         // evaluate method triggers after initial registration so it will always know about other methods within a class
-        // requires extra parser data for context class during validate time access validation
-        ParserClassData data = getParser().getData(ParserClassData.class);
-        data.skriptClass = abstractSkriptClass;
+        if (!fieldSignatures.isEmpty()) {
+            abstractSkriptClass.updateFieldSignatureMap(fieldSignatures);
+        }
 
         for (SecMethod secMethod : methods) {
             secMethod.evaluateTrigger();
         }
-        data.skriptClass = null;
         return true;
     }
 
@@ -156,7 +146,6 @@ public class StructClass extends Structure {
         if (ClassManager.classExists(name)) {
             if (ClassManager.getClass(name).getValidScript() == getParser().getCurrentScript()) exists = true;
         }
-
         return exists;
     }
 

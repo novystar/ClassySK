@@ -42,7 +42,6 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
     @Override
     public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, SkriptParser.ParseResult parseResult) {
         String fieldName = ClassyStringUtils.getLowerCase(parseResult.regexes.get(matchedPattern));
-
         if (matchedPattern == 0) {
             fieldValidator = new FieldValidator(fieldName, false);
             skriptClassExpr = (Expression<SkriptClass>) expressions[0];
@@ -57,7 +56,6 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
             fieldValidator.checkAccess(getParser());
             return (fieldValidator.isValid().isTrue());
         }
-
         return true;
     }
 

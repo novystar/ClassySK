@@ -6,7 +6,6 @@ import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.classes.SkriptClass;
-import com.novystxr.classysk.api.util.ConverterUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 
@@ -88,10 +87,6 @@ public class FieldValidator {
     public Object[] get() {
         if (!skriptClass.getParent().accessible) return null;
         return skriptClass.getFieldValue(fieldName);
-    }
-
-    public boolean canConvert(Object @Nullable [] delta) {
-        return ConverterUtils.canConvert(signature.type(), delta);
     }
 
     public String fieldName() {

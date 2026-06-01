@@ -7,6 +7,7 @@ import ch.njol.skript.lang.*;
 import ch.njol.skript.util.ClassInfoReference;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.*;
+import com.novystxr.classysk.api.classes.ParserClassData;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodSignature;
@@ -48,7 +49,7 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
     private SectionNode sectionNode;
     private SkriptMethod skriptMethod;
 
-    private AbstractSkriptClass skriptClass;
+    public AbstractSkriptClass contextClass;
 
     @SuppressWarnings("unchecked")
     @Override
@@ -110,12 +111,12 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
     @SuppressWarnings("unchecked")
     public void evaluateTrigger() {
         Trigger trigger;
+
         if (classInfoExpr != null) {
             trigger = loadReturnableSectionCode(sectionNode, "method body", new Class[]{MethodRunEvent.class});
         } else {
             trigger = loadCode(sectionNode, "method body", MethodRunEvent.class);
         }
-
         skriptMethod.setTrigger(trigger);
     }
 

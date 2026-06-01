@@ -20,8 +20,7 @@ public class ArgumentValidator {
         this.expectsReturn = expectsReturn;
 
         if (args == null || args.isEmpty()) {
-            noReferencedArgs = true;
-            return;
+            noReferencedArgs = true; return;
         }
         argsString = args;
         argStrings = ClassyStringUtils.splitArgs(args);
@@ -55,20 +54,17 @@ public class ArgumentValidator {
         this.skriptClass = skriptClass;
         isValid = Kleenean.UNKNOWN;
         if (skriptClass == null) {
-            illegalAccess();
-            return;
+            illegalAccess(); return;
         }
         SkriptMethod method = skriptClass.getAccessibleMethod(methodName);
         if (method == null) {
-            illegalAccess();
-            return;
+            illegalAccess(); return;
         }
         parsedMethod = method;
         MethodSignature signature = method.signature;
         if (expectsReturn && signature.returnType() == null) {
             Skript.error("This method can't return anything");
-            isValid = Kleenean.FALSE;
-            return;
+            isValid = Kleenean.FALSE; return;
         }
         if (noReferencedArgs) {
             if (signature.arguments() != null) {
@@ -86,16 +82,14 @@ public class ArgumentValidator {
     public void checkAccess(Event event) {
         if (isValid.isFalse()) return;
         if (!parsedMethod.signature.isAccessible(event, isStatic)) {
-            isValid = Kleenean.FALSE;
-            return;
+            isValid = Kleenean.FALSE; return;
         }
         isValid = Kleenean.TRUE;
     }
     public void checkAccess(ParserInstance parser) {
         if (isValid.isFalse()) return;
         if (!parsedMethod.signature.isAccessible(parser, isStatic)) {
-            isValid = Kleenean.FALSE;
-            return;
+            isValid = Kleenean.FALSE; return;
         }
         isValid = Kleenean.TRUE;
     }
