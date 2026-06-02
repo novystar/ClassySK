@@ -6,6 +6,7 @@ import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.SyntaxStringBuilder;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
+import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.classes.AbstractSkriptClass;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
@@ -23,7 +24,7 @@ public class ExprNewClassInstance extends SimpleExpression<SkriptClass> {
                 DefaultSyntaxInfos.Expression.builder(ExprNewClassInstance.class, SkriptClass.class)
                         .addPatterns(
                                 "new [instance of [class]] %abstractclasss%",
-                                "new instance of [class] <(\\w+)>"
+                                "new instance of [class] <"+ Classysk.namePattern +">"
                         )
                         .supplier(ExprNewClassInstance::new)
                         .build()

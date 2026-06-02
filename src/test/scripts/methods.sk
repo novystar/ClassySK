@@ -1,19 +1,19 @@
 class testMethods:
-	private field privateField: string = "im private"
-	private static field privateStaticField: string = "im private and static"
+	private privateField: string = "im private"
+	private static privateStaticField: string = "im private and static"
 
-	field publicMethodFired: boolean = false
+	public publicMethodFired: boolean = false
 
-	method publicMethod():
+	public publicMethod():
 		set instance::publicMethodFired to true
 
-	method publicMethodReturn() :: boolean:
+	public publicMethodReturn() :: boolean:
 		return true
 
-	method publicMethodArgs(arg1: string, arg2: boolean) :: string:
+	public publicMethodArgs(arg1: string, arg2: boolean) :: string:
 		return "arg1: %{_arg1}%, arg2: %{_arg2}%"
 
-	method privateAccessTest() :: boolean:
+	public privateAccessTest() :: boolean:
 		if instance::privateField is "im private":
 			if testMethods::privateStaticField is "im private and static":
 				return true

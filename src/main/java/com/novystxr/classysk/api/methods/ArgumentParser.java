@@ -9,6 +9,7 @@ import ch.njol.skript.lang.Variable;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.util.LiteralUtils;
 import ch.njol.skript.util.Utils;
+import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodSignature;
 import com.novystxr.classysk.api.util.ConverterUtils;
@@ -29,8 +30,8 @@ public class ArgumentParser {
     private static final Pattern namedArgPattern =
             Pattern.compile("^[^:(){}\\s\",]+:\\s?.+$");
 
-    public static final String methodPattern = "%classs%\\:\\:<(\\w+)>\\([args:<.+>]\\)";
-    public static final String staticMethodPattern = "<(\\w+)>\\:\\:<(\\w+)>\\([args:<.+>]\\)";
+    public static final String methodPattern = "%classs%\\:\\:<"+ Classysk.namePattern +">\\([args:<.+>]\\)";
+    public static final String staticMethodPattern = "<"+ Classysk.namePattern +">\\:\\:<"+ Classysk.namePattern +">\\([args:<.+>]\\)";
 
     public static @Nullable SequencedMap<String, Expression<?>> parseReferenceArgs(MethodSignature signature, List<String> args) {
         SequencedMap<String, Expression<?>> result = new LinkedHashMap<>();

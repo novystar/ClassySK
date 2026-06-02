@@ -4,6 +4,7 @@ import ch.njol.skript.Skript;
 import ch.njol.skript.config.Node;
 import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.lang.*;
+import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.classes.AbstractSkriptClass;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.event.FieldRegistrationEvent;
@@ -28,7 +29,7 @@ public class StructClass extends Structure {
         registry.register(
                 SyntaxRegistry.STRUCTURE,
                 SyntaxInfo.Structure.builder(StructClass.class)
-                        .addPattern("class <(\\w+)>")
+                        .addPattern("class <"+ Classysk.namePattern +">")
                         .supplier(StructClass::new)
                         .nodeType(DefaultSyntaxInfos.Structure.NodeType.BOTH)
                         .build()

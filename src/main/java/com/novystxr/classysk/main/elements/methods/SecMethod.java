@@ -6,6 +6,7 @@ import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.lang.*;
 import ch.njol.skript.util.ClassInfoReference;
 import ch.njol.util.Kleenean;
+import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.*;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
@@ -28,14 +29,12 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
         registry.register(
                 SyntaxRegistry.SECTION,
                 SyntaxInfo.builder(SecMethod.class)
-                        .addPattern("[public|:private] [:static] method <(\\w+)>\\([args:<.+>]\\) [(\\:\\:|returns) %-classinfo%]")
+                        .addPattern("(public|:private) [:static] <"+ Classysk.namePattern +">\\([args:<.+>]\\) [(\\:\\:|returns) %-classinfo%]")
                         .supplier(SecMethod::new)
                         .build()
 
         );
     }
-
-    // TODO: functionNamePattern to allow snake case
 
     private AccessModifiable.AccessType accessType;
     private boolean isStatic;

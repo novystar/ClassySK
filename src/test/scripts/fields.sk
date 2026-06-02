@@ -1,11 +1,11 @@
 using error catching
 
 class testFields:
-	private field privateField: string = "im private"
-	field publicField: string = "im public"
+	private privateField: string = "im private"
+	public publicField: string = "im public"
 
-	static field publicStaticField: string = "im public and static"
-	private static field privateStaticField: string = "im private and static"
+	public static publicStaticField: string = "im public and static"
+	private static privateStaticField: string = "im private and static"
 
 test "ClassySK - Fields":
 	set {_instance} to new instance of testFields

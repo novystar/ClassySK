@@ -6,6 +6,7 @@ import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import ch.njol.util.coll.CollectionUtils;
+import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.classes.AbstractSkriptClass;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.fields.FieldValidator;
@@ -25,8 +26,8 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
                 SyntaxRegistry.EXPRESSION,
                 DefaultSyntaxInfos.Expression.builder(ExprFieldAccess.class, Object.class)
                         .addPatterns(
-                                "%classs%\\:\\:<(\\w+)>",
-                                "<(\\w+)>\\:\\:<(\\w+)>"
+                                "%classs%\\:\\:<"+ Classysk.namePattern +">",
+                                "<"+ Classysk.namePattern +">\\:\\:<"+ Classysk.namePattern +">"
                         )
                         .supplier(ExprFieldAccess::new)
                         .priority(SyntaxInfo.PATTERN_MATCHES_EVERYTHING)

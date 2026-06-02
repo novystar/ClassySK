@@ -6,6 +6,7 @@ import ch.njol.skript.lang.*;
 import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.util.ClassInfoReference;
 import ch.njol.util.Kleenean;
+import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.AccessModifiable.AccessType;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.event.FieldRegistrationEvent;
@@ -21,7 +22,7 @@ public class EffField extends Effect {
         registry.register(
                 SyntaxRegistry.EFFECT,
                 SyntaxInfo.builder(EffField.class)
-                        .addPattern("[:private] [:static] field <(\\w+)>\\: %-classinfo% [=[ ]%-objects%]")
+                        .addPattern("(public|:private) [:static] <"+ Classysk.namePattern +">\\: %-classinfo% [=[ ]%-objects%]")
                         .supplier(EffField::new)
                         .build()
         );
