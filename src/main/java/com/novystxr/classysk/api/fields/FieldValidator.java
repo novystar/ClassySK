@@ -4,6 +4,7 @@ import ch.njol.skript.Skript;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.util.Kleenean;
+import com.novystxr.classysk.api.classes.AbstractSkriptClass;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import org.bukkit.event.Event;
@@ -28,8 +29,13 @@ public class FieldValidator {
             Skript.error("Illegal Access! This class does not exist");
             isValid = Kleenean.FALSE; return;
         }
+        AbstractSkriptClass parentClass = skriptClass.getParent();
+        if (parentClass == null) {
+            Skript.error("Class structure of this instance no longer exists");
+            isValid = Kleenean.FALSE; return;
+        }
+        signature = parentClass.getFieldSignature(fieldName);
 
-        signature = skriptClass.getParent().getFieldSignature(fieldName);
         if (signature == null) {
             Skript.error("Unable to resolve field signature '%s'", SkriptField.getEffectiveName(skriptClass, fieldName));
             isValid = Kleenean.FALSE; return;
