@@ -80,13 +80,14 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
             fieldValidator.updateInstance(skriptClassExpr, event);
         }
         if (!fieldValidator.isValid().isTrue()) return;
-        if (!ConverterUtils.canConvert(fieldValidator.signature().type(), delta)) return;
 
         switch (mode) {
             case SET:
                 fieldValidator.attemptSetValue(delta);
+                break;
             case RESET, DELETE:
                 fieldValidator.skriptClass().removeField(fieldValidator.fieldName());
+                break;
             case REMOVE, ADD:
                 if (delta == null) return;
                 if (!ConverterUtils.canConvert(fieldValidator.signature().type(), delta)) return;
@@ -97,6 +98,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
                     return;
                 }
                 fieldValidator.attemptSetValue(ExpressionUtils.mutatePlural(initialValue, delta, mode));
+                break;
         }
     }
 

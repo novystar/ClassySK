@@ -75,7 +75,6 @@ public class FieldValidator {
     }
 
     public void attemptSetValue(@Nullable Object[] delta) {
-        if (!isValid.isTrue()) return;
         if (delta == null) return;
         if (!skriptClass.getParent().accessible) return;
 
