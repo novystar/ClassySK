@@ -24,7 +24,7 @@ public class ExprNewClassInstance extends SimpleExpression<SkriptClass> {
                 DefaultSyntaxInfos.Expression.builder(ExprNewClassInstance.class, SkriptClass.class)
                         .addPatterns(
                                 "new [instance of [class]] %abstractclasss%",
-                                "new instance of [class] <"+ Classysk.namePattern +">"
+                                "new instance of [class] <"+ Classysk.classNamePattern +">"
                         )
                         .supplier(ExprNewClassInstance::new)
                         .build()

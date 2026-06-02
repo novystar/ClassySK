@@ -29,7 +29,7 @@ public class StructClass extends Structure {
         registry.register(
                 SyntaxRegistry.STRUCTURE,
                 SyntaxInfo.Structure.builder(StructClass.class)
-                        .addPattern("class <"+ Classysk.namePattern +">")
+                        .addPattern("class <"+ Classysk.classNamePattern +">")
                         .supplier(StructClass::new)
                         .nodeType(DefaultSyntaxInfos.Structure.NodeType.BOTH)
                         .build()
@@ -51,10 +51,6 @@ public class StructClass extends Structure {
 
         if (classAlreadyExists()) {
             Skript.error("A class structure named '%s' already exists in a script", name);
-            return false;
-        }
-        if (name.equals("instance")) {
-            Skript.error("A class can't be named 'instance' as this would create conflicts");
             return false;
         }
         return true;
@@ -102,8 +98,6 @@ public class StructClass extends Structure {
                     }
 
                     if (signature != null) fieldSignatures.put(signature.name(), signature);
-                } else {
-                    Skript.error("You can only define fields and methods here");
                 }
             }
         }
@@ -111,14 +105,12 @@ public class StructClass extends Structure {
         for (Node node : nodes) {
             if (node instanceof SectionNode sectionNode) {
                 if (node.getKey() == null) continue;
-                Section section = Section.parse(node.getKey(), null, sectionNode, null);
+                Section section = Section.parse(node.getKey(), "Invalid Method Declaration", sectionNode, null);
 
                 if (section instanceof SecMethod secMethod) {
                     secMethod.contextClass = abstractSkriptClass;
                     secMethod.walk(new MethodRegistrationEvent(abstractSkriptClass));
                     methods.add(secMethod);
-                } else {
-                    Skript.error("Invalid Method Declaration");
                 }
             }
         }

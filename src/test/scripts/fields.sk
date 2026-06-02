@@ -1,6 +1,6 @@
 using error catching
 
-class testFields:
+class TestFields:
 	private privateField: string = "im private"
 	public publicField: string = "im public"
 
@@ -8,14 +8,14 @@ class testFields:
 	private static privateStaticField: string = "im private and static"
 
 test "ClassySK - Fields":
-	set {_instance} to new instance of testFields
+	set {_instance} to new instance of TestFields
 
 	assert {_instance}::publicStaticField is not set with "Attempt to access static field from instance"
-	assert testFields::publicStaticField is "im public and static" with "public access (static)"
-	assert testFields::privateStaticField is not set with "Attempt to access private field from outside class structure (static)"
+	assert TestFields::publicStaticField is "im public and static" with "public access (static)"
+	assert TestFields::privateStaticField is not set with "Attempt to access private field from outside class structure (static)"
 
 	catch runtime errors:
-		set {_publicFieldValue} to testFields::publicField
+		set {_publicFieldValue} to TestFields::publicField
 	assert {_publicFieldValue} is not set with "Attempt to access instance field from static context"
 	
 	assert {_instance}::publicField is "im public" with "public access (instance)"

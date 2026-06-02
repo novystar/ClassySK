@@ -1,4 +1,4 @@
-class testMethods:
+class TestMethods:
 	private privateField: string = "im private"
 	private static privateStaticField: string = "im private and static"
 
@@ -15,11 +15,11 @@ class testMethods:
 
 	public privateAccessTest() :: boolean:
 		if instance::privateField is "im private":
-			if testMethods::privateStaticField is "im private and static":
+			if TestMethods::privateStaticField is "im private and static":
 				return true
 
 test "ClassySK - Methods":
-	set {_instance} to new instance of testMethods
+	set {_instance} to new instance of TestMethods
 
 	{_instance}::publicMethod()
 

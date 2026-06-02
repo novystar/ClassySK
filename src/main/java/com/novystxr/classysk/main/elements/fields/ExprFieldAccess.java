@@ -27,7 +27,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
                 DefaultSyntaxInfos.Expression.builder(ExprFieldAccess.class, Object.class)
                         .addPatterns(
                                 "%classs%\\:\\:<"+ Classysk.namePattern +">",
-                                "<"+ Classysk.namePattern +">\\:\\:<"+ Classysk.namePattern +">"
+                                "<"+ Classysk.classNamePattern +">\\:\\:<"+ Classysk.namePattern +">"
                         )
                         .supplier(ExprFieldAccess::new)
                         .priority(SyntaxInfo.PATTERN_MATCHES_EVERYTHING)

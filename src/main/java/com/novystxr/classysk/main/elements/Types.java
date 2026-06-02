@@ -6,6 +6,7 @@ import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.registrations.Classes;
 import com.novystxr.classysk.api.classes.AbstractSkriptClass;
 import com.novystxr.classysk.api.classes.SkriptClass;
+import org.jspecify.annotations.Nullable;
 
 public class Types {
     public static void register() {
@@ -35,7 +36,7 @@ public class Types {
 
         Classes.registerClass(
                 new ClassInfo<>(SkriptClass.class, "class")
-                        .user("^class (instance)?(es)?$")
+                        .user("^class( instance)?(es)?$")
                         .name("Class")
                         .description("Instance version of a class, holds non-static methods and fields, representing a created instance of a class.")
                         .parser(new Parser<>() {

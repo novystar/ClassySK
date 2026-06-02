@@ -18,7 +18,7 @@ public class ExprAbstractClass extends SimpleExpression<AbstractSkriptClass> {
     public static void register(SyntaxRegistry registry) {
         registry.register(SyntaxRegistry.EXPRESSION,
                 DefaultSyntaxInfos.Expression.builder(ExprAbstractClass.class, AbstractSkriptClass.class)
-                        .addPattern("(static|abstract) instance of [class] <"+ Classysk.namePattern +">")
+                        .addPattern("(static|abstract) instance of [class] <"+ Classysk.classNamePattern +">")
                         .supplier(ExprAbstractClass::new)
                         .build()
         );
