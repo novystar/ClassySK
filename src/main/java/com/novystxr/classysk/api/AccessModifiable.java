@@ -13,6 +13,8 @@ public interface AccessModifiable {
     boolean checkContext(boolean isStatic);
 
     default boolean isAccessible(ParserInstance parser, boolean isStatic) {
+        if (!checkContext(isStatic)) return false;
+
         if (parser.getCurrentStructure() instanceof SectionSkriptEvent secSkriptEvent) {
             if (secSkriptEvent.getSection() instanceof SecMethod secMethod) {
                 return checkAccess(secMethod.contextClass);
@@ -24,11 +26,10 @@ public interface AccessModifiable {
     default boolean isAccessible(Event event, boolean isStatic) {
         if (!checkContext(isStatic)) return false;
 
-        AbstractSkriptClass contextClass = null;
         if (event instanceof MethodRunEvent runEvent) {
-            contextClass = runEvent.instance.getParent();
+            return checkAccess(runEvent.instance.getParent());
         }
-        return (checkAccess(contextClass));
+        return checkAccess(null);
     }
 
     enum AccessType {
