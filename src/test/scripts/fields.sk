@@ -1,3 +1,5 @@
+using error catching
+
 class testFields:
 	private field privateField: string = "im private"
 	field publicField: string = "im public"
