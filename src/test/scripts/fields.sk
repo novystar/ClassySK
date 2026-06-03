@@ -14,7 +14,7 @@ test "ClassySK - Fields":
 	assert TestFields::publicStaticField is "im public and static" with "public access (static)"
 	assert TestFields::privateStaticField is not set with "Attempt to access private field from outside class structure (static)"
 
-	catch runtime errors:
+	catch errors:
 		set {_publicFieldValue} to TestFields::publicField
 	assert {_publicFieldValue} is not set with "Attempt to access instance field from static context"
 	
