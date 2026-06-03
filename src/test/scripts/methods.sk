@@ -28,12 +28,6 @@ test "ClassySK - Methods":
 
 	assert {_instance}::publicMethodArgs("test", true) is "arg1: test, arg2: true" with "method valid args"
 
-	parse:
-		broadcast 1
-		set {_publicMethodArgsValue} to {_instance}::publicMethodArgs("test")
-		broadcast 2
-	assert {_publicMethodArgsValue} is not set
-	parse:
-		set {_result} to {_instance}::publicMethodArgs("test", true, false)
-	assert {_result} is not set
+	assert {_instance}::publicMethodArgs("test") is not set
+	assert {_instance}::publicMethodArgs("test", true, false) is not set
 	assert {_instance}::privateAccessTest() is true with "private access from method"
