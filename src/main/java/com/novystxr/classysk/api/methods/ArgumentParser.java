@@ -14,9 +14,11 @@ import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodSignature;
 import com.novystxr.classysk.api.util.ConverterUtils;
 import com.novystxr.classysk.api.util.ClassyStringUtils;
+import com.novystxr.classysk.api.util.Logger;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,13 +36,10 @@ public class ArgumentParser {
     public static final String staticMethodPattern = "<"+ Classysk.classNamePattern +">\\:\\:<"+ Classysk.namePattern +">\\([args:<.+>]\\)";
 
     public static @Nullable SequencedMap<String, Expression<?>> parseReferenceArgs(MethodSignature signature, List<String> args) {
+        if (args == null) args = new ArrayList<>();
         SequencedMap<String, Expression<?>> result = new LinkedHashMap<>();
         if (signature.arguments() == null) {
             Skript.error("This method does not have any arguments");
-            return null;
-        }
-        if (signature.arguments().size() != args.size()) {
-            Skript.error("Expected "+signature.arguments().size()+" arguments but got "+args.size());
             return null;
         }
         boolean hasNamedArgs = false;
@@ -64,6 +63,10 @@ public class ArgumentParser {
                 }
                 hasNamedArgs = true;
             } else {
+                if (i == argNames.size()) {
+                    Skript.error("Argument %s out of bounds for this method signature", i + 1);
+                    return null;
+                }
                 argName = argNames.get(i);
                 argUnparsedExpr = arg;
                 hasUnnamedArgs = true;
@@ -84,6 +87,17 @@ public class ArgumentParser {
                     return null;
                 }
             }
+        }
+        // resolve defaults, if one cannot resolve then fail parse
+        for (Entry<String, MethodArgument> entry : signature.arguments().entrySet()) {
+            if (referenceArgNames.contains(entry.getKey())) continue;
+
+            Expression<?> defaultValue = entry.getValue().defaultValue();
+            if (defaultValue == null) {
+                Skript.error("Could not resolve some argument(s) for this method call");
+                return null;
+            }
+            result.put(entry.getKey(), defaultValue);
         }
         return result;
     }

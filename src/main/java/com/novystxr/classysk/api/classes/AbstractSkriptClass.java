@@ -144,11 +144,9 @@ public class AbstractSkriptClass extends SkriptClass {
 
         });
 
-        /*
-        if field value cannot convert to new template, the instance is orphaned
+        /* if field value cannot convert to new template, the instance is orphaned
         this means it will never be checked for field updates, and the abstract class is now unaware of it
-        the instance is still aware of its parent though, and can create newly defined fields regardless
-        */
+        the instance is still aware of its parent though, and can create newly defined fields regardless */
         instances.removeIf(reference -> {
             SkriptClass instance = reference.get();
             if (instance == null) {

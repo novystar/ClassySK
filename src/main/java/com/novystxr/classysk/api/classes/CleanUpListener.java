@@ -14,8 +14,8 @@ public class CleanUpListener implements ScriptLoadEvent {
 
     @Override
     public void onLoad(ParserInstance parser, Script script) {
-
         Collection<AbstractSkriptClass> classes = new HashSet<>(ClassManager.getClasses());
+
         for (AbstractSkriptClass skriptClass : classes) {
             if (skriptClass.getValidScript() == script && !skriptClass.accessible) {
                 ClassManager.removeClass(skriptClass.name);

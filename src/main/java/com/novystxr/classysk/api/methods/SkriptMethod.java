@@ -10,10 +10,8 @@ import com.novystxr.classysk.api.event.MethodRunEvent;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.SequencedMap;
 
 public class SkriptMethod {
 
@@ -48,6 +46,17 @@ public class SkriptMethod {
         @Override
         public boolean checkContext(boolean isStatic) {
             return isStatic == this.isStatic;
+        }
+
+        public boolean hasRequiredArgs() {
+            if (arguments == null) return false;
+
+            for (MethodArgument arg : arguments.sequencedValues()) {
+                if (arg.defaultValue == null) {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 

@@ -18,6 +18,7 @@ public class ArgumentValidator {
     public ArgumentValidator(String methodName, @Nullable String args, boolean expectsReturn, boolean isStatic) {
         this.methodName = methodName;
         this.expectsReturn = expectsReturn;
+        this.isStatic = isStatic;
 
         if (args == null || args.isEmpty()) {
             noReferencedArgs = true; return;
@@ -36,7 +37,7 @@ public class ArgumentValidator {
 
     private final String methodName;
     private String argsString;
-    private final boolean isStatic = false;
+    private final boolean isStatic;
 
     private List<String> argStrings;
     private final boolean expectsReturn;
@@ -67,11 +68,11 @@ public class ArgumentValidator {
             isValid = Kleenean.FALSE; return;
         }
         if (noReferencedArgs) {
-            if (signature.arguments() != null) {
+            if (signature.hasRequiredArgs()) {
                 Skript.error("Method has arguments but none provided");
-                isValid = Kleenean.FALSE;
+                isValid = Kleenean.FALSE; return;
             }
-            return;
+            if (signature.arguments() == null) return;
         }
         if (isValid.isUnknown()) {
             parsedArgs = ArgumentParser.parseReferenceArgs(signature, argStrings);

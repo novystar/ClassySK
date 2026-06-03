@@ -20,7 +20,7 @@ public class EffMethodCall extends Effect {
                 SyntaxInfo.builder(EffMethodCall.class)
                         .addPatterns(ArgumentParser.methodPattern, ArgumentParser.staticMethodPattern)
                         .supplier(EffMethodCall::new)
-                        .priority(SyntaxInfo.PATTERN_MATCHES_EVERYTHING)
+                        .priority(SyntaxInfo.SIMPLE)
                         .build()
         );
     }
