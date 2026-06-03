@@ -14,7 +14,6 @@ import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodSignature;
 import com.novystxr.classysk.api.util.ConverterUtils;
 import com.novystxr.classysk.api.util.ClassyStringUtils;
-import com.novystxr.classysk.api.util.Logger;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
