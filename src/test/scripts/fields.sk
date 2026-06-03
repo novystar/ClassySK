@@ -1,3 +1,5 @@
+using error catching
+
 class TestFields:
 	private privateField: string = "im private"
 	public publicField: string = "im public"
@@ -8,7 +10,8 @@ class TestFields:
 test "ClassySK - Fields":
 	set {_instance} to new instance of TestFields
 
-	assert {_instance}::publicStaticField is not set with "Attempt to access static field from instance"
+	catch errors:
+		assert {_instance}::publicStaticField is not set with "Attempt to access static field from instance"
 	assert TestFields::publicStaticField is "im public and static" with "public access (static)"
 	assert TestFields::privateStaticField is not set with "Attempt to access private field from outside class structure (static)"
 
@@ -17,4 +20,5 @@ test "ClassySK - Fields":
 	assert {_publicFieldValue} is not set with "Attempt to access instance field from static context"
 	
 	assert {_instance}::publicField is "im public" with "public access (instance)"
-	assert {_instance}::privateField is not set with "Attempt to access private field from outside class structure (instance)"
+	catch errors:
+		assert {_instance}::privateField is not set with "Attempt to access private field from outside class structure (instance)"
