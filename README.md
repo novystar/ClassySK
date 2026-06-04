@@ -4,11 +4,10 @@ This repo and project are currently a wip!! I have made this public so that i ca
 
 ## Roadmap
 Nothing here is set in stone but these are my future ambitions regarding the project
-- [ ] Converters: ability to recognize objects of certain types as a class instance, with methods using class values (e.g. class-player)
+- [ ] Converters: ability to recognize objects of certain types as an implicit class instance, with methods using class values (e.g. class-player)
 - [ ] Method overloading: multiple methods with the same name and different arguments
 - [ ] Inheritance: extending other classes
 - [ ] File specific access modifiers: local, folder/package-private
-- [ ] Reflection: Syntax for getting fields and methods
-- [ ] Serialization: Map fields to list variables, Map list variables to fields
+- [ ] Reflection: Syntax for getting fields and methods and mapping fields to variable lists
 - [ ] Final/Constant fields
 - [ ] Tables: unstructured "classes" that contain untyped fields (ideally serializable)
