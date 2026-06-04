@@ -10,4 +10,4 @@ Nothing here is set in stone but these are my future ambitions regarding the pro
 - [ ] File specific access modifiers: local, folder/package-private
 - [ ] Reflection: Syntax for getting fields and methods and mapping fields to variable lists
 - [ ] Final/Constant fields
-- [ ] Tables: unstructured "classes" that contain untyped fields (ideally serializable)
+- [ ] Tables: unstructured "classes" that contain untyped fields (serializable)
