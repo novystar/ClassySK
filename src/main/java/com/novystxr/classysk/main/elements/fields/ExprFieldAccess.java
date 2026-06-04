@@ -21,8 +21,6 @@ import org.skriptlang.skript.registration.DefaultSyntaxInfos;
 import org.skriptlang.skript.registration.SyntaxInfo;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
-import java.util.List;
-
 public class ExprFieldAccess extends SimpleExpression<Object> {
     public static void register(SyntaxRegistry registry) {
         registry.register(
