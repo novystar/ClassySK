@@ -11,6 +11,7 @@ import com.novystxr.classysk.api.classes.AbstractSkriptClass;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.fields.FieldValidator;
 import com.novystxr.classysk.api.classes.SkriptClass;
+import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.util.ConverterUtils;
 import com.novystxr.classysk.api.util.ExpressionUtils;
 import com.novystxr.classysk.api.util.ClassyStringUtils;
@@ -19,6 +20,8 @@ import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
 import org.skriptlang.skript.registration.SyntaxInfo;
 import org.skriptlang.skript.registration.SyntaxRegistry;
+
+import java.util.List;
 
 public class ExprFieldAccess extends SimpleExpression<Object> {
     public static void register(SyntaxRegistry registry) {
@@ -98,7 +101,13 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
                     fieldValidator.attemptSetValue(ExpressionUtils.mutatePlural(initialValue, delta, mode));
                     return;
                 }
-                fieldValidator.attemptSetValue(ExpressionUtils.mutatePlural(initialValue, delta, mode));
+
+                Object[] setValue = ExpressionUtils.mutateSingle(initialValue, delta, mode, fieldValidator.signature().type());
+                if (setValue == null) {
+                    error("Could not mutate single value "+ delta[0] +" into field " + SkriptField.getEffectiveName(fieldValidator.skriptClass(), fieldValidator.fieldName()));
+                    return;
+                }
+                fieldValidator.attemptSetValue(ExpressionUtils.mutateSingle(initialValue, delta, mode, fieldValidator.signature().type()));
                 break;
         }
     }

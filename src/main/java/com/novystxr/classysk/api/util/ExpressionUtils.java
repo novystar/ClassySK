@@ -1,7 +1,14 @@
 package com.novystxr.classysk.api.util;
 
+import ch.njol.skript.classes.Changer;
 import ch.njol.skript.classes.Changer.ChangeMode;
+import ch.njol.skript.registrations.Classes;
+import ch.njol.skript.util.Utils;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.lang.arithmetic.Arithmetics;
+import org.skriptlang.skript.lang.arithmetic.OperationInfo;
+import org.skriptlang.skript.lang.arithmetic.Operator;
+import org.skriptlang.skript.lang.converter.Converters;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,27 +29,56 @@ public class ExpressionUtils {
         return result.toArray();
     }
 
-    public static Object[] mutateSingle(Object @Nullable [] initialValue, Object[] delta, ChangeMode changeMode) {
-        if (initialValue == null) initialValue = new Object[]{0};
-        if (delta.length == 0) return initialValue;
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public static @Nullable Object[] mutateSingle(Object @Nullable [] arrayValue, Object[] delta, ChangeMode changeMode, Class<?> type) {
+        Operator operator = (changeMode == ChangeMode.ADD) ? Operator.ADDITION : Operator.SUBTRACTION;
+        boolean changed = false;
 
-        if (delta instanceof Double[] numberDelta && initialValue[0] instanceof Double initialNumber) {
-            double sum = 0.0;
-            for (Double value : numberDelta) {
-                sum = sum + value;
-            }
-
-            double result;
-            if (changeMode == ChangeMode.ADD) {
-                result = initialNumber + sum;
-            } else {
-                result = initialNumber - sum;
-            }
-
-            return new Object[]{result};
-
+        Object unwrappedValue = null;
+        if (arrayValue != null && arrayValue.length > 0) {
+            unwrappedValue = arrayValue[0];
         }
 
-        return initialValue;
+        if (!Arithmetics.getOperations(operator, type).isEmpty()) {
+            for (Object newValue : delta) {
+
+                Class<?> targetClass = type;
+                if (type == Object.class) targetClass = newValue.getClass();
+
+                OperationInfo info = Arithmetics.lookupOperationInfo(operator, targetClass, type, newValue.getClass());
+                if (info == null) continue;
+
+                Object value = unwrappedValue;
+                if (unwrappedValue == null) value = Arithmetics.getDefaultValue(info.left());
+                if (value == null) continue;
+
+                unwrappedValue = info.operation().calculate(value, newValue);
+                changed = true;
+            }
+            if (changed) {
+                return new Object[]{unwrappedValue};
+            } else {
+                return null;
+            }
+        }
+
+        Changer<?> changer = Classes.getSuperClassInfo(type).getChanger();
+        if (changer == null) return null;
+
+        Class<?>[] classes = changer.acceptChange(changeMode);
+        if (classes == null) return null;
+
+        Class<?>[] componentClasses = new Class<?>[classes.length];
+        for (int i = 0; i < classes.length; i++) {
+            componentClasses[i] = classes[i].isArray() ? classes[i].getComponentType() : classes[i];
+        }
+
+        Object[] convertedDelta = Converters.convert(delta, (Class[]) componentClasses, Utils.getSuperType(componentClasses));
+
+        if (convertedDelta.length > 0) {
+            Changer.ChangerUtils.change(changer, arrayValue, convertedDelta, changeMode);
+            return arrayValue;
+        }
+        return null;
     }
 }

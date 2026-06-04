@@ -1,7 +1,5 @@
 package com.novystxr.classysk.api.classes;
 
-import org.skriptlang.skript.lang.script.Script;
-
 import java.util.*;
 
 public class ClassManager {
@@ -27,18 +25,6 @@ public class ClassManager {
     public static boolean isAccessible(String name) {
         if (!classExists(name)) return false;
         return getClass(name).accessible;
-    }
-
-    public static List<AbstractSkriptClass> getInaccessibleScriptClasses(Script script) {
-
-        List<AbstractSkriptClass> result = new ArrayList<>();
-
-        for (AbstractSkriptClass skriptClass : classMap.values()) {
-            if (skriptClass.getValidScript() == script && !skriptClass.accessible) {
-                result.add(skriptClass);
-            }
-        }
-        return result;
     }
 
     public static Collection<AbstractSkriptClass> getClasses() {
