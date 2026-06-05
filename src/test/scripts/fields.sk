@@ -1,3 +1,5 @@
+using error catching
+
 class TestFields:
 	private privateField: string = "im private"
 	public publicField: string = "im public"
@@ -5,7 +7,7 @@ class TestFields:
 	public static publicStaticField: string = "im public and static"
 	private static privateStaticField: string = "im private and static"
 
-test "ClassySK - Fields":
+test "ClassySK - Field Access":
 	set {_instance} to new instance of TestFields
 
 	assert {_instance}::publicStaticField is not set with "Attempt to access static field from instance"
@@ -15,7 +17,88 @@ test "ClassySK - Fields":
 	assert last parse logs is set with "Attempt to access private field from outside class structure (static)"
 	parse:
 		set {_var} to TestFields::publicField
-	assert last parse logs is set with "Attempt to access instance field from static context"
+	assert last parse logs is set with "Attempt to access instance field from static context"'
 	
 	assert {_instance}::publicField is "im public" with "public access (instance)"
 	assert {_instance}::privateField is not set with "Attempt to access private field from outside class structure (instance)"
+
+class TestTyped:
+	public intField: integer
+	public strField: string
+	public objField: object
+	public numField: number
+
+	public static static_intField: integer
+	public static static_strField: string
+	public static static_objField: object
+	public static static_numField: number
+
+test "ClassySK - Typed Fields":
+	set {_instance} to new instance of TestFields
+
+	catch runtime errors:
+
+		# int
+		set {_instance}::intField to 1
+		assert {_instance}::intField is 1 with "Set int field to 1"
+		set {_instance}::intField to 1.5
+		assert {_instance}::intField is 1 with "Attempt set int field to float"
+
+		# str
+		set {_instance}::strField to "test"
+		assert {_instance}::strField is "test" with "Set string field to string"
+		set {_instance}::strField to 1
+		assert {_instance}::strField is "test" with "Attempt set string field to int"
+
+		# obj
+		set {_instance}::objField to "test"
+		assert {_instance}::objField is "test" with "Set object field to string"
+		set {_instance}::objField to 1
+		assert {_instance}::objField is 1 with "Set object field to int"
+		set {_instance}::objField to 1.5
+		assert {_instance}::objField is 1.5 with "Set object field to float"
+		set {_instance}::objField to true
+		assert {_instance}::objField is true with "Set object field to boolean"
+
+		# num
+		set {_instance}::numField to 1.5
+		assert {_instance}::numField is 1.5 with "Set num field to float"
+		set {_instance}::numField to 1
+		assert {_instance}::numField is 1 with "Set num field to int"
+		set {_instance}::numField to "test"
+		assert {_instance}::numField is 1 with "Attempt Set num field to string"
+	
+test "ClassySK - Typed Static Fields":
+
+	# int
+	set TestTyped::static_intField to 1
+	assert TestTyped::static_intField is 1 with "Set int field to 1)"
+	parse:
+		set TestTyped::static_intField to 1.5
+	assert last parse logs is set with "Attempt set int field to float"
+
+	# str
+	set TestTyped::static_strField to "test"
+	assert TestTyped::static_strField is "test" with "Set string field to string"
+	parse:
+		set TestTyped::static_strField to 1
+	ssert last parse logs is set with "Attempt set string field to int"
+
+	# obj
+	set TestTyped::static_objField to "test"
+	assert TestTyped::static_objField is "test" with "Set object field to string"
+	set TestTyped::static_objField to 1
+	assert TestTyped::static_objField is 1 with "Set object field to int"
+	set TestTyped::static_objField to 1.5
+	assert TestTyped::static_objField is 1.5 with "Set object field to float"
+	set TestTyped::static_objField to true
+	assert TestTyped::static_objField is true with "Set object field to boolean"
+
+	# num
+	set TestTyped::static_numField to 1.5
+	assert TestTyped::static_numField is 1.5 with "Set num field to float"
+	set TestTyped::static_numField to 1
+	assert TestTyped::static_numField is 1 with "Set num field to int"
+	parse:
+		set TestTyped::static_numField to "test"
+	ssert last parse logs is set with "Attempt Set num field to string"
