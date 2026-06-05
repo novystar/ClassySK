@@ -34,7 +34,7 @@ class TestTyped:
 	public static static_numField: number
 
 test "ClassySK - Typed Fields":
-	set {_instance} to new instance of TestFields
+	set {_instance} to new instance of TestTyped
 
 	# int
 	set {_instance}::intField to 1
