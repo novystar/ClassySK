@@ -5,7 +5,7 @@ import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.methods.ArgumentParser;
-import com.novystxr.classysk.api.methods.ArgumentValidator;
+import com.novystxr.classysk.api.methods.MethodValidator;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.util.ClassyStringUtils;
 import org.bukkit.event.Event;
@@ -26,7 +26,7 @@ public class EffMethodCall extends Effect {
     }
 
     private Expression<SkriptClass> classExpr;
-    private ArgumentValidator argValidator;
+    private MethodValidator validator;
 
     @SuppressWarnings("unchecked")
     @Override
@@ -34,14 +34,14 @@ public class EffMethodCall extends Effect {
         String methodName = ClassyStringUtils.getLowerCase(parseResult.regexes.get(matchedPattern));
         String argsString = (parseResult.hasTag("args")) ? ClassyStringUtils.getLowerCase(parseResult.regexes.get(matchedPattern+1)) : null;
         if (matchedPattern == 1) {
-            argValidator = new ArgumentValidator(methodName, argsString, false, true);
+            validator = new MethodValidator(methodName, argsString, false, true);
             String className = ClassyStringUtils.getLowerCase(parseResult.regexes.getFirst());
-            argValidator.validate(className);
-            argValidator.checkAccess(getParser());
+            validator.validate(className);
+            validator.checkAccess(getParser());
 
-            return argValidator.isValid().isTrue();
+            return validator.isValid().isTrue();
         } else {
-            argValidator = new ArgumentValidator(methodName, argsString, false, false);
+            validator = new MethodValidator(methodName, argsString, false, false);
         }
         classExpr = (Expression<SkriptClass>) expressions[0];
         return true;
@@ -49,14 +49,14 @@ public class EffMethodCall extends Effect {
 
     @Override
     protected void execute(Event event) {
-        if (argValidator.isValid().isUnknown()) {
-            argValidator.validate(classExpr.getSingle(event));
-            argValidator.checkAccess(event);
+        if (validator.isValid().isUnknown()) {
+            validator.validate(classExpr.getSingle(event));
+            validator.checkAccess(event);
         } else {
-            argValidator.updateInstance(classExpr, event);
+            validator.updateInstance(classExpr, event);
         }
-        if (!argValidator.isValid().isTrue()) return;
-        argValidator.parsedMethod.run(event, argValidator.skriptClass, argValidator.parsedArgs);
+        if (!validator.isValid().isTrue()) return;
+        validator.parsedMethod.run(event, validator.skriptClass, validator.parsedArgs);
     }
 
     @Override

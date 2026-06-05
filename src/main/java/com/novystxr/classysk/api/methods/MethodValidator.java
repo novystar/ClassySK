@@ -14,8 +14,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.SequencedMap;
 
-public class ArgumentValidator {
-    public ArgumentValidator(String methodName, @Nullable String args, boolean expectsReturn, boolean isStatic) {
+public class MethodValidator {
+    public MethodValidator(String methodName, @Nullable String args, boolean expectsReturn, boolean isStatic) {
         this.methodName = methodName;
         this.expectsReturn = expectsReturn;
         this.isStatic = isStatic;

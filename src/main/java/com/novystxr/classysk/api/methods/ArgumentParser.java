@@ -71,7 +71,6 @@ public class ArgumentParser {
                 hasUnnamedArgs = true;
             }
             Class<?> type = signature.arguments().get(argName).type();
-
             SkriptParser parser = new SkriptParser(argUnparsedExpr, SkriptParser.ALL_FLAGS, ParseContext.DEFAULT);
 
             Expression<?> argExpr = LiteralUtils.defendExpression(parser.parseExpression(type));
@@ -135,7 +134,10 @@ public class ArgumentParser {
             Expression<?> defaultValue = null;
 
             if (unparsedDefault != null) {
-                defaultValue = new SkriptParser(unparsedDefault, SkriptParser.ALL_FLAGS, ParseContext.DEFAULT).parseExpression(type);
+
+                SkriptParser parser = new SkriptParser(unparsedDefault, SkriptParser.ALL_FLAGS, ParseContext.DEFAULT);
+
+                defaultValue = LiteralUtils.defendExpression(parser.parseExpression(type));
                 String variableName = unparsedDefault.endsWith("*") ? unparsedDefault.substring(0, unparsedDefault.length() - 3) + (!isPlural ? "::1" : "") : unparsedDefault;
 
                 if (!Variable.isValidVariableName(variableName, true, false)) {
