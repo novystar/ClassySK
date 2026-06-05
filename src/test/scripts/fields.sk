@@ -14,10 +14,10 @@ test "ClassySK - Field Access":
 	assert TestFields::publicStaticField is "im public and static" with "public access (static)"
 	parse:
 		set {_var} to TestFields::privateStaticField
-	assert last parse logs is set with "Attempt to access private field from outside class structure (static)"
+	assert (last parse logs is set) with "Attempt to access private field from outside class structure (static)"
 	parse:
 		set {_var} to TestFields::publicField
-	assert last parse logs is set with "Attempt to access instance field from static context"'
+	assert (last parse logs is set) with "Attempt to access instance field from static context"'
 	
 	assert {_instance}::publicField is "im public" with "public access (instance)"
 	assert {_instance}::privateField is not set with "Attempt to access private field from outside class structure (instance)"
@@ -72,17 +72,17 @@ test "ClassySK - Typed Static Fields":
 
 	# int
 	set TestTyped::static_intField to 1
-	assert TestTyped::static_intField is 1 with "Set int field to 1)"
+	assert TestTyped::static_intField is 1 with "Set int field to 1"
 	parse:
 		set TestTyped::static_intField to 1.5
-	assert last parse logs is set with "Attempt set int field to float"
+	assert (last parse logs is set) with "Attempt set int field to float"
 
 	# str
 	set TestTyped::static_strField to "test"
 	assert TestTyped::static_strField is "test" with "Set string field to string"
 	parse:
 		set TestTyped::static_strField to 1
-	ssert last parse logs is set with "Attempt set string field to int"
+	assert (last parse logs is set) with "Attempt set string field to int"
 
 	# obj
 	set TestTyped::static_objField to "test"
@@ -101,4 +101,4 @@ test "ClassySK - Typed Static Fields":
 	assert TestTyped::static_numField is 1 with "Set num field to int"
 	parse:
 		set TestTyped::static_numField to "test"
-	ssert last parse logs is set with "Attempt Set num field to string"
+	assert (last parse logs is set) with "Attempt Set num field to string"
