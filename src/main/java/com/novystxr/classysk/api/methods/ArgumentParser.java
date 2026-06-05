@@ -71,9 +71,12 @@ public class ArgumentParser {
                 hasUnnamedArgs = true;
             }
             Class<?> type = signature.arguments().get(argName).type();
-            Expression<?> argExpr = new SkriptParser(argUnparsedExpr, SkriptParser.ALL_FLAGS, ParseContext.DEFAULT).parseExpression(type);
 
+            SkriptParser parser = new SkriptParser(argUnparsedExpr, SkriptParser.ALL_FLAGS, ParseContext.DEFAULT);
+
+            Expression<?> argExpr = LiteralUtils.defendExpression(parser.parseExpression(type));
             if (argExpr == null) return null;
+
             result.put(argName, argExpr);
         }
         List<String> referenceArgNames = new ArrayList<>(result.keySet());
