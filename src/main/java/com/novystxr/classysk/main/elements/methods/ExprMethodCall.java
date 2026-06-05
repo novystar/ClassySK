@@ -63,12 +63,14 @@ public class ExprMethodCall extends SimpleExpression<Object> {
 
     @Override
     public boolean isSingle() {
-        return false;
+        if (validator.parsedMethod == null) return false;
+        return !validator.parsedMethod.signature.returnPlural();
     }
 
     @Override
     public boolean canBeSingle() {
-        return true;
+        if (validator.parsedMethod == null) return true;
+        return !validator.parsedMethod.signature.returnPlural();
     }
 
     // TODO: dynamic return type

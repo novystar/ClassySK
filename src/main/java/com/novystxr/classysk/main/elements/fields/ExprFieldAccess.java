@@ -15,6 +15,7 @@ import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.util.ConverterUtils;
 import com.novystxr.classysk.api.util.ExpressionUtils;
 import com.novystxr.classysk.api.util.ClassyStringUtils;
+import com.novystxr.classysk.api.util.Logger;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
@@ -133,12 +134,14 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
 
     @Override
     public boolean isSingle() {
-        return false;
+        if (fieldValidator.signature() == null) return false;
+        return !fieldValidator.signature().isPlural();
     }
 
     @Override
     public boolean canBeSingle() {
-        return true;
+        if (fieldValidator.signature() == null) return true;
+        return !fieldValidator.signature().isPlural();
     }
 
     @Override
