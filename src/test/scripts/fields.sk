@@ -144,4 +144,5 @@ test "ClassySK - Default Field Values":
 	assert {_instance}::boolsField is true, false
 	assert {_instance}::objsField is 1, 1.4, "test", true
 
+	broadcast "DEBUG: %size of {-testInvalidDefaults::*}% --- %{-testInvalidDefaults::*}%"
 	assert size of {-testInvalidDefaults::*} is 9
