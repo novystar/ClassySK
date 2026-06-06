@@ -101,3 +101,53 @@ test "ClassySK - Typed Static Fields":
 	parse:
 		set TestTyped::static_numField to "test"
 	assert last parse logs is set with "Attempt Set num field to string"
+
+class TestDefaults:
+	public intField: integer = 1
+	public numField: number = 1.5
+	public strField: string = "test"
+	public boolField: boolean = true
+	public objField: object = "test"
+
+	public intsField: integers = 1, 2, 3, 4
+	public numsField: numbers = 1, 2.5, 3.1, 4
+	public strsField: strings = "test", "hello"
+	public boolsField: booleans = true, false
+	public objsField: objects = 1, 1.4, "test", true
+
+	public invalid_intField: integer = 1.5
+	public invalid_numField: number = "not a number"
+	public invalid_strField: string = 1
+	public invalid_boolField: boolean = 1
+
+	public invalid_intsField: integers = 1, 2, 1.5, 3, 4
+	public invalid_numsField: numbers = 1, 2.5, 3.1, 4, "a"
+	public invalid_strsField: strings = "test", "hello", true
+	public invalid_boolsField: booleans = true, false, "test"
+
+test "ClassySK - Default Field Values":
+	set {_instance} to new instance of TestDefaults
+
+	assert {_instance}::intField is 1
+	assert {_instance}::numField is 1.5
+	assert {_instance}::strField is "test"
+	assert {_instance}::boolField is true
+	assert {_instance}::objField is "test"
+
+	assert {_instance}::intsField is 1, 2, 3, 4
+	assert {_instance}::numsField is 1, 2.5, 3.1, 4
+	assert {_instance}::strsField is "test", "hello"
+	assert {_instance}::boolsField is true, false
+	assert {_instance}::objsField is 1, 1.4, "test", true
+
+	assert {_instance}::invalid_intField is not set
+	assert {_instance}::invalid_numField is not set
+	assert {_instance}::invalid_strField is not set
+	assert {_instance}::invalid_boolField is not set
+	assert {_instance}::invalid_objField is not set
+
+	assert {_instance}::invalid_intsField is not set
+	assert {_instance}::invalid_numsField is not set
+	assert {_instance}::invalid_strsField is not set
+	assert {_instance}::invalid_boolsField is not set
+	assert {_instance}::invalid_objsField is not set
