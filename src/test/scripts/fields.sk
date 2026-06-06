@@ -113,6 +113,22 @@ class TestDefaults:
 	public boolsField: booleans = true, false
 	public objsField: objects = 1, 1.4, "test", true
 
+parse:
+	results: {-testInvalidDefaults::*}
+	code:
+		class TestInvalidDefaults:
+			public intField: integer = 1.5
+			public numField: number = "not a number"
+			public strField: string = 1
+			public boolField: boolean = 1
+
+			public intsField: integers = 1, 2, 3, 4, 1.5
+			public numsField: numbers = 1, 2.5, 3.1, 4, true
+			public strsField: strings = "test", "hello", true
+			public boolsField: booleans = true, false, 1
+
+			public singleNumField: number = 1, 2, 3, 4
+
 test "ClassySK - Default Field Values":
 	set {_instance} to new instance of TestDefaults
 
@@ -127,3 +143,5 @@ test "ClassySK - Default Field Values":
 	assert {_instance}::strsField is "test", "hello"
 	assert {_instance}::boolsField is true, false
 	assert {_instance}::objsField is 1, 1.4, "test", true
+
+	assert size of {-testInvalidDefaults::*} is 9
