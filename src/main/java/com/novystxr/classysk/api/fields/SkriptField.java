@@ -40,7 +40,7 @@ public class SkriptField {
 
         public boolean canConvert(Object[] values) {
             if (values == null) return true;
-            if (values.length != 1 && isPlural) return false;
+            if (values.length != 1 && !isPlural) return false;
 
             return ConverterUtils.canConvert(type, values);
         }
