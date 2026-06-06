@@ -39,11 +39,17 @@ public class ExpressionUtils {
             unwrappedValue = arrayValue[0];
         }
 
+        if (type == Object.class) {
+            if (unwrappedValue != null) type = unwrappedValue.getClass();
+        }
+
         if (!Arithmetics.getOperations(operator, type).isEmpty()) {
             for (Object newValue : delta) {
 
                 Class<?> targetClass = type;
-                if (type == Object.class) targetClass = newValue.getClass();
+                if (type == Object.class)  {
+                    targetClass = newValue.getClass();
+                }
 
                 OperationInfo info = Arithmetics.lookupOperationInfo(operator, targetClass, type, newValue.getClass());
                 if (info == null) continue;
