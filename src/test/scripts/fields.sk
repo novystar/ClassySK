@@ -71,9 +71,10 @@ test "ClassySK - Typed Static Fields":
 	# int
 	set TestTyped::static_intField to 1
 	assert TestTyped::static_intField is 1 with "Set int field to 1"
-	parse:
-		set TestTyped::static_intField to 1.5
-	assert last parse logs is set with "Attempt set int field to float"
+
+	# acceptChange does not care about int/number distinction, should be caught at runtime by canConvert
+	set TestTyped::static_intField to 1.5
+	assert TestTyped::static_intField is 1 with "Attempt set int field to float"
 
 	# str
 	set TestTyped::static_strField to "test"
