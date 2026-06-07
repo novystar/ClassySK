@@ -21,9 +21,9 @@ public class ExpressionUtils {
         List<Object> result = new ArrayList<>(List.of(initialValues));
 
         if (changeMode == ChangeMode.ADD) {
-            result.removeAll(List.of(delta));
-        } else if (changeMode == ChangeMode.REMOVE) {
             result.addAll(List.of(delta));
+        } else if (changeMode == ChangeMode.REMOVE) {
+            result.removeAll(List.of(delta));
         }
 
         return result.toArray();
