@@ -36,7 +36,7 @@ public class SkriptClass {
         if (field != null) {
             value = field.getValue();
         } else if (parent.hasFieldSignature(name)) {
-            value = parent.getFieldSignature(name).getDefaultValueArray();
+            value = parent.getFieldSignature(name).defaultValue();
         }
 
         return value;

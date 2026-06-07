@@ -12,7 +12,7 @@ public class SkriptField {
     public record FieldSignature (
             String name,
             Class<?> type,
-            @Nullable List<Object> defaultValue,
+            @Nullable Object[] defaultValue,
 
             AccessType accessType,
             boolean isStatic,
@@ -33,24 +33,11 @@ public class SkriptField {
             return isStatic == this.isStatic;
         }
 
-        public @Nullable Object[] getDefaultValueArray() {
-            if (defaultValue == null) return null;
-            return defaultValue.toArray();
-        }
-
         public boolean canConvert(Object[] values) {
             if (values == null) return true;
             if (values.length != 1 && !isPlural) return false;
 
             return ConverterUtils.canConvert(type, values);
-        }
-
-        // constructor with array for convenience
-        public FieldSignature(String name, Class<?> type, Object[] defaultValue, AccessType accessType, boolean isStatic, boolean isPlural, AbstractSkriptClass parentClass) {
-            List<Object> listValue = null;
-            if (defaultValue != null) listValue = List.of(defaultValue);
-
-            this(name, type, listValue, accessType, isStatic, isPlural, parentClass);
         }
 
     }
@@ -64,7 +51,7 @@ public class SkriptField {
 
     public SkriptField(FieldSignature signature) {
         this.signature = signature;
-        this.value = signature.getDefaultValueArray();
+        this.value = signature.defaultValue();
     }
 
     public void setValue(@Nullable Object[] value) {
