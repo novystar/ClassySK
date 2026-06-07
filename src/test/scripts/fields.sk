@@ -156,6 +156,8 @@ class TestChangers:
 
 	public testInvalidChanger: integer = 1
 
+	public testReset: numbers: 1, 2
+
 test "ClassySK - Changers & Arithmetic":
 	add 1 to TestChangers::intsField
 	add 1 to TestChangers::intField
@@ -187,3 +189,7 @@ test "ClassySK - Changers & Arithmetic":
 
 	add 0.5 to {_instance}::testInvalidChanger
 	assert {_instance}::testInvalidChanger is 1
+
+	set {_instance}::testReset to 5
+	reset {_instance}::testReset
+	assert {_instance}::testReset is 1, 2
