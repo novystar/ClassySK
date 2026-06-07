@@ -147,7 +147,7 @@ test "ClassySK - Default Field Values":
 	assert size of {-testInvalidDefaults::*} is 9
 
 class TestChangers:
-	public static intsField: integers = 2, 2
+	public static intsField: integers = 2, 1
 	public static intField: integer = 1
 	public static strField: string = "test"
 	public static strsField: strings = "test"
@@ -166,7 +166,7 @@ test "ClassySK - Changers & Arithmetic":
 	add 1 to TestChangers::intObjField
 	add "test" to TestChangers::strObjField
 
-	assert TestChangers::intsField is 2, 2, 1
+	assert TestChangers::intsField is 2, 1, 1
 	assert TestChangers::intField is 2
 
 	assert TestChangers::strField is "testtest"
@@ -179,11 +179,11 @@ test "ClassySK - Changers & Arithmetic":
 	remove 2 from TestChangers::intField
 	remove 2 from TestChangers::intObjField
 
-	assert TestChangers::intsField is 2, 1
+	assert TestChangers::intsField is 1, 1
 	assert TestChangers::intField is 0
 	assert TestChangers::intObjField is 0
 
 	set {_instance} to new instance of TestChangers
-	
+
 	add 0.5 to {_instance}::testInvalidChanger
 	assert {_instance}::testInvalidChanger is 1
