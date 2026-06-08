@@ -36,6 +36,10 @@ public class SkriptClass {
         fieldMap.remove(name);
     }
 
+    public void removeField(SkriptField value) {
+        fieldMap.remove(value.signature.name());
+    }
+
     public Object[] getFieldValue(String name) {
         SkriptField field = fieldMap.get(name);
         AbstractSkriptClass parent = getParent();
@@ -97,7 +101,7 @@ public class SkriptClass {
         return result;
     }
 
-    public @Nullable AbstractSkriptClass getParent() {
+    public AbstractSkriptClass getParent() {
         return ClassManager.getClass(name);
     }
 

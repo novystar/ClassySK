@@ -5,17 +5,15 @@ import ch.njol.skript.classes.Parser;
 import ch.njol.skript.classes.Serializer;
 import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.registrations.Classes;
+import ch.njol.skript.util.EmptyStacktraceException;
 import ch.njol.yggdrasil.Fields;
 import ch.njol.yggdrasil.Fields.FieldContext;
 import com.novystxr.classysk.api.classes.AbstractSkriptClass;
+import com.novystxr.classysk.api.classes.AbstractSkriptClass.ClassOption;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
-import org.jspecify.annotations.Nullable;
 
-import java.io.NotSerializableException;
 import java.io.StreamCorruptedException;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.Map.Entry;
 
 public class Types {
@@ -67,13 +65,16 @@ public class Types {
             .serializer(new Serializer<>() {
                 @Override
                 public Fields serialize(SkriptClass o) {
+                    // silently reject serialization
+                    if (!o.getParent().option(ClassOption.STORABLE)) {
+                        throw new EmptyStacktraceException();
+                    }
                     Fields fields = new Fields();
                     fields.putObject("name", o.name);
 
                     for (Entry<String, Object[]> entry : o.getFieldValueMap().entrySet()) {
                         fields.putObject("field:"+entry.getKey(), entry.getValue());
                     }
-
                     return fields;
                 }
 

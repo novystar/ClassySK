@@ -20,6 +20,26 @@ import org.skriptlang.skript.lang.structure.Structure;
 
 public class AbstractSkriptClass extends SkriptClass {
 
+    public enum ClassOption {
+        STRICT_SIGNATURE_ENFORCEMENT(false),
+        STORABLE(true);
+
+        private final boolean defaultValue;
+
+        ClassOption(boolean defaultValue) {
+            this.defaultValue = defaultValue;
+        }
+        public static Map<ClassOption, Boolean> getDefaults() {
+            Map<ClassOption, Boolean> result = new HashMap<>();
+            for (ClassOption option : ClassOption.class.getEnumConstants()) {
+                result.put(option, option.defaultValue);
+            }
+            return result;
+        }
+    }
+
+    public final Map<ClassOption, Boolean> options = ClassOption.getDefaults();
+
     private Map<String, FieldSignature> fieldSignatures = new HashMap<>();
     private final Map<String, SkriptMethod> methods = new HashMap<>();
 
@@ -33,8 +53,20 @@ public class AbstractSkriptClass extends SkriptClass {
 
     public AbstractSkriptClass(String name, Script script) {
         super(name);
-
         this.script = script;
+    }
+
+    public void setOption(ClassOption option, String value) {
+        if (value == null) return;
+        if (value.equals("true")) {
+            options.replace(option, true);
+        } else if (value.equals("false")) {
+            options.replace(option, false);
+        }
+    }
+
+    public boolean option(ClassOption option) {
+        return options.get(option);
     }
 
     public boolean hasFieldSignature(String name) {
@@ -56,19 +88,15 @@ public class AbstractSkriptClass extends SkriptClass {
         if (script == null) return null;
         if (script.valid()) {
             return script;
-        } else {
-            File file = script.getConfig().getFile();
-            if (file != null) {
-                Script newScript = ScriptLoader.getScript(file);
-                if (newScript == null) {
-                    return null;
-                } else {
-                    this.script = newScript;
-                    return this.script;
-                }
-            }
-            return null;
         }
+        File file = script.getConfig().getFile();
+        if (file == null) return null;
+
+        Script newScript = ScriptLoader.getScript(file);
+        if (newScript == null) return null;
+
+        this.script = newScript;
+        return this.script;
     }
 
     public SkriptClass createInstance() {
@@ -143,14 +171,21 @@ public class AbstractSkriptClass extends SkriptClass {
         instances.removeIf(reference -> {
             SkriptClass instance = reference.get();
             if (instance == null) return true;
+            boolean strictSignatureEnforcement =
+                    instance.getParent().option(ClassOption.STRICT_SIGNATURE_ENFORCEMENT);
+
             for (SkriptField field : instance.getFieldMap().values()) {
                 FieldSignature signature = fieldSignatures.get(field.signature.name());
 
-                if (ConverterUtils.canConvert(field.signature.type(), field.getValue())) {
+                if (ConverterUtils.canConvert(signature.type(), field.getValue())) {
                     // if signature no longer exists or static context changed, ignore and use existing signature
-                    if (signature == null || signature.isStatic() != field.signature.isStatic()) continue;
-
+                    if (signature == null || signature.isStatic() != field.signature.isStatic()) {
+                        if (strictSignatureEnforcement) instance.removeField(field);
+                        continue;
+                    }
                     field.signature = signature;
+                } else if (strictSignatureEnforcement) {
+                    instance.removeField(field);
                 }
             }
             return false;

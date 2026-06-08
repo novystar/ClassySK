@@ -6,6 +6,7 @@ import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.lang.*;
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.classes.AbstractSkriptClass;
+import com.novystxr.classysk.api.classes.AbstractSkriptClass.ClassOption;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.event.FieldRegistrationEvent;
 import com.novystxr.classysk.api.event.MethodRegistrationEvent;
@@ -59,28 +60,28 @@ public class StructClass extends Structure {
     @Override
     public boolean preLoad() {
         Script script = getParser().getCurrentScript();
-        AbstractSkriptClass abstractSkriptClass = null;
+        AbstractSkriptClass newClass = null;
 
         // check for existing class and validate
         if (ClassManager.classExists(name)) {
-            abstractSkriptClass = ClassManager.getClass(name);
+            newClass = ClassManager.getClass(name);
 
-            if (abstractSkriptClass.validateStructure()) {
-                abstractSkriptClass.accessible = true;
+            if (newClass.validateStructure()) {
+                newClass.accessible = true;
             } else {
-                abstractSkriptClass = null;
+                newClass = null;
             }
         }
 
         // if no existing class or validation failed, new class
-        if (abstractSkriptClass == null) {
-            abstractSkriptClass = new AbstractSkriptClass(name, script);
-            ClassManager.createClass(abstractSkriptClass);
+        if (newClass == null) {
+            newClass = new AbstractSkriptClass(name, script);
+            ClassManager.createClass(newClass);
         }
 
         Map<String, FieldSignature> fieldSignatures = new HashMap<>();
         List<SecMethod> methods = new ArrayList<>();
-        abstractSkriptClass.initMethodRegistry();
+        newClass.initMethodRegistry();
 
         List<Node> nodes = this.entryContainer.getUnhandledNodes();
 
@@ -90,7 +91,7 @@ public class StructClass extends Structure {
                 Effect effect = Effect.parse(node.getKey(), "Invalid field declaration");
 
                 if (effect instanceof EffField fieldEffect) {
-                    FieldSignature signature = fieldEffect.getSignature(new FieldRegistrationEvent(abstractSkriptClass));
+                    FieldSignature signature = fieldEffect.getSignature(new FieldRegistrationEvent(newClass));
 
                     if (fieldSignatures.containsValue(signature)) {
                         Skript.error("You cannot have duplicate field signatures.");
@@ -104,21 +105,31 @@ public class StructClass extends Structure {
         // validate methods
         for (Node node : nodes) {
             if (node instanceof SectionNode sectionNode) {
-                if (node.getKey() == null) continue;
-                Section section = Section.parse(node.getKey(), "Invalid Method Declaration", sectionNode, null);
+
+                if (sectionNode.getKey().equals("options")) {
+                    sectionNode.convertToEntries(1);
+
+                    newClass.setOption(ClassOption.STRICT_SIGNATURE_ENFORCEMENT,
+                            sectionNode.getValue("strict signature enforcement"));
+                    newClass.setOption(ClassOption.STORABLE,
+                            sectionNode.getValue("storable"));
+
+                    continue;
+                }
+                Section section = Section.parse(node.getKey(), null, sectionNode, null);
 
                 if (section instanceof SecMethod secMethod) {
-                    secMethod.contextClass = abstractSkriptClass;
-                    secMethod.walk(new MethodRegistrationEvent(abstractSkriptClass));
+                    secMethod.contextClass = newClass;
+                    secMethod.walk(new MethodRegistrationEvent(newClass));
                     methods.add(secMethod);
                 }
             }
         }
         // evaluate method triggers after initial registration so it will always know about other methods within a class
         if (!fieldSignatures.isEmpty()) {
-            abstractSkriptClass.updateFieldSignatureMap(fieldSignatures);
+            newClass.updateFieldSignatureMap(fieldSignatures);
         }
-        ClassManager.checkAwaitingParent(abstractSkriptClass);
+        ClassManager.checkAwaitingParent(newClass);
 
         for (SecMethod secMethod : methods) {
             secMethod.evaluateTrigger();
