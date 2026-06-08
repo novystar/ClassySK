@@ -44,6 +44,8 @@ public class SkriptClass {
 
         if (field != null) {
             value = field.getValue();
+        } else if (parent == null) {
+            return null;
         } else if (parent.hasFieldSignature(name)) {
             value = parent.getFieldSignature(name).defaultValue();
         }
