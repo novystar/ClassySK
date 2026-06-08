@@ -26,23 +26,15 @@ public class ClassManager {
             if (instance.name.equals(parent.name)) {
                 parent.instances.add(ref);
 
-                boolean anyFailed = false;
-
                 for (Entry<String, Object[]> entry : instance.awaitingFields.entrySet()) {
                     FieldSignature signature = parent.getFieldSignature(entry.getKey());
                     Object[] value = entry.getValue();
-                    if (signature == null) {
-                        anyFailed = true; continue;
-                    }
+                    if (signature == null) continue;
+
                     if (signature.canConvert(value)) {
                         //noinspection DataFlowIssue dw gang
                         instance.getField(entry.getKey()).setValue(value);
-                    } else {
-                        anyFailed = true;
                     }
-                }
-                if (anyFailed) {
-                    Skript.warning("Some fields failed to convert into the new template when deserializing. (Instance of "+instance.name+")");
                 }
                 return true;
             }

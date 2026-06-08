@@ -127,7 +127,6 @@ public class AbstractSkriptClass extends SkriptClass {
 
         // static field validation
         // attempt to convert, if failed, static context changes or no longer exists, remove field
-
         getFieldMap().values().removeIf(field -> {
             FieldSignature signature = fieldSignatures.get(field.signature.name());
 
@@ -139,37 +138,22 @@ public class AbstractSkriptClass extends SkriptClass {
             } else {
                 return true;
             }
-
             return false;
-
         });
-
-        /* if field value cannot convert to new template, the instance is orphaned
-        this means it will never be checked for field updates, and the abstract class is now unaware of it
-        the instance is still aware of its parent though, and can create newly defined fields regardless */
         instances.removeIf(reference -> {
             SkriptClass instance = reference.get();
-            if (instance == null) {
-                return true;
-            }
-
+            if (instance == null) return true;
             for (SkriptField field : instance.getFieldMap().values()) {
-
                 FieldSignature signature = fieldSignatures.get(field.signature.name());
 
                 if (ConverterUtils.canConvert(field.signature.type(), field.getValue())) {
-
                     // if signature no longer exists or static context changed, ignore and use existing signature
                     if (signature == null || signature.isStatic() != field.signature.isStatic()) continue;
 
                     field.signature = signature;
-                } else {
-                    return true;
                 }
-
             }
             return false;
-
         });
     }
 
