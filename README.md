@@ -10,4 +10,4 @@ Nothing here is set in stone but these are my future ambitions regarding the pro
 - [ ] File specific access modifiers: local, folder
 - [ ] Reflection: Syntax for getting fields and methods and mapping fields to variable lists
 - [ ] Final/Constant fields
-- [ ] Tables: looser, untyped and data structures that can be passed around and used easily
+- [ ] Tables: looser, untyped data structures that can be passed around and used easily
