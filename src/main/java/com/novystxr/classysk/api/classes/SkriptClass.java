@@ -2,7 +2,9 @@ package com.novystxr.classysk.api.classes;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.TreeMap;
 
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.methods.SkriptMethod;
@@ -12,7 +14,14 @@ public class SkriptClass {
     public final String name;
     private final Map<String, SkriptField> fieldMap = new HashMap<>();
 
-    SkriptClass(String name) {
+    // set on deserialization for when parent class becomes known
+    final Map<String, Object[]> awaitingFields = new HashMap<>();
+
+    public void putAwaitingField(String name, Object[] value) {
+        awaitingFields.put(name, value);
+    }
+
+    public SkriptClass(String name) {
         this.name = name;
     }
 
@@ -43,11 +52,12 @@ public class SkriptClass {
     }
 
     // if field does not yet exist, instantiates one
-    public SkriptField getField(String name) {
+    public @Nullable SkriptField getField(String name) {
         SkriptField field = fieldMap.get(name);
         if (field != null) return field;
 
         AbstractSkriptClass parent = getParent();
+        if (parent == null) return null;
 
         SkriptField.FieldSignature signature = parent.getFieldSignature(name);
         field = new SkriptField(signature);
@@ -72,11 +82,20 @@ public class SkriptClass {
         return "%"+name+"%";
     }
 
-    Map<String, SkriptField> getFieldMap() {
+    protected Map<String, SkriptField> getFieldMap() {
         return fieldMap;
     }
 
-    public AbstractSkriptClass getParent() {
+    public Map<String, Object[]> getFieldValueMap() {
+        Map<String, Object[]> result = new TreeMap<>();
+        for (Entry<String, SkriptField> entry : fieldMap.entrySet()) {
+            result.put(entry.getKey(), entry.getValue().getValue());
+        }
+
+        return result;
+    }
+
+    public @Nullable AbstractSkriptClass getParent() {
         return ClassManager.getClass(name);
     }
 

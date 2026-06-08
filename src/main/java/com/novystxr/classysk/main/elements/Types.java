@@ -2,11 +2,21 @@ package com.novystxr.classysk.main.elements;
 
 import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.classes.Parser;
+import ch.njol.skript.classes.Serializer;
 import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.registrations.Classes;
+import ch.njol.yggdrasil.Fields;
+import ch.njol.yggdrasil.Fields.FieldContext;
 import com.novystxr.classysk.api.classes.AbstractSkriptClass;
+import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import org.jspecify.annotations.Nullable;
+
+import java.io.NotSerializableException;
+import java.io.StreamCorruptedException;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class Types {
     public static void register() {
@@ -54,6 +64,52 @@ public class Types {
                             @Override
                             public String toVariableNameString(SkriptClass o) {
                                 return "Class " + o.name + " (" + o.getHashCode() + ")";
+                            }
+                        })
+                        .serializer(new Serializer<>() {
+                            @Override
+                            public Fields serialize(SkriptClass o) {
+                                Fields fields = new Fields();
+                                fields.putObject("name", o.name);
+
+                                for (Entry<String, Object[]> entry : o.getFieldValueMap().entrySet()) {
+                                    fields.putObject("field:"+entry.getKey(), entry.getValue());
+                                }
+
+                                return fields;
+                            }
+
+                            @Override
+                            protected SkriptClass deserialize(Fields fields) throws StreamCorruptedException {
+                                String name = fields.getAndRemoveObject("name", String.class);
+                                AbstractSkriptClass parentClass = ClassManager.getClass(name);
+
+                                SkriptClass instance;
+                                if (parentClass != null) {
+                                    instance = parentClass.createInstance();
+                                } else {
+                                    instance = new SkriptClass(name);
+                                    ClassManager.setAwaitingParent(instance);
+                                }
+                                for (FieldContext context : fields) {
+                                    if (!context.getID().startsWith("field:")) continue;
+
+                                    String fieldName = context.getID().substring("field:".length());
+                                    Object[] value = context.getObject(Object[].class);
+
+                                    instance.putAwaitingField(fieldName, value);
+                                }
+                                return instance;
+                            }
+
+                            @Override
+                            public boolean mustSyncDeserialization() {
+                                return true;
+                            }
+
+                            @Override
+                            protected boolean canBeInstantiated() {
+                                return false;
                             }
                         })
         );

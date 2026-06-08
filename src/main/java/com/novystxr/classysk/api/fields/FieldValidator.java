@@ -82,15 +82,15 @@ public class FieldValidator {
 
     public void attemptSetValue(@Nullable Object[] delta) {
         if (delta == null) return;
-        if (!skriptClass.getParent().accessible) return;
 
         if (signature.canConvert(delta)) {
-            skriptClass.getField(fieldName).setValue(delta);
+            SkriptField field = skriptClass.getField(fieldName);
+            if (field == null) return;
+            field.setValue(delta);
         }
     }
 
     public Object[] get() {
-        if (!skriptClass.getParent().accessible) return null;
         return skriptClass.getFieldValue(fieldName);
     }
 

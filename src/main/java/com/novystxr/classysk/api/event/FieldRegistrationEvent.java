@@ -11,7 +11,6 @@ public class FieldRegistrationEvent extends Event {
 
     public FieldRegistrationEvent(AbstractSkriptClass skriptClass) {
         this.skriptClass = skriptClass;
-
     }
 
     @Override

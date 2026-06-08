@@ -118,6 +118,7 @@ public class StructClass extends Structure {
         if (!fieldSignatures.isEmpty()) {
             abstractSkriptClass.updateFieldSignatureMap(fieldSignatures);
         }
+        ClassManager.checkAwaitingParent(abstractSkriptClass);
 
         for (SecMethod secMethod : methods) {
             secMethod.evaluateTrigger();
