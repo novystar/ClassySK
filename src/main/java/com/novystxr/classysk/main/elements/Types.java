@@ -12,7 +12,9 @@ import com.novystxr.classysk.api.classes.AbstractSkriptClass;
 import com.novystxr.classysk.api.classes.AbstractSkriptClass.ClassOption;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
+import com.novystxr.classysk.api.util.EmptyIOException;
 
+import java.io.NotSerializableException;
 import java.io.StreamCorruptedException;
 import java.util.Map.Entry;
 
@@ -64,10 +66,9 @@ public class Types {
             })
             .serializer(new Serializer<>() {
                 @Override
-                public Fields serialize(SkriptClass o) {
-                    // silently reject serialization
+                public Fields serialize(SkriptClass o) throws NotSerializableException {
                     if (!o.getParent().option(ClassOption.STORABLE)) {
-                        throw new EmptyStacktraceException();
+                        throw new EmptyIOException("Tried to store instance of class marked as not storable: '"+o.name+"' (THIS IS NOT A BUG)");
                     }
                     Fields fields = new Fields();
                     fields.putObject("name", o.name);
