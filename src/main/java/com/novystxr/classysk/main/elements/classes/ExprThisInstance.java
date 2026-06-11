@@ -2,11 +2,13 @@ package com.novystxr.classysk.main.elements.classes;
 
 import ch.njol.skript.Skript;
 import ch.njol.skript.lang.Expression;
+import ch.njol.skript.lang.SectionSkriptEvent;
 import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.event.MethodRunEvent;
+import com.novystxr.classysk.main.elements.methods.SecMethod;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
@@ -17,7 +19,10 @@ public class ExprThisInstance extends SimpleExpression<ClassInstance> {
         registry.register(
                 SyntaxRegistry.EXPRESSION,
                 DefaultSyntaxInfos.Expression.builder(ExprThisInstance.class, ClassInstance.class)
-                        .addPattern("[this ]instance")
+                        .addPatterns(
+                                "this instance",
+                                "self"
+                        )
                         .supplier(ExprThisInstance::new)
                         .build()
         );
@@ -25,14 +30,13 @@ public class ExprThisInstance extends SimpleExpression<ClassInstance> {
 
     @Override
     public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, SkriptParser.ParseResult parseResult) {
-        Class<? extends Event>[] events = getParser().getCurrentEvents();
-        if (events == null) return false;
-
-        if (events[0] != MethodRunEvent.class) {
-            Skript.error("This expression can only be used within a method section.");
-            return false;
+        if (getParser().getCurrentStructure() instanceof SectionSkriptEvent secSkriptEvent) {
+            if (secSkriptEvent.getSection() instanceof SecMethod secMethod) {
+                return true;
+            }
         }
-        return true;
+        Skript.error("This expression can only be used within a method section.");
+        return false;
     }
 
     @Override
