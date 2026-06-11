@@ -27,6 +27,10 @@ public class ClassyStringUtils {
         return result;
     }
 
+    public static String titleCase(String input) {
+        return input.substring(0, 1).toUpperCase()+input.substring(1);
+    }
+
     public static String getLowerCase(MatchResult matchResult) {
         if (SkriptConfig.caseInsensitiveVariables.value()) {
             return matchResult.group(0).trim().toLowerCase(Locale.ENGLISH);

@@ -11,7 +11,7 @@ import com.novystxr.classysk.api.*;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodSignature;
-import com.novystxr.classysk.api.classes.AbstractSkriptClass;
+import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.event.MethodRegistrationEvent;
 import com.novystxr.classysk.api.event.MethodRunEvent;
 import com.novystxr.classysk.api.methods.ArgumentParser;
@@ -47,7 +47,7 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
     private SectionNode sectionNode;
     private SkriptMethod skriptMethod;
 
-    public AbstractSkriptClass contextClass;
+    public SkriptClass contextClass;
 
     @SuppressWarnings("unchecked")
     @Override
@@ -90,7 +90,7 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
     public @Nullable TriggerItem walk(Event event) {
         if (event instanceof MethodRegistrationEvent regEvent) {
 
-            AbstractSkriptClass skriptClass = regEvent.skriptClass;
+            SkriptClass skriptClass = regEvent.skriptClass;
             Class<?> returnType = null;
             ClassInfo<?> classInfo = null;
             if (classInfoExpr != null) classInfo = classInfoExpr.getSingle(event);

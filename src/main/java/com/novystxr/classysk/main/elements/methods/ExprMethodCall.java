@@ -6,7 +6,7 @@ import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.methods.ArgumentParser;
 import com.novystxr.classysk.api.methods.MethodValidator;
-import com.novystxr.classysk.api.classes.SkriptClass;
+import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.util.ClassyStringUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
@@ -26,7 +26,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
         );
     }
 
-    private Expression<SkriptClass> classExpr;
+    private Expression<ClassInstance> classExpr;
     private MethodValidator validator;
 
     @SuppressWarnings("unchecked")
@@ -45,7 +45,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
         } else {
             validator = new MethodValidator(methodName, argsString, true, false);
         }
-        classExpr = (Expression<SkriptClass>) expressions[0];
+        classExpr = (Expression<ClassInstance>) expressions[0];
         return true;
     }
 
@@ -58,7 +58,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
             validator.updateInstance(classExpr, event);
         }
         if (!validator.isValid().isTrue()) return null;
-        return validator.parsedMethod.run(event, validator.skriptClass, validator.parsedArgs);
+        return validator.parsedMethod.run(event, validator.instance, validator.parsedArgs);
     }
 
     @Override

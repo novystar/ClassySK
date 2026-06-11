@@ -1,8 +1,8 @@
 package com.novystxr.classysk.api.fields;
 
 import com.novystxr.classysk.api.AccessModifiable;
-import com.novystxr.classysk.api.classes.AbstractSkriptClass;
 import com.novystxr.classysk.api.classes.SkriptClass;
+import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.util.ConverterUtils;
 import org.jetbrains.annotations.Nullable;
 
@@ -16,12 +16,12 @@ public class SkriptField {
             boolean isStatic,
             boolean isPlural,
 
-            AbstractSkriptClass parentClass
+            SkriptClass parentClass
 
     ) implements AccessModifiable {
 
         @Override
-        public boolean checkAccess(@Nullable AbstractSkriptClass contextClass) {
+        public boolean checkAccess(@Nullable SkriptClass contextClass) {
             if (accessType == AccessType.PRIVATE && parentClass != contextClass) return false;
             return true;
         }
@@ -40,7 +40,7 @@ public class SkriptField {
 
     }
 
-    public static String getEffectiveName(SkriptClass parentClass, String fieldName) {
+    public static String getEffectiveName(ClassInstance parentClass, String fieldName) {
         return parentClass.getEffectiveName()+"::"+fieldName;
     }
 

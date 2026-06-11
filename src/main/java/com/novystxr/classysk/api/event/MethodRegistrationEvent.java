@@ -1,14 +1,14 @@
 package com.novystxr.classysk.api.event;
 
-import com.novystxr.classysk.api.classes.AbstractSkriptClass;
+import com.novystxr.classysk.api.classes.SkriptClass;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
 public class MethodRegistrationEvent extends Event {
-    public final AbstractSkriptClass skriptClass;
+    public final SkriptClass skriptClass;
 
-    public MethodRegistrationEvent(AbstractSkriptClass skriptClass) {
+    public MethodRegistrationEvent(SkriptClass skriptClass) {
         this.skriptClass = skriptClass;
 
     }

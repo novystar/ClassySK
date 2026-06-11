@@ -5,18 +5,18 @@ import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
-import com.novystxr.classysk.api.classes.SkriptClass;
+import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.event.MethodRunEvent;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
-public class ExprThisInstance extends SimpleExpression<SkriptClass> {
+public class ExprThisInstance extends SimpleExpression<ClassInstance> {
     public static void register(SyntaxRegistry registry) {
         registry.register(
                 SyntaxRegistry.EXPRESSION,
-                DefaultSyntaxInfos.Expression.builder(ExprThisInstance.class, SkriptClass.class)
+                DefaultSyntaxInfos.Expression.builder(ExprThisInstance.class, ClassInstance.class)
                         .addPattern("[this ]instance")
                         .supplier(ExprThisInstance::new)
                         .build()
@@ -36,10 +36,10 @@ public class ExprThisInstance extends SimpleExpression<SkriptClass> {
     }
 
     @Override
-    protected SkriptClass @Nullable [] get(Event event) {
+    protected ClassInstance @Nullable [] get(Event event) {
         if (event instanceof MethodRunEvent runEvent) {
             if (runEvent.instance.isInstance()) {
-                return new SkriptClass[]{runEvent.instance};
+                return new ClassInstance[]{runEvent.instance};
             }
         }
         return null;
@@ -51,8 +51,8 @@ public class ExprThisInstance extends SimpleExpression<SkriptClass> {
     }
 
     @Override
-    public Class<? extends SkriptClass> getReturnType() {
-        return SkriptClass.class;
+    public Class<? extends ClassInstance> getReturnType() {
+        return ClassInstance.class;
     }
 
     @Override

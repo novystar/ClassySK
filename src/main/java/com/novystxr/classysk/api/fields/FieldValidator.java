@@ -4,16 +4,16 @@ import ch.njol.skript.Skript;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.util.Kleenean;
-import com.novystxr.classysk.api.classes.AbstractSkriptClass;
-import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.classes.SkriptClass;
+import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
+import com.novystxr.classysk.api.classes.ClassInstance;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 
 public class FieldValidator {
 
     String fieldName;
-    SkriptClass skriptClass;
+    ClassInstance instance;
 
     Kleenean isValid = Kleenean.UNKNOWN;
     FieldSignature signature;
@@ -24,12 +24,12 @@ public class FieldValidator {
         this.isStatic = isStatic;
     }
 
-    public void validate(@Nullable SkriptClass skriptClass) {
-        if (skriptClass == null) {
+    public void validate(@Nullable ClassInstance instance) {
+        if (instance == null) {
             Skript.error("Illegal Access! This class does not exist");
             isValid = Kleenean.FALSE; return;
         }
-        AbstractSkriptClass parentClass = skriptClass.getParent();
+        SkriptClass parentClass = instance.getParent();
         if (parentClass == null) {
             Skript.error("Class structure of this instance no longer exists");
             isValid = Kleenean.FALSE; return;
@@ -37,10 +37,10 @@ public class FieldValidator {
         signature = parentClass.getFieldSignature(fieldName);
 
         if (signature == null) {
-            Skript.error("Unable to resolve field signature '%s'", SkriptField.getEffectiveName(skriptClass, fieldName));
+            Skript.error("Unable to resolve field signature '%s'", SkriptField.getEffectiveName(instance, fieldName));
             isValid = Kleenean.FALSE; return;
         }
-        this.skriptClass = skriptClass;
+        this.instance = instance;
     }
 
     public void checkAccess(Event event) {
@@ -61,20 +61,20 @@ public class FieldValidator {
 
     private void illegalAccess() {
         isValid = Kleenean.FALSE;
-        Skript.error("Illegal Access! Tried to access non-existent field '%s' or tried to access it from improper context", SkriptField.getEffectiveName(skriptClass, fieldName));
+        Skript.error("Illegal Access! Tried to access non-existent field '%s' or tried to access it from improper context", SkriptField.getEffectiveName(instance, fieldName));
     }
 
-    public void updateInstance(@Nullable Expression<SkriptClass> skriptClassExpr, Event event) {
+    public void updateInstance(@Nullable Expression<ClassInstance> skriptClassExpr, Event event) {
         // static access
         if (skriptClassExpr == null) {
             return;
         }
-        SkriptClass newClass = skriptClassExpr.getSingle(event);
+        ClassInstance newClass = skriptClassExpr.getSingle(event);
         if (newClass == null) {
             isValid = Kleenean.FALSE;
             return;
         }
-        if (this.skriptClass == null || newClass.getParent() != this.skriptClass.getParent()) {
+        if (this.instance == null || newClass.getParent() != this.instance.getParent()) {
             validate(newClass);
             checkAccess(event);
         }
@@ -84,14 +84,14 @@ public class FieldValidator {
         if (delta == null) return;
 
         if (signature.canConvert(delta)) {
-            SkriptField field = skriptClass.getField(fieldName);
+            SkriptField field = instance.getField(fieldName);
             if (field == null) return;
             field.setValue(delta);
         }
     }
 
     public Object[] get() {
-        return skriptClass.getFieldValue(fieldName);
+        return instance.getFieldValue(fieldName);
     }
 
     public String fieldName() {
@@ -100,8 +100,8 @@ public class FieldValidator {
     public FieldSignature signature() {
         return signature;
     }
-    public SkriptClass skriptClass() {
-        return skriptClass;
+    public ClassInstance instance() {
+        return instance;
     }
     public Kleenean isValid() {
         return isValid;

@@ -2,14 +2,14 @@ package com.novystxr.classysk.api;
 
 import ch.njol.skript.lang.SectionSkriptEvent;
 import ch.njol.skript.lang.parser.ParserInstance;
-import com.novystxr.classysk.api.classes.AbstractSkriptClass;
+import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.event.MethodRunEvent;
 import com.novystxr.classysk.main.elements.methods.SecMethod;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 
 public interface AccessModifiable {
-    boolean checkAccess(@Nullable AbstractSkriptClass contextClass);
+    boolean checkAccess(@Nullable SkriptClass contextClass);
     boolean checkContext(boolean isStatic);
 
     default boolean isAccessible(ParserInstance parser, boolean isStatic) {

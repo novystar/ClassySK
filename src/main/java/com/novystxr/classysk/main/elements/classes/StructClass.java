@@ -5,8 +5,8 @@ import ch.njol.skript.config.Node;
 import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.lang.*;
 import com.novystxr.classysk.Classysk;
-import com.novystxr.classysk.api.classes.AbstractSkriptClass;
-import com.novystxr.classysk.api.classes.AbstractSkriptClass.ClassOption;
+import com.novystxr.classysk.api.classes.SkriptClass;
+import com.novystxr.classysk.api.classes.SkriptClass.ClassOption;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.event.FieldRegistrationEvent;
 import com.novystxr.classysk.api.event.MethodRegistrationEvent;
@@ -60,7 +60,7 @@ public class StructClass extends Structure {
     @Override
     public boolean preLoad() {
         Script script = getParser().getCurrentScript();
-        AbstractSkriptClass newClass = null;
+        SkriptClass newClass = null;
 
         // check for existing class and validate
         if (ClassManager.classExists(name)) {
@@ -75,7 +75,7 @@ public class StructClass extends Structure {
 
         // if no existing class or validation failed, new class
         if (newClass == null) {
-            newClass = new AbstractSkriptClass(name, script);
+            newClass = new SkriptClass(name, script);
             ClassManager.createClass(newClass);
         }
 
@@ -161,8 +161,8 @@ public class StructClass extends Structure {
 
     @Override
     public void unload() {
-        AbstractSkriptClass abstractSkriptClass = ClassManager.getClass(name);
-        abstractSkriptClass.accessible = false;
+        SkriptClass skriptClass = ClassManager.getClass(name);
+        skriptClass.accessible = false;
 
     }
 

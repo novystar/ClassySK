@@ -6,7 +6,7 @@ import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.methods.ArgumentParser;
 import com.novystxr.classysk.api.methods.MethodValidator;
-import com.novystxr.classysk.api.classes.SkriptClass;
+import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.util.ClassyStringUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
@@ -25,7 +25,7 @@ public class EffMethodCall extends Effect {
         );
     }
 
-    private Expression<SkriptClass> classExpr;
+    private Expression<ClassInstance> classExpr;
     private MethodValidator validator;
 
     @SuppressWarnings("unchecked")
@@ -43,7 +43,7 @@ public class EffMethodCall extends Effect {
         } else {
             validator = new MethodValidator(methodName, argsString, false, false);
         }
-        classExpr = (Expression<SkriptClass>) expressions[0];
+        classExpr = (Expression<ClassInstance>) expressions[0];
         return true;
     }
 
@@ -56,7 +56,7 @@ public class EffMethodCall extends Effect {
             validator.updateInstance(classExpr, event);
         }
         if (!validator.isValid().isTrue()) return;
-        validator.parsedMethod.run(event, validator.skriptClass, validator.parsedArgs);
+        validator.parsedMethod.run(event, validator.instance, validator.parsedArgs);
     }
 
     @Override

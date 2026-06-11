@@ -6,7 +6,7 @@ import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodSignature;
 import com.novystxr.classysk.api.classes.ClassManager;
-import com.novystxr.classysk.api.classes.SkriptClass;
+import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.util.ClassyStringUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
@@ -29,7 +29,7 @@ public class MethodValidator {
             failedParse();
         }
     }
-    public SkriptClass skriptClass = null;
+    public ClassInstance instance = null;
     private boolean noReferencedArgs = false;
 
     public SequencedMap<String, Expression<?>> parsedArgs;
@@ -51,13 +51,13 @@ public class MethodValidator {
         }
         validate(ClassManager.getClass(className));
     }
-    public void validate(SkriptClass skriptClass) {
-        this.skriptClass = skriptClass;
+    public void validate(ClassInstance instance) {
+        this.instance = instance;
         isValid = Kleenean.UNKNOWN;
-        if (skriptClass == null) {
+        if (instance == null) {
             illegalAccess(); return;
         }
-        SkriptMethod method = skriptClass.getAccessibleMethod(methodName);
+        SkriptMethod method = instance.getAccessibleMethod(methodName);
         if (method == null) {
             illegalAccess(); return;
         }
@@ -95,17 +95,17 @@ public class MethodValidator {
         isValid = Kleenean.TRUE;
     }
 
-    public void updateInstance(Expression<SkriptClass> skriptClassExpr, Event event) {
+    public void updateInstance(Expression<ClassInstance> skriptClassExpr, Event event) {
         // static access
         if (skriptClassExpr == null) {
             return;
         }
-        SkriptClass newClass = skriptClassExpr.getSingle(event);
+        ClassInstance newClass = skriptClassExpr.getSingle(event);
         if (newClass == null) {
             isValid = Kleenean.FALSE;
             return;
         }
-        if (this.skriptClass == null || newClass.getParent() != this.skriptClass.getParent()) {
+        if (this.instance == null || newClass.getParent() != this.instance.getParent()) {
             validate(newClass);
             checkAccess(event);
         }
@@ -113,11 +113,11 @@ public class MethodValidator {
 
     private void illegalAccess() {
         isValid = Kleenean.FALSE;
-        Skript.error("Illegal Access! Tried to access non-existent method '%s'", SkriptMethod.getEffectiveName(skriptClass, methodName, argsString)+" or tried to access it from improper context");
+        Skript.error("Illegal Access! Tried to access non-existent method '%s'", SkriptMethod.getEffectiveName(instance, methodName, argsString)+" or tried to access it from improper context");
     }
     private void failedParse() {
         isValid = Kleenean.FALSE;
-        Skript.error("Method call failed to validate! '%s'", SkriptMethod.getEffectiveName(skriptClass, methodName, argsString));
+        Skript.error("Method call failed to validate! '%s'", SkriptMethod.getEffectiveName(instance, methodName, argsString));
     }
 
     public Kleenean isValid() {

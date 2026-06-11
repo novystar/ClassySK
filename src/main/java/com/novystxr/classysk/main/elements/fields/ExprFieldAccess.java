@@ -7,10 +7,10 @@ import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import ch.njol.util.coll.CollectionUtils;
 import com.novystxr.classysk.Classysk;
-import com.novystxr.classysk.api.classes.AbstractSkriptClass;
+import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.fields.FieldValidator;
-import com.novystxr.classysk.api.classes.SkriptClass;
+import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.util.ConverterUtils;
 import com.novystxr.classysk.api.util.ExpressionUtils;
@@ -37,7 +37,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
         );
     }
 
-    private Expression<SkriptClass> skriptClassExpr;
+    private Expression<ClassInstance> skriptClassExpr;
     private FieldValidator fieldValidator;
 
     @SuppressWarnings("unchecked")
@@ -46,12 +46,12 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
         String fieldName = ClassyStringUtils.getLowerCase(parseResult.regexes.get(matchedPattern));
         if (matchedPattern == 0) {
             fieldValidator = new FieldValidator(fieldName, false);
-            skriptClassExpr = (Expression<SkriptClass>) expressions[0];
+            skriptClassExpr = (Expression<ClassInstance>) expressions[0];
 
         } else {
             fieldValidator = new FieldValidator(fieldName, true);
             String className = ClassyStringUtils.getLowerCase(parseResult.regexes.getFirst());
-            AbstractSkriptClass skriptClass = ClassManager.getClass(className);
+            SkriptClass skriptClass = ClassManager.getClass(className);
 
             // validate time validation for static access
             fieldValidator.validate(skriptClass);
@@ -88,13 +88,13 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
                 fieldValidator.attemptSetValue(delta);
                 break;
             case RESET, DELETE:
-                fieldValidator.skriptClass().removeField(fieldValidator.fieldName());
+                fieldValidator.instance().removeField(fieldValidator.fieldName());
                 break;
             case REMOVE, ADD:
                 if (delta == null) return;
                 if (!ConverterUtils.canConvert(fieldValidator.signature().type(), delta)) return;
 
-                Object[] initialValue = fieldValidator.skriptClass().getFieldValue(fieldValidator.fieldName());
+                Object[] initialValue = fieldValidator.instance().getFieldValue(fieldValidator.fieldName());
                 if (fieldValidator.signature().isPlural()) {
                     fieldValidator.attemptSetValue(ExpressionUtils.mutatePlural(initialValue, delta, mode));
                     return;
@@ -102,7 +102,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
 
                 Object[] setValue = ExpressionUtils.mutateSingle(initialValue, delta, mode, fieldValidator.signature().type());
                 if (setValue == null) {
-                    error("Could not mutate single value "+ delta[0] +" into field " + SkriptField.getEffectiveName(fieldValidator.skriptClass(), fieldValidator.fieldName()));
+                    error("Could not mutate single value "+ delta[0] +" into field " + SkriptField.getEffectiveName(fieldValidator.instance(), fieldValidator.fieldName()));
                     return;
                 }
                 fieldValidator.attemptSetValue(ExpressionUtils.mutateSingle(initialValue, delta, mode, fieldValidator.signature().type()));

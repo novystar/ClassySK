@@ -1,6 +1,5 @@
 package com.novystxr.classysk.api.classes;
 
-import ch.njol.skript.Skript;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 
 import java.lang.ref.WeakReference;
@@ -10,17 +9,17 @@ import java.util.Map.Entry;
 public class ClassManager {
 
     // freshly deserialized instances that are waiting for the corresponding class structure to be registered
-    private static final List<WeakReference<SkriptClass>> awaitingParent = new ArrayList<>();
+    private static final List<WeakReference<ClassInstance>> awaitingParent = new ArrayList<>();
 
-    private static final Map<String, AbstractSkriptClass> classMap = new HashMap<>();
+    private static final Map<String, SkriptClass> classMap = new HashMap<>();
 
-    public static void setAwaitingParent(SkriptClass skriptClass) {
-        awaitingParent.add(new WeakReference<>(skriptClass));
+    public static void setAwaitingParent(ClassInstance instance) {
+        awaitingParent.add(new WeakReference<>(instance));
     }
 
-    public static void checkAwaitingParent(AbstractSkriptClass parent) {
+    public static void checkAwaitingParent(SkriptClass parent) {
         awaitingParent.removeIf(ref -> {
-            SkriptClass instance = ref.get();
+            ClassInstance instance = ref.get();
             if (instance == null) return true;
 
             if (instance.name.equals(parent.name)) {
@@ -42,7 +41,7 @@ public class ClassManager {
         });
     }
 
-    public static void createClass(AbstractSkriptClass newClass) {
+    public static void createClass(SkriptClass newClass) {
         classMap.put(newClass.name, newClass);
     }
 
@@ -50,7 +49,7 @@ public class ClassManager {
         classMap.remove(name);
     }
 
-    public static AbstractSkriptClass getClass(String name) {
+    public static SkriptClass getClass(String name) {
         return classMap.get(name);
     }
 
@@ -63,7 +62,7 @@ public class ClassManager {
         return getClass(name).accessible;
     }
 
-    public static Collection<AbstractSkriptClass> getClasses() {
+    public static Collection<SkriptClass> getClasses() {
         return classMap.values();
     }
 

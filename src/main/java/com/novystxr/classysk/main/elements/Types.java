@@ -5,13 +5,12 @@ import ch.njol.skript.classes.Parser;
 import ch.njol.skript.classes.Serializer;
 import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.registrations.Classes;
-import ch.njol.skript.util.EmptyStacktraceException;
 import ch.njol.yggdrasil.Fields;
 import ch.njol.yggdrasil.Fields.FieldContext;
-import com.novystxr.classysk.api.classes.AbstractSkriptClass;
-import com.novystxr.classysk.api.classes.AbstractSkriptClass.ClassOption;
-import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
+import com.novystxr.classysk.api.classes.SkriptClass.ClassOption;
+import com.novystxr.classysk.api.classes.ClassManager;
+import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.util.EmptyIOException;
 
 import java.io.NotSerializableException;
@@ -20,7 +19,7 @@ import java.util.Map.Entry;
 
 public class Types {
     public static void register() {
-        Classes.registerClass(new ClassInfo<>(AbstractSkriptClass.class, "abstractclass")
+        Classes.registerClass(new ClassInfo<>(SkriptClass.class, "abstractclass")
             .user("^abstract class(es)?$")
             .name("Abstract Class")
             .description("Non-instance version of a class, holds static methods and fields, representing the class as a whole.")
@@ -32,18 +31,18 @@ public class Types {
                 }
 
                 @Override
-                public String toString(AbstractSkriptClass o, int flags) {
+                public String toString(SkriptClass o, int flags) {
                     return "Abstract Class " + o.name;
                 }
 
                 @Override
-                public String toVariableNameString(AbstractSkriptClass o) {
+                public String toVariableNameString(SkriptClass o) {
                     return "Abstract Class " + o.name;
                 }
             })
         );
 
-        Classes.registerClass(new ClassInfo<>(SkriptClass.class, "class")
+        Classes.registerClass(new ClassInfo<>(ClassInstance.class, "class")
             .user("^class( instance)?(es)?$")
             .name("Class")
             .description("Instance version of a class, holds non-static methods and fields, representing a created instance of a class.")
@@ -55,18 +54,18 @@ public class Types {
                 }
 
                 @Override
-                public String toString(SkriptClass o, int flags) {
+                public String toString(ClassInstance o, int flags) {
                     return "Class " + o.name;
                 }
 
                 @Override
-                public String toVariableNameString(SkriptClass o) {
+                public String toVariableNameString(ClassInstance o) {
                     return "Class " + o.name + " (" + o.getHashCode() + ")";
                 }
             })
             .serializer(new Serializer<>() {
                 @Override
-                public Fields serialize(SkriptClass o) throws NotSerializableException {
+                public Fields serialize(ClassInstance o) throws NotSerializableException {
                     if (!o.getParent().option(ClassOption.STORABLE)) {
                         throw new EmptyIOException("Tried to store instance of class marked as not storable: '"+o.name+"' (THIS IS NOT A BUG)");
                     }
@@ -80,15 +79,15 @@ public class Types {
                 }
 
                 @Override
-                protected SkriptClass deserialize(Fields fields) throws StreamCorruptedException {
+                protected ClassInstance deserialize(Fields fields) throws StreamCorruptedException {
                     String name = fields.getAndRemoveObject("name", String.class);
-                    AbstractSkriptClass parentClass = ClassManager.getClass(name);
+                    SkriptClass parentClass = ClassManager.getClass(name);
 
-                    SkriptClass instance;
+                    ClassInstance instance;
                     if (parentClass != null) {
                         instance = parentClass.createInstance();
                     } else {
-                        instance = new SkriptClass(name);
+                        instance = new ClassInstance(name);
                         ClassManager.setAwaitingParent(instance);
                     }
                     for (FieldContext context : fields) {
