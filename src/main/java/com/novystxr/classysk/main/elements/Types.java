@@ -32,12 +32,12 @@ public class Types {
 
                 @Override
                 public String toString(SkriptClass o, int flags) {
-                    return "Abstract Class " + o.name;
+                    return "Static Class " + o.name;
                 }
 
                 @Override
                 public String toVariableNameString(SkriptClass o) {
-                    return "Abstract Class " + o.name;
+                    return "Static Class " + o.name;
                 }
             })
         );
@@ -55,12 +55,12 @@ public class Types {
 
                 @Override
                 public String toString(ClassInstance o, int flags) {
-                    return "Class " + o.name;
+                    return "Class Instance " + o.name;
                 }
 
                 @Override
                 public String toVariableNameString(ClassInstance o) {
-                    return "Class " + o.name + " (" + o.getHashCode() + ")";
+                    return "Class Instance " + o.name + " (" + o.getHashCode() + ")";
                 }
             })
             .serializer(new Serializer<>() {
