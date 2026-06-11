@@ -21,8 +21,8 @@ public class CondInstanceOf extends Condition {
         registry.register(
                 SyntaxRegistry.CONDITION,
                 SyntaxInfo.builder(CondInstanceOf.class)
-                        .addPattern("%classs% [(is|negated:(isn[']t|is not)) a[n]] instance of [class] <"+ Classysk.classNamePattern +">")
-                        .addPattern("%classs% [(is|negated:(isn[']t|is not)) a[n]] instance of [class] %abstractclasss%")
+                        .addPattern("%classinstance% [(is|negated:(isn[']t|is not)) a[n]] instance of [class] <"+ Classysk.classNamePattern +">")
+                        .addPattern("%classinstance% [(is|negated:(isn[']t|is not)) a[n]] instance of [class] %classs%")
                         .supplier(CondInstanceOf::new)
                         .build()
         );
