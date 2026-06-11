@@ -6,8 +6,6 @@ import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.util.ConverterUtils;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
-
 public class SkriptField {
     public record FieldSignature (
             String name,

@@ -1,7 +1,5 @@
 package com.novystxr.classysk.api.util;
 
-import ch.njol.skript.util.EmptyStacktraceException;
-
 import java.io.NotSerializableException;
 
 public class EmptyIOException extends NotSerializableException {

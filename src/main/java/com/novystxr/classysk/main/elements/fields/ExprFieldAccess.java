@@ -15,7 +15,6 @@ import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.util.ConverterUtils;
 import com.novystxr.classysk.api.util.ExpressionUtils;
 import com.novystxr.classysk.api.util.ClassyStringUtils;
-import com.novystxr.classysk.api.util.Logger;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
