@@ -5,7 +5,7 @@ class TestMethods:
 	public publicMethodFired: boolean = false
 
 	public publicMethod():
-		set instance::publicMethodFired to true
+		set self::publicMethodFired to true
 
 	public publicMethodReturn() :: boolean:
 		return true
@@ -14,7 +14,7 @@ class TestMethods:
 		return "arg1: %{_arg1}%, arg2: %{_arg2}%"
 
 	public privateAccessTest() :: boolean:
-		if instance::privateField is "im private":
+		if self::privateField is "im private":
 			if TestMethods::privateStaticField is "im private and static":
 				return true
 

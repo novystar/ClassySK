@@ -31,7 +31,7 @@ public class ArgumentParser {
     private static final Pattern namedArgPattern =
             Pattern.compile("^[^:(){}\\s\",]+:\\s?.+$");
 
-    public static final String methodPattern = "%classs%\\:\\:<"+ Classysk.namePattern +">\\([args:<.+>]\\)";
+    public static final String methodPattern = "%classinstance%\\:\\:<"+ Classysk.namePattern +">\\([args:<.+>]\\)";
     public static final String staticMethodPattern = "<"+ Classysk.classNamePattern +">\\:\\:<"+ Classysk.namePattern +">\\([args:<.+>]\\)";
 
     public static @Nullable SequencedMap<String, Expression<?>> parseReferenceArgs(MethodSignature signature, List<String> args) {

@@ -23,7 +23,7 @@ public class ExprNewClassInstance extends SimpleExpression<ClassInstance> {
                 SyntaxRegistry.EXPRESSION,
                 DefaultSyntaxInfos.Expression.builder(ExprNewClassInstance.class, ClassInstance.class)
                         .addPatterns(
-                                "new [instance of [class]] %abstractclasss%",
+                                "new [instance of [class]] %classs%",
                                 "new instance of [class] <"+ Classysk.classNamePattern +">"
                         )
                         .supplier(ExprNewClassInstance::new)
