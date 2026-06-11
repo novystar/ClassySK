@@ -4,9 +4,6 @@ import com.novystxr.classysk.api.classes.ClassInstance;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.Map;
 
 public class MethodRunEvent extends Event {
 

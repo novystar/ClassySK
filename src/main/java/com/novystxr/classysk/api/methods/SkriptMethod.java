@@ -87,7 +87,7 @@ public class SkriptMethod {
             args = null;
         }
 
-        MethodRunEvent runEvent = new MethodRunEvent(instance, args);
+        MethodRunEvent runEvent = new MethodRunEvent(instance);
         if (args != null && signature.arguments != null) {
             for (Entry<String, Object[]> arg : args.entrySet()) {
 
