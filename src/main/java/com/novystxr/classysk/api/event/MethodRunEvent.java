@@ -13,7 +13,7 @@ public class MethodRunEvent extends Event {
     public final ClassInstance instance;
     public Object[] returnObject;
 
-    public MethodRunEvent(ClassInstance instance, @Nullable Map<String, Object[]> arguments) {
+    public MethodRunEvent(ClassInstance instance) {
         this.instance = instance;
 
     }

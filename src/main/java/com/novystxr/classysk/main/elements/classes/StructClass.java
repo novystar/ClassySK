@@ -104,8 +104,8 @@ public class StructClass extends Structure {
         }
         // validate methods
         for (Node node : nodes) {
+            if (node.getKey() == null) continue;
             if (node instanceof SectionNode sectionNode) {
-
                 if (sectionNode.getKey().equals("options")) {
                     sectionNode.convertToEntries(1);
 

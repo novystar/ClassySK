@@ -52,7 +52,7 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
     @SuppressWarnings("unchecked")
     @Override
     public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, SkriptParser.ParseResult parseResult, SectionNode sectionNode, List<TriggerItem> triggerItems) {
-        if (!(getParser().getCurrentStructure() instanceof StructClass structClass)) {
+        if (!(getParser().getCurrentStructure() instanceof StructClass)) {
             Skript.error("Method declaration can only be used within a class structure.");
             return false;
         }
