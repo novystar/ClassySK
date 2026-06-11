@@ -9,3 +9,5 @@ load: POSTWORLD
 
 authors: [ novanovy ]
 website: https://github.com/novystar/ClassySK
+depend:
+  - Skript
