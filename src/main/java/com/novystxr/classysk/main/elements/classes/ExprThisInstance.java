@@ -31,7 +31,7 @@ public class ExprThisInstance extends SimpleExpression<ClassInstance> {
     @Override
     public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, SkriptParser.ParseResult parseResult) {
         if (getParser().getCurrentStructure() instanceof SectionSkriptEvent secSkriptEvent) {
-            if (secSkriptEvent.getSection() instanceof SecMethod secMethod) {
+            if (secSkriptEvent.getSection() instanceof SecMethod) {
                 return true;
             }
         }
