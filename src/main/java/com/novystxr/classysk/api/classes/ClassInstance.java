@@ -7,7 +7,9 @@ import java.util.Objects;
 import java.util.TreeMap;
 
 import com.novystxr.classysk.api.fields.SkriptField;
+import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.methods.SkriptMethod;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class ClassInstance {
@@ -40,6 +42,28 @@ public class ClassInstance {
         fieldMap.remove(value.signature.name());
     }
 
+    // lazy initialization
+    public void setFieldValue(String name, @Nullable Object[] value) {
+        SkriptField field = fieldMap.get(name);
+        SkriptClass parent = getParent();
+
+        if (parent == null) return;
+
+        if (field == null) {
+            FieldSignature signature = parent.getFieldSignature(name);
+            if (signature == null) return;
+            if (signature.canConvert(value)) {
+                getField(name).setValue(value);
+            }
+        } else {
+            FieldSignature signature = field.signature;
+            if (signature == null) return;
+            if (signature.canConvert(value)) {
+                field.setValue(value);
+            }
+        }
+    }
+
     public Object[] getFieldValue(String name) {
         SkriptField field = fieldMap.get(name);
         SkriptClass parent = getParent();
@@ -58,7 +82,7 @@ public class ClassInstance {
     }
 
     // if field does not yet exist, instantiates one
-    public @Nullable SkriptField getField(String name) {
+    SkriptField getField(String name) {
         SkriptField field = fieldMap.get(name);
         if (field != null) return field;
 

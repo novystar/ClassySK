@@ -3,10 +3,12 @@ package com.novystxr.classysk.main.elements.classes;
 import ch.njol.skript.Skript;
 import ch.njol.skript.config.Node;
 import ch.njol.skript.config.SectionNode;
+import ch.njol.skript.config.validate.SectionValidator;
 import ch.njol.skript.lang.*;
+import ch.njol.skript.log.SkriptLogger;
 import com.novystxr.classysk.Classysk;
+import com.novystxr.classysk.api.classes.ClassOption;
 import com.novystxr.classysk.api.classes.SkriptClass;
-import com.novystxr.classysk.api.classes.SkriptClass.ClassOption;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.event.FieldRegistrationEvent;
 import com.novystxr.classysk.api.event.MethodRegistrationEvent;
@@ -16,6 +18,7 @@ import com.novystxr.classysk.main.elements.methods.SecMethod;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.UnknownNullability;
 import org.skriptlang.skript.lang.entry.EntryContainer;
+import org.skriptlang.skript.lang.entry.EntryValidator;
 import org.skriptlang.skript.lang.script.Script;
 import org.skriptlang.skript.lang.structure.Structure;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
@@ -87,6 +90,7 @@ public class StructClass extends Structure {
 
         // validate fields
         for (Node node : nodes) {
+            SkriptLogger.setNode(node);
             if (!(node instanceof SectionNode) && node.getKey() != null) {
                 Effect effect = Effect.parse(node.getKey(), "Invalid field declaration");
 
@@ -102,20 +106,18 @@ public class StructClass extends Structure {
                 }
             }
         }
+        EntryValidator optionValidator = ClassOption.getValidator();
         // validate methods
         for (Node node : nodes) {
             if (node.getKey() == null) continue;
             if (node instanceof SectionNode sectionNode) {
-                if (sectionNode.getKey().equals("options")) {
-                    sectionNode.convertToEntries(1);
-
-                    newClass.setOption(ClassOption.STRICT_SIGNATURE_ENFORCEMENT,
-                            sectionNode.getValue("strict signature enforcement"));
-                    newClass.setOption(ClassOption.STORABLE,
-                            sectionNode.getValue("storable"));
-
+                if (node.getKey().equals("options")) {
+                    ClassOption.setOptions(newClass, optionValidator.validate(sectionNode));
                     continue;
+                } else {
+                    newClass.resetOptions();
                 }
+
                 Section section = Section.parse(node.getKey(), null, sectionNode, null);
 
                 if (section instanceof SecMethod secMethod) {
@@ -170,7 +172,4 @@ public class StructClass extends Structure {
     public String toString(Event event, boolean debug) {
         return "Class";
     }
-
-
-
 }

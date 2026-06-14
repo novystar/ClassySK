@@ -26,14 +26,7 @@ public class ClassManager {
                 parent.instances.add(ref);
 
                 for (Entry<String, Object[]> entry : instance.awaitingFields.entrySet()) {
-                    FieldSignature signature = parent.getFieldSignature(entry.getKey());
-                    Object[] value = entry.getValue();
-                    if (signature == null) continue;
-
-                    if (signature.canConvert(value)) {
-                        //noinspection DataFlowIssue dw gang
-                        instance.getField(entry.getKey()).setValue(value);
-                    }
+                    instance.setFieldValue(entry.getKey(), entry.getValue());
                 }
                 return true;
             }

@@ -17,7 +17,7 @@ public class CleanUpListener implements ScriptLoadEvent {
         for (SkriptClass skriptClass : classes) {
             if (skriptClass.getValidScript() == script && !skriptClass.accessible) {
                 ClassManager.removeClass(skriptClass.name);
-                Logger.log("Cleaned up class<AQUA>", skriptClass.name);
+                Logger.log("Cleaned up class<AQUA>", skriptClass.getEffectiveName());
             }
         }
 

@@ -4,6 +4,7 @@ import com.novystxr.classysk.api.AccessModifiable;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.util.ConverterUtils;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
 public class SkriptField {
@@ -31,6 +32,7 @@ public class SkriptField {
             return isStatic == this.isStatic;
         }
 
+        @Contract("null -> true")
         public boolean canConvert(Object[] values) {
             if (values == null) return true;
             if (values.length != 1 && !isPlural) return false;

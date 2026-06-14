@@ -18,26 +18,7 @@ import org.skriptlang.skript.lang.structure.Structure;
 /** non instance skript class <br>
  holds static fields/methods, instances and signature data **/
 public class SkriptClass extends ClassInstance {
-
-    public enum ClassOption {
-        STRICT_SIGNATURE_ENFORCEMENT(false),
-        STORABLE(true);
-
-        private final boolean defaultValue;
-
-        ClassOption(boolean defaultValue) {
-            this.defaultValue = defaultValue;
-        }
-        public static Map<ClassOption, Boolean> getDefaults() {
-            Map<ClassOption, Boolean> result = new HashMap<>();
-            for (ClassOption option : ClassOption.class.getEnumConstants()) {
-                result.put(option, option.defaultValue);
-            }
-            return result;
-        }
-    }
-
-    public final Map<ClassOption, Boolean> options = ClassOption.getDefaults();
+    public Map<ClassOption, Boolean> options = ClassOption.getDefaults();
 
     private Map<String, FieldSignature> fieldSignatures = new HashMap<>();
     private final Map<String, SkriptMethod> methods = new HashMap<>();
@@ -55,17 +36,15 @@ public class SkriptClass extends ClassInstance {
         this.script = script;
     }
 
-    public void setOption(ClassOption option, String value) {
-        if (value == null) return;
-        if (value.equals("true")) {
-            options.replace(option, true);
-        } else if (value.equals("false")) {
-            options.replace(option, false);
-        }
+    public void setOption(ClassOption option, boolean value) {
+        options.replace(option, value);
     }
 
     public boolean option(ClassOption option) {
         return options.get(option);
+    }
+    public void resetOptions() {
+        options = ClassOption.getDefaults();
     }
 
     public boolean hasFieldSignature(String name) {

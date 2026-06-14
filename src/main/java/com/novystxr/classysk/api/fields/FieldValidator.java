@@ -82,12 +82,7 @@ public class FieldValidator {
 
     public void attemptSetValue(@Nullable Object[] delta) {
         if (delta == null) return;
-
-        if (signature.canConvert(delta)) {
-            SkriptField field = instance.getField(fieldName);
-            if (field == null) return;
-            field.setValue(delta);
-        }
+        instance.setFieldValue(fieldName, delta);
     }
 
     public Object[] get() {

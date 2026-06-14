@@ -2,13 +2,12 @@ package com.novystxr.classysk.main.elements.classes;
 
 import ch.njol.skript.Skript;
 import ch.njol.skript.lang.Expression;
-import ch.njol.skript.lang.SectionSkriptEvent;
 import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.event.MethodRunEvent;
-import com.novystxr.classysk.main.elements.methods.SecMethod;
+import com.novystxr.classysk.api.methods.SkriptMethod;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
@@ -19,10 +18,7 @@ public class ExprThisInstance extends SimpleExpression<ClassInstance> {
         registry.register(
                 SyntaxRegistry.EXPRESSION,
                 DefaultSyntaxInfos.Expression.builder(ExprThisInstance.class, ClassInstance.class)
-                        .addPatterns(
-                                "this instance",
-                                "self"
-                        )
+                        .addPatterns("this instance", "self")
                         .supplier(ExprThisInstance::new)
                         .build()
         );
@@ -30,10 +26,8 @@ public class ExprThisInstance extends SimpleExpression<ClassInstance> {
 
     @Override
     public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, SkriptParser.ParseResult parseResult) {
-        if (getParser().getCurrentStructure() instanceof SectionSkriptEvent secSkriptEvent) {
-            if (secSkriptEvent.getSection() instanceof SecMethod) {
-                return true;
-            }
+        if (SkriptMethod.isMethodBody(getParser())) {
+            return true;
         }
         Skript.error("This expression can only be used within a method section.");
         return false;
@@ -61,6 +55,6 @@ public class ExprThisInstance extends SimpleExpression<ClassInstance> {
 
     @Override
     public String toString(@Nullable Event event, boolean debug) {
-        return "instance";
+        return "self";
     }
 }

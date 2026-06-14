@@ -1,12 +1,15 @@
 package com.novystxr.classysk.api.methods;
 
 import ch.njol.skript.lang.Expression;
+import ch.njol.skript.lang.SectionSkriptEvent;
 import ch.njol.skript.lang.Trigger;
+import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.variables.Variables;
 import com.novystxr.classysk.api.AccessModifiable;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.event.MethodRunEvent;
+import com.novystxr.classysk.main.elements.methods.SecMethod;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 
@@ -122,6 +125,22 @@ public class SkriptMethod {
         else className = "unknown";
 
         return className+"::"+methodName+"("+args+")";
+    }
+
+    public static boolean isMethodBody(ParserInstance parser) {
+        if (parser.getCurrentStructure() instanceof SectionSkriptEvent secSkriptEvent) {
+            if (secSkriptEvent.getSection() instanceof SecMethod) return true;
+        }
+        return false;
+    }
+
+    public static @Nullable SkriptClass getContextClass(ParserInstance parser) {
+        if (parser.getCurrentStructure() instanceof SectionSkriptEvent secSkriptEvent) {
+            if (secSkriptEvent.getSection() instanceof SecMethod secMethod) {
+                return secMethod.contextClass;
+            }
+        }
+        return null;
     }
 
 }

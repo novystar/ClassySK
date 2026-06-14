@@ -31,10 +31,14 @@ public class ClassyStringUtils {
         return input.substring(0, 1).toUpperCase()+input.substring(1);
     }
 
-    public static String getLowerCase(MatchResult matchResult) {
+    public static String getLowerCase(String value) {
         if (SkriptConfig.caseInsensitiveVariables.value()) {
-            return matchResult.group(0).trim().toLowerCase(Locale.ENGLISH);
+            return value.trim().toLowerCase(Locale.ENGLISH);
         }
-        return matchResult.group(0).trim();
+        return value.trim();
+    }
+
+    public static String getLowerCase(MatchResult matchResult) {
+        return getLowerCase(matchResult.group(0));
     }
 }

@@ -8,7 +8,7 @@ import ch.njol.skript.registrations.Classes;
 import ch.njol.yggdrasil.Fields;
 import ch.njol.yggdrasil.Fields.FieldContext;
 import com.novystxr.classysk.api.classes.SkriptClass;
-import com.novystxr.classysk.api.classes.SkriptClass.ClassOption;
+import com.novystxr.classysk.api.classes.ClassOption;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.util.EmptyIOException;
