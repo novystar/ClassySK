@@ -10,6 +10,7 @@ import com.novystxr.classysk.api.classes.ClassInstance;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 
+// NOTE: too much extraction, need a more elegant way to do this
 public class FieldValidator {
 
     String fieldName;
