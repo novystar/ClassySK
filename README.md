@@ -7,8 +7,8 @@ Nothing here is set in stone but these are my future ambitions regarding the pro
 - [ ] Converters: ability to recognize objects of certain types as an implicit class instance, with methods using class values (e.g. class-player)
 - [ ] Method overloading
 - [ ] Inheritance: extending other classes
+- [ ] Maybe: Abstract classes
 - [ ] File specific access modifiers: local, folder
 - [ ] Reflection: Syntax for getting fields and methods and mapping fields to variable lists
 - [ ] Final/Constant fields
-- [ ] Maybe: Abstract classes
 - [ ] Tables: looser, untyped data structures that can be passed around and used easily
