@@ -1,18 +1,18 @@
 package com.novystxr.classysk.api.fields;
 
-import ch.njol.skript.config.Node;
 import com.novystxr.classysk.api.AccessValidator;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import org.jetbrains.annotations.NotNull;
+import org.skriptlang.skript.log.runtime.ErrorSource;
 
 public class FieldValidator extends AccessValidator<FieldSignature> {
 
     private final String fieldName;
 
-    public FieldValidator(Node node, SkriptClass contextClass, String fieldName) {
-        super(node, contextClass);
+    public FieldValidator(ErrorSource errorSource, SkriptClass contextClass, String fieldName) {
+        super(errorSource, contextClass);
         this.fieldName = fieldName;
     }
 

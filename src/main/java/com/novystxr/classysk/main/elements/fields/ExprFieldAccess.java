@@ -3,7 +3,6 @@ package com.novystxr.classysk.main.elements.fields;
 import ch.njol.skript.classes.Changer.ChangeMode;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
-import ch.njol.skript.lang.SyntaxStringBuilder;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import ch.njol.util.coll.CollectionUtils;
@@ -57,10 +56,10 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
             instanceExpr = (Expression<ClassInstance>) expressions[0];
         }
         SkriptClass contextClass = SkriptMethod.getContextClass(getParser());
-        validator = new FieldValidator(getNode(), contextClass, fieldName);
+        validator = new FieldValidator(getErrorSource(), contextClass, fieldName);
 
         if (isStaticReference) {
-            return validator.validateInstance(skriptClass);
+            return validator.validateInstance(skriptClass, false);
         }
         return true;
     }
@@ -102,7 +101,6 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
             case SET, RESET, DELETE, REMOVE, ADD -> true;
             default -> false;
         };
-
         if (result) {
             FieldSignature signature = validator.getSignature();
             if (signature != null) {
@@ -117,7 +115,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
         if (isStaticReference) return skriptClass;
         ClassInstance newInstance = instanceExpr.getSingle(event);
 
-        if (validator.validateInstance(newInstance)) {
+        if (validator.validateInstance(newInstance, true)) {
             return newInstance;
         }
         return null;
