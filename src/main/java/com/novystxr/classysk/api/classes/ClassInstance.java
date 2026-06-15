@@ -104,9 +104,9 @@ public class ClassInstance {
         SkriptClass parent = getParent();
 
         if (parent == null) return null;
-        if (!parent.hasMethod(name)) return null;
 
         SkriptMethod method = parent.getMethod(name);
+        if (method == null) return null;
         if (method.signature.isStatic() == isInstance()) return null;
 
         return method;

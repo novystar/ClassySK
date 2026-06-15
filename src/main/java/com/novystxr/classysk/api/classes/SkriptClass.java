@@ -47,18 +47,11 @@ public class SkriptClass extends ClassInstance {
         options = ClassOption.getDefaults();
     }
 
-    public boolean hasFieldSignature(String name) {
-        return fieldSignatures.containsKey(name);
-    }
-
     @Override
     public FieldSignature getFieldSignature(String key) {
         return fieldSignatures.get(key);
     }
 
-    public boolean hasMethod(String name) {
-        return methods.containsKey(name);
-    }
     public SkriptMethod getMethod(String key) {
         return methods.get(key);
     }
@@ -163,11 +156,6 @@ public class SkriptClass extends ClassInstance {
                 }
                 // attempt to convert to new signature
                 if (ConverterUtils.canConvert(signature.type(), field.getValue())) {
-                    // if signature no longer exists or static context changed, ignore and use existing signature
-                    if (signature == null || signature.isStatic() != field.signature.isStatic()) {
-                        if (strictSignatureEnforcement) instance.removeField(field);
-                        continue;
-                    }
                     field.signature = signature;
                 } else if (strictSignatureEnforcement) {
                     instance.removeField(field);
