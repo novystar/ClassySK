@@ -12,7 +12,7 @@ import org.skriptlang.skript.log.runtime.RuntimeErrorProducer;
 public abstract class AccessValidator<T> implements RuntimeErrorProducer {
     private ClassInstance instance;
 
-    protected boolean printErrors = true;
+    protected boolean dontPrintErrors;
     protected boolean isStatic;
 
     private final ErrorSource errorSource;
@@ -44,7 +44,7 @@ public abstract class AccessValidator<T> implements RuntimeErrorProducer {
         }
         isStatic = !newInstance.isInstance();
 
-        this.printErrors = newInstance.getParent().option(ClassOption.SUPPRESS_RUNTIME_ERRORS) && isRuntime;
+        this.dontPrintErrors = newInstance.getParent().option(ClassOption.SUPPRESS_RUNTIME_ERRORS) && isRuntime;
         if (validate(newInstance)) {
             this.instance = newInstance;
             return true;
@@ -63,7 +63,7 @@ public abstract class AccessValidator<T> implements RuntimeErrorProducer {
 
     @Override
     public final void error(String message) {
-        if (!printErrors) return;
+        if (dontPrintErrors) return;
         if (isRuntime) {
             RuntimeErrorProducer.super.error(message);
         } else {
@@ -73,7 +73,7 @@ public abstract class AccessValidator<T> implements RuntimeErrorProducer {
 
     @Override
     public final void warning(String message) {
-        if (!printErrors) return;
+        if (dontPrintErrors) return;
         if (isRuntime) {
             RuntimeErrorProducer.super.warning(message);
         } else {
