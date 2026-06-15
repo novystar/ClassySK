@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.SequencedMap;
 
-// NOTE: too much extraction, need a more elegant way to do this
+// TODO: rewrite using AccessValidator
 // method parsing/validation overall needs a rework to accommodate for overloading
 public class MethodValidator {
     public MethodValidator(String methodName, @Nullable String args, boolean expectsReturn, boolean isStatic) {

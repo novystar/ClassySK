@@ -34,6 +34,13 @@ public class ClassInstance {
 
     }
 
+    public boolean isAccessible() {
+        SkriptClass parent = getParent();
+        if (parent == null) return false;
+
+        return parent.accessible;
+    }
+
     public void removeField(String name) {
         fieldMap.remove(name);
     }
@@ -79,6 +86,17 @@ public class ClassInstance {
         }
 
         return value;
+    }
+
+    // gets existing signature and falls back to parent
+    public @Nullable FieldSignature getFieldSignature(String name) {
+        SkriptField field = fieldMap.get(name);
+        if (field == null) {
+            SkriptClass parent = getParent();
+            if (parent == null) return null;
+            return parent.getFieldSignature(name);
+        }
+        return field.signature;
     }
 
     // if field does not yet exist, instantiates one

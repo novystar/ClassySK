@@ -51,6 +51,7 @@ public class SkriptClass extends ClassInstance {
         return fieldSignatures.containsKey(name);
     }
 
+    @Override
     public FieldSignature getFieldSignature(String key) {
         return fieldSignatures.get(key);
     }
