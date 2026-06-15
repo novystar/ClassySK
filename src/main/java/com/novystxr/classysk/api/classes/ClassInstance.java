@@ -9,7 +9,6 @@ import java.util.TreeMap;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.methods.SkriptMethod;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class ClassInstance {
@@ -51,41 +50,27 @@ public class ClassInstance {
 
     // lazy initialization
     public void setFieldValue(String name, @Nullable Object[] value) {
-        SkriptField field = fieldMap.get(name);
-        SkriptClass parent = getParent();
-
-        if (parent == null) return;
-
-        if (field == null) {
-            FieldSignature signature = parent.getFieldSignature(name);
-            if (signature == null) return;
-            if (signature.canConvert(value)) {
-                getField(name).setValue(value);
-            }
-        } else {
-            FieldSignature signature = field.signature;
-            if (signature == null) return;
-            if (signature.canConvert(value)) {
-                field.setValue(value);
-            }
+        FieldSignature signature = getFieldSignature(name);
+        if (signature == null) return;
+        if (signature.canConvert(value)) {
+            getField(name).setValue(value);
         }
+        getField(name).setValue(value);
     }
 
     public Object[] getFieldValue(String name) {
         SkriptField field = fieldMap.get(name);
-        SkriptClass parent = getParent();
-
-        Object[] value = null;
-
         if (field != null) {
-            value = field.getValue();
-        } else if (parent == null) {
-            return null;
-        } else if (parent.hasFieldSignature(name)) {
-            value = parent.getFieldSignature(name).defaultValue();
+            return field.getValue();
         }
+        SkriptClass parent = getParent();
+        if (parent == null) return null;
 
-        return value;
+        FieldSignature signature = parent.getFieldSignature(name);
+        if (signature != null) {
+            return signature.defaultValue();
+        }
+        return null;
     }
 
     // gets existing signature and falls back to parent
@@ -108,6 +93,7 @@ public class ClassInstance {
         if (parent == null) return null;
 
         SkriptField.FieldSignature signature = parent.getFieldSignature(name);
+        //noinspection DataFlowIssue
         field = new SkriptField(signature);
         createField(field);
 
