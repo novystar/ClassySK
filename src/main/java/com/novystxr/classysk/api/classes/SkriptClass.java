@@ -156,6 +156,12 @@ public class SkriptClass extends ClassInstance {
             for (SkriptField field : instance.getFieldMap().values()) {
                 FieldSignature signature = fieldSignatures.get(field.signature.name());
 
+                // if signature no longer exists or static context changed, ignore and use existing signature
+                if (signature == null || signature.isStatic() != field.signature.isStatic()) {
+                    if (strictSignatureEnforcement) instance.removeField(field);
+                    continue;
+                }
+                // attempt to convert to new signature
                 if (ConverterUtils.canConvert(signature.type(), field.getValue())) {
                     // if signature no longer exists or static context changed, ignore and use existing signature
                     if (signature == null || signature.isStatic() != field.signature.isStatic()) {
