@@ -69,7 +69,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
         ClassInstance instance = getValidInstance(event);
         if (instance == null) return null;
 
-        return instance.getParent().getFieldValue(fieldName);
+        return instance.getFieldValue(fieldName);
     }
 
     @Override
