@@ -55,7 +55,6 @@ public class ClassInstance {
         if (signature.canConvert(value)) {
             getField(name).setValue(value);
         }
-        getField(name).setValue(value);
     }
 
     public Object[] getFieldValue(String name) {
@@ -93,7 +92,8 @@ public class ClassInstance {
         if (parent == null) return null;
 
         SkriptField.FieldSignature signature = parent.getFieldSignature(name);
-        //noinspection DataFlowIssue
+        if (signature == null) return null;
+
         field = new SkriptField(signature);
         createField(field);
 
