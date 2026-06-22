@@ -9,4 +9,4 @@ Nothing here is set in stone but these are my future ambitions regarding the pro
 - [ ] Constant fields: fields that cant be changed after creation
 - [ ] File specific access modifiers: local, folder
 - [ ] Tables: looser, untyped data structures that can be passed around and used easily
-- [ ] Reflection: Syntax for getting fields and methods and mapping fields to variable lists
+- [ ] Reflection: syntax for getting fields and methods and mapping fields to variable lists
