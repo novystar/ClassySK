@@ -4,11 +4,9 @@ This repo and project are currently a wip!! I have made this public so that i ca
 
 ## Roadmap
 Nothing here is set in stone but these are my future ambitions regarding the project (in no particular order)
-- [ ] Converters: ability to recognize objects of certain types as an implicit class instance, with methods using class values (e.g. class-player)
-- [ ] Method overloading
 - [ ] Inheritance: extending other classes
-- [ ] Maybe: Abstract classes
+- [ ] Abstract classes: contains methods that must be implemented by inheritors, cannot be instantiated on its own
+- [ ] Constant fields: fields that cant be changed after creation
 - [ ] File specific access modifiers: local, folder
-- [ ] Reflection: Syntax for getting fields and methods and mapping fields to variable lists
-- [ ] Final/Constant fields
 - [ ] Tables: looser, untyped data structures that can be passed around and used easily
+- [ ] Reflection: Syntax for getting fields and methods and mapping fields to variable lists
