@@ -83,7 +83,7 @@ public class StructClass extends Structure {
 
         Map<String, FieldSignature> fieldSignatures = new HashMap<>();
         List<SecMethod> methods = new ArrayList<>();
-        newClass.initMethodRegistry();
+        newClass.methodRegistry.init();
 
         List<Node> nodes = this.entryContainer.getUnhandledNodes();
 

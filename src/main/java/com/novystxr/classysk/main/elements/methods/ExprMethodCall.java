@@ -1,8 +1,8 @@
 package com.novystxr.classysk.main.elements.methods;
 
-import ch.njol.skript.lang.Effect;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
+import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.ClassManager;
@@ -13,21 +13,22 @@ import com.novystxr.classysk.api.methods.MethodValidator;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.registration.DefaultSyntaxInfos;
 import org.skriptlang.skript.registration.SyntaxInfo;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
 import static com.novystxr.classysk.api.util.StringUtils.getLowerCase;
 
-public class EffMethodCall extends Effect {
+public class ExprMethodCall extends SimpleExpression<Object> {
 
     public static void register(SyntaxRegistry registry) {
         registry.register(
-            SyntaxRegistry.EFFECT,
-            SyntaxInfo.builder(EffMethodCall.class)
-                .addPatterns(MethodParser.METHOD_PATTERN, MethodParser.STATIC_METHOD_PATTERN)
-                .priority(SyntaxInfo.PATTERN_MATCHES_EVERYTHING)
-                .supplier(EffMethodCall::new)
-                .build()
+                SyntaxRegistry.EXPRESSION,
+                DefaultSyntaxInfos.Expression.builder(ExprMethodCall.class, Object.class)
+                    .addPatterns(MethodParser.METHOD_PATTERN, MethodParser.STATIC_METHOD_PATTERN)
+                    .priority(SyntaxInfo.PATTERN_MATCHES_EVERYTHING)
+                    .supplier(ExprMethodCall::new)
+                    .build()
         );
     }
 
@@ -50,7 +51,7 @@ public class EffMethodCall extends Effect {
         MethodReference reference = MethodParser.parseReference(methodName, args);
 
         if (reference == null) return false;
-        validator = new MethodValidator(getErrorSource(), contextClass, reference, false);
+        validator = new MethodValidator(getErrorSource(), contextClass, reference, true);
 
         if (isStaticReference) {
             String className = getLowerCase(result.regexes.getFirst());
@@ -63,12 +64,36 @@ public class EffMethodCall extends Effect {
     }
 
     @Override
-    protected void execute(Event event) {
+    protected Object @Nullable [] get(Event event) {
         ClassInstance instance = getValidInstance(event);
-        if (instance == null) return;
+        if (instance == null) return null;
 
         SkriptMethod method = validator.getProduct();
-        method.run(event, instance, validator.getValidatedArgs());
+        return method.run(event, instance, validator.getValidatedArgs());
+    }
+
+    @Override
+    public boolean isSingle() {
+        if (isStaticReference) {
+            return !validator.getProduct().signature.returnPlural();
+        }
+        return false;
+    }
+
+    @Override
+    public boolean canBeSingle() {
+        if (isStaticReference) {
+            return !validator.getProduct().signature.returnPlural();
+        }
+        return true;
+    }
+
+    @Override
+    public Class<?> getReturnType() {
+        if (isStaticReference) {
+            return validator.getProduct().signature.returnType();
+        }
+        return Object.class;
     }
 
     private @Nullable ClassInstance getValidInstance(Event event) {
@@ -82,7 +107,7 @@ public class EffMethodCall extends Effect {
     }
 
     @Override
-    public String toString(@Nullable Event event, boolean debug) {
+    public String toString(Event event, boolean debug) {
         return "method call";
     }
 }

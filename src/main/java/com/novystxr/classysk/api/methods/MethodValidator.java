@@ -19,12 +19,14 @@ import java.util.*;
 public class MethodValidator extends AccessValidator<SkriptMethod> {
 
     private final MethodReference reference;
+    private final boolean expectsReturn;
 
     private Map<String, Expression<?>> validatedArgs;
 
-    public MethodValidator(ErrorSource errorSource, SkriptClass contextClass, MethodReference reference) {
+    public MethodValidator(ErrorSource errorSource, SkriptClass contextClass, MethodReference reference, boolean expectsReturn) {
         super(errorSource, contextClass);
         this.reference = reference;
+        this.expectsReturn = expectsReturn;
     }
 
     public Map<String, Expression<?>> getValidatedArgs() {
@@ -64,6 +66,10 @@ public class MethodValidator extends AccessValidator<SkriptMethod> {
         }
         if (!method.checkContext(isStatic)) {
             Skript.error("Method accessed from improper context");
+            return false;
+        }
+        if (expectsReturn && method.signature.returnType() == null) {
+            Skript.error("This method can't return anything");
             return false;
         }
 
