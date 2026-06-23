@@ -123,23 +123,26 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
 
     @Override
     public boolean isSingle() {
-        FieldSignature signature = validator.getProduct();
-        if (signature == null) return false;
-        return !signature.isPlural();
+        if (isStaticReference) {
+            return !validator.getProduct().isPlural();
+        }
+        return false;
     }
 
     @Override
     public boolean canBeSingle() {
-        FieldSignature signature = validator.getProduct();
-        if (signature == null) return true;
-        return !signature.isPlural();
+        if (isStaticReference) {
+            return !validator.getProduct().isPlural();
+        }
+        return true;
     }
 
     @Override
     public Class<?> getReturnType() {
-        FieldSignature signature = validator.getProduct();
-        if (signature == null) return Object.class;
-        return signature.type();
+        if (isStaticReference) {
+            return validator.getProduct().type();
+        }
+        return Object.class;
     }
 
     @Override
