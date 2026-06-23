@@ -11,6 +11,8 @@ import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.log.runtime.ErrorSource;
 import org.skriptlang.skript.log.runtime.RuntimeErrorProducer;
 
+import java.util.logging.Level;
+
 public abstract class AccessValidator<T extends AccessModifiable> implements RuntimeErrorProducer {
     protected ClassInstance instance;
     protected boolean isStatic;
@@ -51,17 +53,17 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
         isStatic = !newInstance.isInstance();
         noRuntimeErrors = newInstance.getParent().option(ClassOption.SUPPRESS_RUNTIME_ERRORS);
 
-        // thanks pickle
         try (RetainingLogHandler handler = new RetainingLogHandler().start()) {
             if (validate(newInstance)) {
                 this.instance = newInstance;
                 return true;
             }
-            LogEntry error = handler.getFirstError();
-            handler.clear();
-            if (error != null) {
-                dynamicError(error.getMessage(), isRuntime);
+            for (LogEntry entry : handler.getLog()) {
+                if (entry.getLevel().intValue() >= Level.SEVERE.intValue()) {
+                    dynamicError(entry.getMessage(), isRuntime);
+                }
             }
+            handler.clear();
         }
         return false;
     }
