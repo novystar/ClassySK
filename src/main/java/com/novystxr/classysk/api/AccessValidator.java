@@ -1,6 +1,7 @@
 package com.novystxr.classysk.api;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.log.LogEntry;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.ClassOption;
 import com.novystxr.classysk.api.classes.SkriptClass;
@@ -55,9 +56,9 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
                 this.instance = newInstance;
                 return true;
             }
-            String error = handler.getErrorMessage();
+            LogEntry error = handler.getLastError();
             if (error != null) {
-                dynamicError(error, isRuntime);
+                dynamicError(error.getMessage(), isRuntime);
             }
         }
         return false;
