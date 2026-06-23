@@ -11,9 +11,6 @@ import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.log.runtime.ErrorSource;
 import org.skriptlang.skript.log.runtime.RuntimeErrorProducer;
 
-import java.util.Collection;
-import java.util.logging.Level;
-
 public abstract class AccessValidator<T extends AccessModifiable> implements RuntimeErrorProducer {
     protected ClassInstance instance;
     protected boolean isStatic;
@@ -59,13 +56,11 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
                 this.instance = newInstance;
                 return true;
             }
+            LogEntry error = handler.getFirstError();
+            if (Skript.testing()) handler.getLog(); // njol stinks
 
-            Collection<LogEntry> entries = handler.getLog();
-
-            for (LogEntry entry : entries) {
-                if (entry.getLevel().intValue() >= Level.SEVERE.intValue()) {
-                    dynamicError(entry.getMessage(), isRuntime);
-                }
+            if (error != null) {
+                dynamicError(error.getMessage(), isRuntime);
             }
             handler.clear();
         }
