@@ -17,6 +17,7 @@ public class ConverterUtils {
 
     public static boolean canConvert(Class<?> toClass, Class<?> fromClass) {
 
+        if (toClass == Object.class) return true;
         if (toClass == Long.class && fromClass != Long.class) return false;
         if (toClass == fromClass) return true;
         return Converters.converterExists(fromClass, toClass);

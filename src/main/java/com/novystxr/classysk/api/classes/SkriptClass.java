@@ -7,8 +7,8 @@ import java.util.*;
 import ch.njol.skript.ScriptLoader;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
-import com.novystxr.classysk.api.methods.SkriptMethod;
-import com.novystxr.classysk.api.util.ClassyStringUtils;
+import com.novystxr.classysk.api.methods.MethodRegistry;
+import com.novystxr.classysk.api.util.StringUtils;
 import com.novystxr.classysk.api.util.ConverterUtils;
 import com.novystxr.classysk.main.elements.classes.StructClass;
 import org.jetbrains.annotations.Nullable;
@@ -20,8 +20,8 @@ import org.skriptlang.skript.lang.structure.Structure;
 public class SkriptClass extends ClassInstance {
     public Map<ClassOption, Boolean> options = ClassOption.getDefaults();
 
+    public final MethodRegistry methodRegistry = new MethodRegistry();
     private Map<String, FieldSignature> fieldSignatures = new HashMap<>();
-    private final Map<String, SkriptMethod> methods = new HashMap<>();
 
     final List<WeakReference<ClassInstance>> instances = new ArrayList<>();
 
@@ -50,10 +50,6 @@ public class SkriptClass extends ClassInstance {
     @Override
     public FieldSignature getFieldSignature(String key) {
         return fieldSignatures.get(key);
-    }
-
-    public SkriptMethod getMethod(String key) {
-        return methods.get(key);
     }
 
     public @Nullable Script getValidScript() {
@@ -89,7 +85,7 @@ public class SkriptClass extends ClassInstance {
 
     @Override
     public String getEffectiveName() {
-        return ClassyStringUtils.titleCase(name);
+        return StringUtils.titleCase(name);
     }
 
     /**
@@ -112,14 +108,6 @@ public class SkriptClass extends ClassInstance {
 
         ClassManager.removeClass(name);
         return false;
-    }
-
-    public void initMethodRegistry() {
-        this.methods.clear();
-    }
-
-    public void putMethod(String key, SkriptMethod method) {
-        methods.put(key, method);
     }
 
     public void updateFieldSignatureMap(Map<String, FieldSignature> fieldSignatures) {

@@ -16,10 +16,21 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.Map.Entry;
 
-public class SkriptMethod {
+public class SkriptMethod implements AccessModifiable {
+
+    @Override
+    public boolean checkAccess(@Nullable SkriptClass contextClass) {
+        if (signature.accessType == AccessType.PRIVATE && contextClass != signature.parentClass) return false;
+
+        return true;
+    }
+
+    @Override
+    public boolean checkContext(boolean isStatic) {
+        return signature.isStatic == isStatic;
+    }
 
     public record MethodArgument(
-            String name,
             Class<?> type,
 
             @Nullable Expression<?> defaultValue,
@@ -29,7 +40,6 @@ public class SkriptMethod {
 
     public record MethodSignature(
         String name,
-
         @Nullable SequencedMap<String, MethodArgument> arguments,
         AccessType accessType,
         boolean isStatic,
@@ -38,30 +48,7 @@ public class SkriptMethod {
         boolean returnPlural,
         SkriptClass parentClass
 
-    ) implements AccessModifiable {
-        @Override
-        public boolean checkAccess(@Nullable SkriptClass contextClass) {
-            if (accessType == AccessType.PRIVATE && contextClass != parentClass) return false;
-
-            return true;
-        }
-
-        @Override
-        public boolean checkContext(boolean isStatic) {
-            return isStatic == this.isStatic;
-        }
-
-        public boolean hasRequiredArgs() {
-            if (arguments == null) return false;
-
-            for (MethodArgument arg : arguments.sequencedValues()) {
-                if (arg.defaultValue == null) {
-                    return true;
-                }
-            }
-            return false;
-        }
-    }
+    ) {}
 
     public SkriptMethod(MethodSignature signature) {
         this.signature = signature;
@@ -114,17 +101,6 @@ public class SkriptMethod {
         }
 
         return null;
-    }
-
-    public static String getEffectiveName(@Nullable ClassInstance parentClass, @Nullable String methodName, @Nullable String args) {
-        if (args == null) args = "";
-        if (methodName == null) methodName = "";
-
-        String className;
-        if (parentClass != null) className = parentClass.getEffectiveName();
-        else className = "unknown";
-
-        return className+"::"+methodName+"("+args+")";
     }
 
     public static boolean isMethodBody(ParserInstance parser) {

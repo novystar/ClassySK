@@ -10,7 +10,7 @@ import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.AccessModifiable.AccessType;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.event.FieldRegistrationEvent;
-import com.novystxr.classysk.api.util.ClassyStringUtils;
+import com.novystxr.classysk.api.util.StringUtils;
 import com.novystxr.classysk.main.elements.classes.StructClass;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
@@ -22,7 +22,7 @@ public class EffField extends Effect {
         registry.register(
                 SyntaxRegistry.EFFECT,
                 SyntaxInfo.builder(EffField.class)
-                        .addPattern("(public|:private) [:static] <"+ Classysk.namePattern +">\\: %-classinfo% [=[ ]%-objects%]")
+                        .addPattern("(public|:private) [:static] <"+ Classysk.NAME_PATTERN +">\\: %-classinfo% [=[ ]%-objects%]")
                         .supplier(EffField::new)
                         .build()
         );
@@ -49,7 +49,7 @@ public class EffField extends Effect {
             return false;
         }
 
-        fieldName = ClassyStringUtils.getLowerCase(parser.regexes.getFirst());
+        fieldName = StringUtils.getLowerCase(parser.regexes.getFirst());
         exprClassInfo = (Expression<ClassInfo<?>>) exprs[0];
 
         isPrivate = parser.hasTag("private");

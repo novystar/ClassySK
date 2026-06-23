@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.regex.MatchResult;
 
-public class ClassyStringUtils {
+public class StringUtils {
     public static @Nullable List<String> splitArgs(String args) {
         List<String> result = new ArrayList<>();
         int j = 0;

@@ -1,6 +1,8 @@
 package com.novystxr.classysk.api;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.log.LogEntry;
+import ch.njol.skript.log.RetainingLogHandler;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.ClassOption;
 import com.novystxr.classysk.api.classes.SkriptClass;
@@ -9,17 +11,15 @@ import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.log.runtime.ErrorSource;
 import org.skriptlang.skript.log.runtime.RuntimeErrorProducer;
 
-public abstract class AccessValidator<T> implements RuntimeErrorProducer {
-    private ClassInstance instance;
-
-    protected boolean dontPrintErrors;
+public abstract class AccessValidator<T extends AccessModifiable> implements RuntimeErrorProducer {
+    protected ClassInstance instance;
     protected boolean isStatic;
 
-    private final ErrorSource errorSource;
     protected final SkriptClass contextClass;
+    private T product;
 
-    protected boolean isRuntime;
-    protected T signature;
+    protected ErrorSource errorSource;
+    private boolean noRuntimeErrors = false;
 
     /**
      * Extend with extra data that is necessary
@@ -29,6 +29,13 @@ public abstract class AccessValidator<T> implements RuntimeErrorProducer {
         this.contextClass = contextClass;
     }
 
+    protected void setProduct(T product) {
+        this.product = product;
+    }
+    public T getProduct() {
+        return product;
+    }
+
     /**
      * Validate your signature and set mutable data
      */
@@ -36,24 +43,27 @@ public abstract class AccessValidator<T> implements RuntimeErrorProducer {
 
     public final boolean validateInstance(@Nullable ClassInstance newInstance, boolean isRuntime) {
         if (this.instance == newInstance) return true;
-        this.isRuntime = isRuntime;
 
         if (newInstance == null || !newInstance.isAccessible()) {
-            error("Passed instance is null or non-accessible");
+            dynamicError("Passed instance is null or non-accessible", isRuntime);
             return false;
         }
         isStatic = !newInstance.isInstance();
+        noRuntimeErrors = newInstance.getParent().option(ClassOption.SUPPRESS_RUNTIME_ERRORS);
 
-        this.dontPrintErrors = newInstance.getParent().option(ClassOption.SUPPRESS_RUNTIME_ERRORS) && isRuntime;
-        if (validate(newInstance)) {
-            this.instance = newInstance;
-            return true;
+        // thanks pickle
+        try (RetainingLogHandler handler = new RetainingLogHandler().start()) {
+            if (validate(newInstance)) {
+                this.instance = newInstance;
+                return true;
+            }
+            LogEntry error = handler.getFirstError();
+            handler.clear();
+            if (error != null) {
+                dynamicError(error.getMessage(), isRuntime);
+            }
         }
         return false;
-    }
-
-    public T getSignature() {
-        return signature;
     }
 
     @Override
@@ -61,24 +71,11 @@ public abstract class AccessValidator<T> implements RuntimeErrorProducer {
         return errorSource;
     }
 
-    @Override
-    public final void error(String message) {
-        if (dontPrintErrors) return;
-        if (isRuntime) {
-            RuntimeErrorProducer.super.error(message);
+    private void dynamicError(String message, boolean isRuntime) {
+        if (isRuntime && !noRuntimeErrors) {
+            error(message);
         } else {
             Skript.error(message);
         }
     }
-
-    @Override
-    public final void warning(String message) {
-        if (dontPrintErrors) return;
-        if (isRuntime) {
-            RuntimeErrorProducer.super.warning(message);
-        } else {
-            Skript.warning(message);
-        }
-    }
-
 }

@@ -8,7 +8,6 @@ import java.util.TreeMap;
 
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
-import com.novystxr.classysk.api.methods.SkriptMethod;
 import org.jetbrains.annotations.Nullable;
 
 public class ClassInstance {
@@ -98,18 +97,6 @@ public class ClassInstance {
         createField(field);
 
         return field;
-    }
-
-    public @Nullable SkriptMethod getAccessibleMethod(String name) {
-        SkriptClass parent = getParent();
-
-        if (parent == null) return null;
-
-        SkriptMethod method = parent.getMethod(name);
-        if (method == null) return null;
-        if (method.signature.isStatic() == isInstance()) return null;
-
-        return method;
     }
 
     public String getEffectiveName() {

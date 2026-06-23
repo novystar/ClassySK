@@ -9,7 +9,7 @@ import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.ClassInstance;
-import com.novystxr.classysk.api.util.ClassyStringUtils;
+import com.novystxr.classysk.api.util.StringUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.SyntaxInfo;
@@ -21,7 +21,7 @@ public class CondInstanceOf extends Condition {
         registry.register(
                 SyntaxRegistry.CONDITION,
                 SyntaxInfo.builder(CondInstanceOf.class)
-                        .addPattern("%classinstance% [(is|negated:(isn[']t|is not)) a[n]] instance of [class] <"+ Classysk.classNamePattern +">")
+                        .addPattern("%classinstance% [(is|negated:(isn[']t|is not)) a[n]] instance of [class] <"+ Classysk.CLASSNAME_PATTERN +">")
                         .addPattern("%classinstance% [(is|negated:(isn[']t|is not)) a[n]] instance of [class] %classs%")
                         .supplier(CondInstanceOf::new)
                         .build()
@@ -42,7 +42,7 @@ public class CondInstanceOf extends Condition {
         if (matchedPattern == 1) {
             abstractClassExpr = (Expression<SkriptClass>) expressions[1];
         } else {
-            String name = ClassyStringUtils.getLowerCase(parseResult.regexes.getFirst());
+            String name = StringUtils.getLowerCase(parseResult.regexes.getFirst());
             if (!ClassManager.isAccessible(name)) {
                 Skript.error("Class named " + name + " does not exist");
                 return false;

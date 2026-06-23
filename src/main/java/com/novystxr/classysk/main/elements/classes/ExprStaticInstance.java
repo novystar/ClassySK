@@ -8,7 +8,7 @@ import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassManager;
-import com.novystxr.classysk.api.util.ClassyStringUtils;
+import com.novystxr.classysk.api.util.StringUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
@@ -18,7 +18,7 @@ public class ExprStaticInstance extends SimpleExpression<SkriptClass> {
     public static void register(SyntaxRegistry registry) {
         registry.register(SyntaxRegistry.EXPRESSION,
                 DefaultSyntaxInfos.Expression.builder(ExprStaticInstance.class, SkriptClass.class)
-                        .addPattern("static instance of [class] <"+ Classysk.classNamePattern +">")
+                        .addPattern("static instance of [class] <"+ Classysk.CLASSNAME_PATTERN +">")
                         .supplier(ExprStaticInstance::new)
                         .build()
         );
@@ -28,7 +28,7 @@ public class ExprStaticInstance extends SimpleExpression<SkriptClass> {
 
     @Override
     public boolean init(Expression<?>[] expr, int matchedPattern, Kleenean isDelayed, SkriptParser.ParseResult parseResult) {
-        String name = ClassyStringUtils.getLowerCase(parseResult.regexes.getFirst());
+        String name = StringUtils.getLowerCase(parseResult.regexes.getFirst());
 
         if (!ClassManager.isAccessible(name)) {
             Skript.error("Class named " + name + " does not exist");

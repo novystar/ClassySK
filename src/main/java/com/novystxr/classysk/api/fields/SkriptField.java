@@ -42,10 +42,6 @@ public class SkriptField {
 
     }
 
-    public static String getEffectiveName(ClassInstance parentClass, String fieldName) {
-        return parentClass.getEffectiveName()+"::"+fieldName;
-    }
-
     public FieldSignature signature;
     private Object[] value;
 

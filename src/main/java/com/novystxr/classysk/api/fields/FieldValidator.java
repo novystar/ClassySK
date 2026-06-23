@@ -1,5 +1,6 @@
 package com.novystxr.classysk.api.fields;
 
+import ch.njol.skript.Skript;
 import com.novystxr.classysk.api.AccessValidator;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.SkriptClass;
@@ -18,20 +19,22 @@ public class FieldValidator extends AccessValidator<FieldSignature> {
 
     @Override
     protected boolean validate(@NotNull ClassInstance instance) {
-        this.signature = instance.getFieldSignature(fieldName);
+        FieldSignature signature = instance.getFieldSignature(fieldName);
 
         if (signature == null) {
-            error("Could not resolve field signature");
+            Skript.error("Could not resolve field signature");
             return false;
         }
         if (!signature.checkAccess(contextClass)) {
-            error("This field can't be accessed here");
+            Skript.error("This field can't be accessed here");
             return false;
         }
         if (!signature.checkContext(isStatic)) {
-            error("Field accessed from improper context");
+            Skript.error("Field accessed from improper context");
             return false;
         }
+
+        setProduct(signature);
         return true;
     }
 }

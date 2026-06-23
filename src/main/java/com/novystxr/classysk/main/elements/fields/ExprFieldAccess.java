@@ -20,15 +20,15 @@ import org.skriptlang.skript.registration.DefaultSyntaxInfos;
 import org.skriptlang.skript.registration.SyntaxInfo;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
-import static com.novystxr.classysk.api.util.ClassyStringUtils.getLowerCase;
+import static com.novystxr.classysk.api.util.StringUtils.getLowerCase;
 
 public class ExprFieldAccess extends SimpleExpression<Object> {
     public static void register(SyntaxRegistry registry) {
         registry.register(SyntaxRegistry.EXPRESSION,
             DefaultSyntaxInfos.Expression.builder(ExprFieldAccess.class, Object.class)
                 .addPatterns(
-                    "%classinstance%\\:\\:<"+ Classysk.namePattern +">",
-                    "<"+ Classysk.classNamePattern +">\\:\\:<"+ Classysk.namePattern +">"
+                    "%classinstance%\\:\\:<"+ Classysk.NAME_PATTERN +">",
+                    "<"+ Classysk.CLASSNAME_PATTERN +">\\:\\:<"+ Classysk.NAME_PATTERN +">"
                 )
                 .supplier(ExprFieldAccess::new)
                 .priority(SyntaxInfo.PATTERN_MATCHES_EVERYTHING)
@@ -102,7 +102,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
             default -> false;
         };
         if (result) {
-            FieldSignature signature = validator.getSignature();
+            FieldSignature signature = validator.getProduct();
             if (signature != null) {
                 return CollectionUtils.array(signature.type());
             }
@@ -123,21 +123,21 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
 
     @Override
     public boolean isSingle() {
-        FieldSignature signature = validator.getSignature();
+        FieldSignature signature = validator.getProduct();
         if (signature == null) return false;
         return !signature.isPlural();
     }
 
     @Override
     public boolean canBeSingle() {
-        FieldSignature signature = validator.getSignature();
+        FieldSignature signature = validator.getProduct();
         if (signature == null) return true;
         return !signature.isPlural();
     }
 
     @Override
     public Class<?> getReturnType() {
-        FieldSignature signature = validator.getSignature();
+        FieldSignature signature = validator.getProduct();
         if (signature == null) return Object.class;
         return signature.type();
     }

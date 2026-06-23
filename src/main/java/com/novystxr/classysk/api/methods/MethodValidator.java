@@ -2,127 +2,142 @@ package com.novystxr.classysk.api.methods;
 
 import ch.njol.skript.Skript;
 import ch.njol.skript.lang.Expression;
-import ch.njol.skript.lang.parser.ParserInstance;
-import ch.njol.util.Kleenean;
-import com.novystxr.classysk.api.methods.SkriptMethod.MethodSignature;
-import com.novystxr.classysk.api.classes.ClassManager;
+import ch.njol.skript.registrations.Classes;
+import com.novystxr.classysk.api.AccessValidator;
 import com.novystxr.classysk.api.classes.ClassInstance;
-import com.novystxr.classysk.api.util.ClassyStringUtils;
-import org.bukkit.event.Event;
-import org.jetbrains.annotations.Nullable;
+import com.novystxr.classysk.api.classes.SkriptClass;
+import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
+import com.novystxr.classysk.api.methods.MethodParser.ReferenceArgument;
+import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
+import com.novystxr.classysk.api.methods.SkriptMethod.MethodSignature;
+import com.novystxr.classysk.api.util.ConverterUtils;
+import org.jetbrains.annotations.NotNull;
+import org.skriptlang.skript.log.runtime.ErrorSource;
 
-import java.util.List;
-import java.util.SequencedMap;
+import java.util.*;
 
-// TODO: rewrite using AccessValidator
-// method parsing/validation overall needs a rework to accommodate for overloading
-public class MethodValidator {
-    public MethodValidator(String methodName, @Nullable String args, boolean expectsReturn, boolean isStatic) {
-        this.methodName = methodName;
-        this.expectsReturn = expectsReturn;
-        this.isStatic = isStatic;
+public class MethodValidator extends AccessValidator<SkriptMethod> {
 
-        if (args == null || args.isEmpty()) {
-            noReferencedArgs = true; return;
-        }
-        argsString = args;
-        argStrings = ClassyStringUtils.splitArgs(args);
-        if (argStrings == null) {
-            failedParse();
-        }
+    private final MethodReference reference;
+
+    private Map<String, Expression<?>> validatedArgs;
+
+    public MethodValidator(ErrorSource errorSource, SkriptClass contextClass, MethodReference reference) {
+        super(errorSource, contextClass);
+        this.reference = reference;
     }
-    public ClassInstance instance = null;
-    private boolean noReferencedArgs = false;
 
-    public SequencedMap<String, Expression<?>> parsedArgs;
-    public SkriptMethod parsedMethod;
-
-    private final String methodName;
-    private String argsString;
-    private final boolean isStatic;
-
-    private List<String> argStrings;
-    private final boolean expectsReturn;
-    private Kleenean isValid = Kleenean.UNKNOWN;
-
-    public void validate(String className) {
-        if (!ClassManager.classExists(className)) {
-            Skript.error("Cannot resolve class '%s'", className);
-            isValid = Kleenean.FALSE;
-            return;
-        }
-        validate(ClassManager.getClass(className));
+    public Map<String, Expression<?>> getValidatedArgs() {
+        return validatedArgs;
     }
-    public void validate(ClassInstance instance) {
-        this.instance = instance;
-        isValid = Kleenean.UNKNOWN;
-        if (instance == null) {
-            illegalAccess(); return;
+
+    @Override
+    protected boolean validate(@NotNull ClassInstance instance) {
+        List<SkriptMethod> candidates = instance.getParent().methodRegistry.getCandidates(reference);
+        if (candidates.isEmpty()) {
+            Skript.error("Could not identify method signature from reference: "+reference.name());
+            return false;
         }
-        SkriptMethod method = instance.getAccessibleMethod(methodName);
-        if (method == null) {
-            illegalAccess(); return;
-        }
-        parsedMethod = method;
-        MethodSignature signature = method.signature;
-        if (expectsReturn && signature.returnType() == null) {
-            Skript.error("This method can't return anything");
-            isValid = Kleenean.FALSE; return;
-        }
-        if (noReferencedArgs) {
-            if (signature.hasRequiredArgs()) {
-                Skript.error("Method has arguments but none provided");
-                isValid = Kleenean.FALSE; return;
+        SkriptMethod method;
+
+        if (candidates.size() == 1) {
+            method = candidates.getFirst();
+            if (!validateReference(method, true)) {
+                return false;
             }
-            if (signature.arguments() == null) return;
+
+        } else {
+            List<SkriptMethod> valid = new ArrayList<>();
+            for (SkriptMethod candidate : candidates) {
+                if (validateReference(candidate, false)) valid.add(candidate);
+            }
+            if (valid.size() != 1) {
+                Skript.error("Could not identify method out of multiple overloads");
+                return false;
+            }
+            method = valid.getFirst();
         }
-        if (isValid.isUnknown()) {
-            parsedArgs = ArgumentParser.parseReferenceArgs(signature, argStrings);
-            if (parsedArgs == null) isValid = Kleenean.FALSE;
+
+        if (!method.checkAccess(contextClass)) {
+            Skript.error("This method can't be accessed here");
+            return false;
         }
+        if (!method.checkContext(isStatic)) {
+            Skript.error("Method accessed from improper context");
+            return false;
+        }
+
+        setProduct(method);
+        return true;
     }
 
-    public void checkAccess(Event event) {
-        if (isValid.isFalse()) return;
-        if (!parsedMethod.signature.isAccessible(event, isStatic)) {
-            isValid = Kleenean.FALSE; return;
-        }
-        isValid = Kleenean.TRUE;
-    }
-    public void checkAccess(ParserInstance parser) {
-        if (isValid.isFalse()) return;
-        if (!parsedMethod.signature.isAccessible(parser, isStatic)) {
-            isValid = Kleenean.FALSE; return;
-        }
-        isValid = Kleenean.TRUE;
-    }
+    private boolean validateReference(SkriptMethod target, boolean printErrors) {
+        MethodSignature signature = target.signature;
 
-    public void updateInstance(Expression<ClassInstance> skriptClassExpr, Event event) {
-        // static access
-        if (skriptClassExpr == null) {
-            return;
-        }
-        ClassInstance newClass = skriptClassExpr.getSingle(event);
-        if (newClass == null) {
-            isValid = Kleenean.FALSE;
-            return;
-        }
-        if (this.instance == null || newClass.getParent() != this.instance.getParent()) {
-            validate(newClass);
-            checkAccess(event);
-        }
-    }
+        SequencedMap<String, MethodArgument> arguments = signature.arguments();
+        Map<String, Expression<?>> result = null;
 
-    private void illegalAccess() {
-        isValid = Kleenean.FALSE;
-        Skript.error("Illegal Access! Tried to access non-existent method '%s'", SkriptMethod.getEffectiveName(instance, methodName, argsString)+" or tried to access it from improper context");
-    }
-    private void failedParse() {
-        isValid = Kleenean.FALSE;
-        Skript.error("Method call failed to validate! '%s'", SkriptMethod.getEffectiveName(instance, methodName, argsString));
-    }
+        if (arguments != null) {
+            result = new HashMap<>();
+            List<String> argNames = new ArrayList<>(arguments.sequencedKeySet());
+            int i = -1;
 
-    public Kleenean isValid() {
-        return isValid;
+            boolean hasUnnamedArgs = false;
+            boolean hasNamedArgs = false;
+
+            for (ReferenceArgument arg : reference.args()) {
+                i++;
+                String name = arg.name();
+                if (name == null) {
+                    name = argNames.get(i);
+                    hasUnnamedArgs = true;
+                } else {
+                    if (!signature.arguments().containsKey(name)) {
+                        if (printErrors) Skript.error("Unknown method argument: "+name);
+                        return false;
+                    }
+                    hasNamedArgs = true;
+                }
+                Class<?> toClass = arguments.get(name).type();
+                Class<?> fromClass = arg.expr().getReturnType();
+
+                if (!ConverterUtils.canConvert(toClass, fromClass)) {
+                    if (printErrors) Skript.error("Argument "+ i+1 +" ("+ name +") is not of required type: "+ Classes.getExactClassName(toClass));
+                    return false;
+                }
+
+                var expr = result.putIfAbsent(name, arg.expr());
+                if (expr != null) {
+                    if (printErrors) Skript.error("Reference contains duplicate arguments");
+                    return false;
+                }
+            }
+            List<String> referenceArgNames = new ArrayList<>(result.keySet());
+
+            if (hasNamedArgs && hasUnnamedArgs) {
+                i = -1; // check mixed arguments order
+                for (String name : argNames) {
+                    i++;
+                    if (!referenceArgNames.get(i).equals(name)) {
+                        Skript.error("Mixed method arguments must be in order");
+                        return false;
+                    }
+                }
+            }
+            // attempt to resolve remaining defaults
+            for (var entry : signature.arguments().entrySet()) {
+                String name = entry.getKey();
+                if (referenceArgNames.contains(name)) continue;
+
+                Expression<?> defaultValue = entry.getValue().defaultValue();
+                if (defaultValue == null) {
+                    Skript.error("Could not resolve some argument(s) for this method call");
+                    return false;
+                }
+                result.put(name, defaultValue);
+            }
+        }
+        this.validatedArgs = result;
+        return true;
     }
 }

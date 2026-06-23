@@ -17,7 +17,7 @@ import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.methods.SkriptMethod;
-import com.novystxr.classysk.api.util.ClassyStringUtils;
+import com.novystxr.classysk.api.util.StringUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
@@ -32,13 +32,13 @@ import java.util.regex.Pattern;
 
 public class SecExprNewInstance extends SectionExpression<ClassInstance> {
 
-    private static final Pattern VALID_NODE_PATTERN = Pattern.compile("("+ Classysk.namePattern +"): (.+)");
+    private static final Pattern VALID_NODE_PATTERN = Pattern.compile("("+ Classysk.NAME_PATTERN +"): (.+)");
 
     public static void register(SyntaxRegistry registry) {
         registry.register(
             SyntaxRegistry.EXPRESSION,
             DefaultSyntaxInfos.Expression.builder(SecExprNewInstance.class, ClassInstance.class)
-                .addPattern("new instance of [class] <"+ Classysk.classNamePattern +">")
+                .addPattern("new instance of [class] <"+ Classysk.CLASSNAME_PATTERN +">")
                 .supplier(SecExprNewInstance::new)
                 .build()
         );
@@ -49,7 +49,7 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
 
     @Override
     public boolean init(Expression<?>[] expressions, int pattern, Kleenean delayed, ParseResult result, @Nullable SectionNode sectionNode, @Nullable List<TriggerItem> triggerItems) {
-        String name = ClassyStringUtils.getLowerCase(result.regexes.getFirst());
+        String name = StringUtils.getLowerCase(result.regexes.getFirst());
         if (!ClassManager.isAccessible(name)) {
             Skript.error("Class named " + name + " does not exist");
             return false;
@@ -75,7 +75,7 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
                     Skript.error("Invalid field name: " + key);
                     return false;
                 }
-                String fieldName = ClassyStringUtils.getLowerCase(matcher.group(1));
+                String fieldName = StringUtils.getLowerCase(matcher.group(1));
                 String unparsedValue = matcher.group(2);
 
                 FieldSignature signature = skriptClass.getFieldSignature(fieldName);
@@ -89,7 +89,8 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
                 }
                 SkriptLogger.setNode(node);
                 Expression<?> valueExpr = LiteralUtils.defendExpression(new SkriptParser(unparsedValue, SkriptParser.ALL_FLAGS, ParseContext.DEFAULT).parseExpression(signature.type()));
-                if (valueExpr == null) return false;
+                if (valueExpr == null || !LiteralUtils.canInitSafely(valueExpr)) return false;
+
                 fields.put(fieldName, valueExpr);
             }
         }

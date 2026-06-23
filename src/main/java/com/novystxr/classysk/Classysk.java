@@ -9,8 +9,8 @@ import org.skriptlang.skript.addon.SkriptAddon;
 
 public class Classysk extends JavaPlugin {
 
-    public static final String namePattern = "[\\w_]+";
-    public static final String classNamePattern = "[A-Z]\\w*";
+    public static final String NAME_PATTERN = "[\\w_]+";
+    public static final String CLASSNAME_PATTERN = "[A-Z]\\w*";
 
     @Override
     public void onEnable() {

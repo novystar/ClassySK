@@ -8,14 +8,14 @@ import ch.njol.skript.util.ClassInfoReference;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.*;
+import com.novystxr.classysk.api.methods.MethodParser;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodSignature;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.event.MethodRegistrationEvent;
 import com.novystxr.classysk.api.event.MethodRunEvent;
-import com.novystxr.classysk.api.methods.ArgumentParser;
-import com.novystxr.classysk.api.util.ClassyStringUtils;
+import com.novystxr.classysk.api.util.StringUtils;
 import com.novystxr.classysk.main.elements.classes.StructClass;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
@@ -29,7 +29,7 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
         registry.register(
                 SyntaxRegistry.SECTION,
                 SyntaxInfo.builder(SecMethod.class)
-                        .addPattern("(public|:private) [:static] <"+ Classysk.namePattern +">\\([args:<.+>]\\) [(\\:\\:|returns) %-classinfo%]")
+                        .addPattern("(public|:private) [:static] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [(\\:\\:|returns) %-classinfo%]")
                         .supplier(SecMethod::new)
                         .build()
 
@@ -56,14 +56,14 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
             Skript.error("Method declaration can only be used within a class structure.");
             return false;
         }
-        methodName = ClassyStringUtils.getLowerCase(parseResult.regexes.get(0));
+        methodName = StringUtils.getLowerCase(parseResult.regexes.get(0));
 
         // validate and validate method arguments
         if (parseResult.hasTag("args")) {
             String argsString = parseResult.regexes.get(1).group();
 
             if (!argsString.isEmpty()) {
-                arguments = ArgumentParser.parseArgs(argsString);
+                arguments = MethodParser.parseArguments(argsString);
 
                 if (arguments == null) {
                     return false;
@@ -99,8 +99,10 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
             MethodSignature signature = new MethodSignature(methodName, arguments, accessType, isStatic, returnType, returnPlural, skriptClass);
             skriptMethod = new SkriptMethod(signature);
 
-            skriptClass.putMethod(methodName, skriptMethod);
-
+            boolean registered = skriptClass.methodRegistry.registerMethod(methodName, skriptMethod);
+            if (!registered) {
+                Skript.error("Method with this signature already exists in class: "+ skriptClass.name);
+            }
         }
 
         return null;
