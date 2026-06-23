@@ -102,9 +102,8 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
             default -> false;
         };
         if (result) {
-            FieldSignature signature = validator.getProduct();
-            if (signature != null) {
-                return CollectionUtils.array(signature.type());
+            if (isStaticReference) {
+                return CollectionUtils.array(validator.getProduct().type());
             }
             return CollectionUtils.array(Object.class);
         }
