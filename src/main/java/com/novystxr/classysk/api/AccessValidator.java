@@ -57,7 +57,7 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
                 return true;
             }
             LogEntry error = handler.getFirstError();
-            if (Skript.testing()) handler.getLog(); // njol stinks
+            handler.getLog(); // njol stinks
 
             if (error != null) {
                 dynamicError(error.getMessage(), isRuntime);
