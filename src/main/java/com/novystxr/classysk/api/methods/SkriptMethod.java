@@ -60,25 +60,21 @@ public class SkriptMethod implements AccessModifiable {
     }
 
     public Object @Nullable [] run(Event event, ClassInstance instance, @Nullable Map<String, Expression<?>> argExprs) {
-
         if (trigger == null) return null;
-
         Map<String, Object[]> args;
 
         if (argExprs != null) {
             args = new HashMap<>();
             for (Map.Entry<String, Expression<?>> entry : argExprs.entrySet()) {
                 args.put(entry.getKey(), entry.getValue().getArray(event));
-
             }
         } else {
             args = null;
         }
-
         MethodRunEvent runEvent = new MethodRunEvent(instance);
         if (args != null && signature.arguments != null) {
-            for (Entry<String, Object[]> arg : args.entrySet()) {
 
+            for (Entry<String, Object[]> arg : args.entrySet()) {
                 Object[] values = arg.getValue();
                 String key = arg.getKey();
 
@@ -93,11 +89,9 @@ public class SkriptMethod implements AccessModifiable {
                 }
             }
         }
-
         if (trigger.execute(runEvent)) {
             return runEvent.returnObject;
         }
-
         return null;
     }
 
