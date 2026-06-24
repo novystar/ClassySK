@@ -30,6 +30,7 @@ public class SkriptField {
         }
 
         public boolean canConvert(@Nullable Object[] values) {
+            if (values == null) return true;
             if (values.length != 1 && !isPlural) return false;
 
             return ConverterUtils.canConvert(type, values);
