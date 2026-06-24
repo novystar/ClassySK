@@ -35,39 +35,31 @@ public class CondInstanceOf extends Condition {
         );
     }
 
-    private Expression<ClassInstance> skriptClassExpr;
-    private Expression<SkriptClass> abstractClassExpr;
-    private SkriptClass abstractClass;
+    private Expression<ClassInstance> instanceExpr;
+    private SkriptClass targetClass;
 
     @Override
     @SuppressWarnings("unchecked")
     public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
-        skriptClassExpr = (Expression<ClassInstance>) expressions[0];
-
+        instanceExpr = (Expression<ClassInstance>) expressions[0];
         setNegated(parseResult.hasTag("negated"));
 
-        if (matchedPattern == 1) {
-            abstractClassExpr = (Expression<SkriptClass>) expressions[1];
-        } else {
-            String name = StringUtils.getLowerCase(parseResult.regexes.getFirst());
-            if (!ClassManager.isAccessible(name)) {
-                Skript.error("Class named " + name + " does not exist");
-                return false;
-            }
-            abstractClass = ClassManager.getClass(name);
+        String name = StringUtils.getLowerCase(parseResult.regexes.getFirst());
+        targetClass = ClassManager.getClass(name);
+
+        if (targetClass == null) {
+            Skript.error("Class named " + name + " does not exist");
+            return false;
         }
         return true;
     }
 
     @Override
     public boolean check(Event event) {
-        SkriptClass targetAbstractClass = (abstractClass == null) ? abstractClassExpr.getSingle(event) : abstractClass;
-        if (targetAbstractClass == null) return false;
+        ClassInstance instance = instanceExpr.getSingle(event);
+        if (instance == null) return false;
 
-        ClassInstance targetClass = skriptClassExpr.getSingle(event);
-        if (targetClass == null) return false;
-
-        return negate(targetClass.getParent() == targetAbstractClass);
+        return negate(instance.getParent() == targetClass);
     }
 
     private boolean negate(boolean condition) {
