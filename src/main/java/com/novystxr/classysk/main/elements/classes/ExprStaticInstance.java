@@ -1,6 +1,10 @@
 package com.novystxr.classysk.main.elements.classes;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.doc.Description;
+import ch.njol.skript.doc.Example;
+import ch.njol.skript.doc.Name;
+import ch.njol.skript.doc.Since;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.util.SimpleExpression;
@@ -14,13 +18,23 @@ import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
+@Name("Static Instance")
+@Description("Get the static instance of a class, allowing you to access non-instance fields and methods at runtime. May be useful in some scenarios.")
+@Example("""
+    class MyClass:
+    \tpublic static myField: integer = 1
+    
+    set {_myClass} to static instance of MyClass
+    broadcast {_myClass}::myField
+    """)
+@Since("1.0")
 public class ExprStaticInstance extends SimpleExpression<SkriptClass> {
     public static void register(SyntaxRegistry registry) {
         registry.register(SyntaxRegistry.EXPRESSION,
-                DefaultSyntaxInfos.Expression.builder(ExprStaticInstance.class, SkriptClass.class)
-                        .addPattern("static instance of [class] <"+ Classysk.CLASSNAME_PATTERN +">")
-                        .supplier(ExprStaticInstance::new)
-                        .build()
+            DefaultSyntaxInfos.Expression.builder(ExprStaticInstance.class, SkriptClass.class)
+                .addPattern("static instance of [class] <"+ Classysk.CLASSNAME_PATTERN +">")
+                .supplier(ExprStaticInstance::new)
+                .build()
         );
     }
 

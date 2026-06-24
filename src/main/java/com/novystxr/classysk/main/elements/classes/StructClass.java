@@ -3,6 +3,10 @@ package com.novystxr.classysk.main.elements.classes;
 import ch.njol.skript.Skript;
 import ch.njol.skript.config.Node;
 import ch.njol.skript.config.SectionNode;
+import ch.njol.skript.doc.Description;
+import ch.njol.skript.doc.Examples;
+import ch.njol.skript.doc.Name;
+import ch.njol.skript.doc.Since;
 import ch.njol.skript.lang.*;
 import ch.njol.skript.log.SkriptLogger;
 import com.novystxr.classysk.Classysk;
@@ -27,15 +31,45 @@ import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 
 import java.util.*;
 
+@Name("Class")
+@Description({
+    "Creates a class, see the [**Official Wiki**](https://github.com/novystar/ClassySK/wiki/Tutorials%3A-Classes-%26-Fields) for more detail",
+    "",
+    "`Options` - Optional section which is used to set certain rules about how your class should be used.",
+    "- `storable (true)` - The class instance may be saved between restarts",
+    "- `external creation (true)` - Instances can be created from outside of the class",
+    "- `strict signature enforcement (false)` - Invalid fields will be aggressively removed from all existing instances when it's structure is updated",
+    "- `private access on create (false)` - Private fields can be set within constructors from outside the class",
+    "- `suppress runtime errors (false)` - Runtime errors regarding instances of this class will be ignored"
+})
+@Examples("""
+    class PlayerStats:
+    \tpublic kills: integer
+    \tpublic deaths: integer
+    \tpublic xp: number
+
+    \tprivate static levelXP: number = 100
+
+    \tpublic getRatio() :: number:
+    \t\treturn self::kills/self::deaths
+
+    \tpublic getRequiredXP() :: number:
+    \t\tset {_levelXP} to PlayerStats::levelXP
+    \t\treturn {_levelXP} - mod(self::xp, {_levelXP})
+
+    \tpublic getLevel() :: number:
+    \t\treturn 1 + floor(self::xp / PlayerStats::levelXP)
+    """)
+@Since("1.0")
 public class StructClass extends Structure {
     public static void register(SyntaxRegistry registry) {
         registry.register(
-                SyntaxRegistry.STRUCTURE,
-                SyntaxInfo.Structure.builder(StructClass.class)
-                        .addPattern("class <"+ Classysk.CLASSNAME_PATTERN +">")
-                        .supplier(StructClass::new)
-                        .nodeType(DefaultSyntaxInfos.Structure.NodeType.BOTH)
-                        .build()
+            SyntaxRegistry.STRUCTURE,
+            SyntaxInfo.Structure.builder(StructClass.class)
+                .addPattern("class <"+ Classysk.CLASSNAME_PATTERN +">")
+                .supplier(StructClass::new)
+                .nodeType(DefaultSyntaxInfos.Structure.NodeType.BOTH)
+                .build()
 
         );
     }

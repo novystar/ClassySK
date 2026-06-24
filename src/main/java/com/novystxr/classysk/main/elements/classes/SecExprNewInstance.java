@@ -4,6 +4,7 @@ import ch.njol.skript.Skript;
 import ch.njol.skript.config.Node;
 import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.config.SimpleNode;
+import ch.njol.skript.doc.*;
 import ch.njol.skript.expressions.base.SectionExpression;
 import ch.njol.skript.lang.*;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
@@ -30,6 +31,16 @@ import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Name("New Instance")
+@Keywords({"constructor", "create class", "creation"})
+@Description("Create a new instance of a class, you can optionally supply fields as a section")
+@Example("set {_myClass} to new instance of MyClass")
+@Example("""
+    set {_myClass} to new instance of PlayerStats:
+    \tkills: 30
+    \tbalance: 5000
+    """)
+@Since("1.0")
 public class SecExprNewInstance extends SectionExpression<ClassInstance> {
 
     private static final Pattern VALID_NODE_PATTERN = Pattern.compile("("+ Classysk.NAME_PATTERN +"): (.+)");

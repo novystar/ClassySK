@@ -3,6 +3,7 @@ package com.novystxr.classysk.main.elements.methods;
 import ch.njol.skript.Skript;
 import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.config.SectionNode;
+import ch.njol.skript.doc.*;
 import ch.njol.skript.lang.*;
 import ch.njol.skript.util.ClassInfoReference;
 import ch.njol.util.Kleenean;
@@ -24,6 +25,34 @@ import org.skriptlang.skript.registration.SyntaxRegistry;
 
 import java.util.*;
 
+@Name("Method")
+@Keywords("function")
+@Description({
+    "Methods are functions belonging to a specific class. The signature is very similar to that of regular functions.",
+    "See the [**Official Wiki**](https://github.com/novystar/ClassySK/wiki/Tutorials%3A-Methods-%26-Access-Modifiers) for more information."
+})
+@Example("""
+    class Example:
+    \tpublic points: number
+    
+    \tprivate static sayMessage(message: text):
+    \t\tbroadcast {_message} # our message argument is available in '{_message}'
+    
+    \tpublic giveApple(amount: number) :: item:
+    \t\treturn {_amount} of apple
+    
+    \tpublic getPoints() returns number:
+    \t\treturn self::points
+    """)
+@Example("""
+    Counter::increment(1)
+    set {_count} to Counter::getValue()
+    """)
+@Example("""
+    {_myClass}::setPlayer(player)
+    set {_player} to {_myClass}::getPlayer()
+    """)
+@Since("1.0")
 public class SecMethod extends Section implements ReturnHandler<Object> {
     public static void register(SyntaxRegistry registry) {
         registry.register(

@@ -2,6 +2,9 @@ package com.novystxr.classysk.main.elements.fields;
 
 import ch.njol.skript.Skript;
 import ch.njol.skript.classes.ClassInfo;
+import ch.njol.skript.doc.Description;
+import ch.njol.skript.doc.Name;
+import ch.njol.skript.doc.Since;
 import ch.njol.skript.lang.*;
 import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.util.ClassInfoReference;
@@ -17,6 +20,12 @@ import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.SyntaxInfo;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
+@Name("Field")
+@Description({
+    "Fields hold data of a specified type relating to a class. They can have default values",
+    "See the [**Official Wiki**](https://github.com/novystar/ClassySK/wiki/Tutorials%3A-Classes-%26-Fields) for more information."
+})
+@Since("1.0")
 public class EffField extends Effect {
     public static void register(SyntaxRegistry registry) {
         registry.register(
@@ -103,7 +112,6 @@ public class EffField extends Effect {
 
     @Override
     protected void execute(Event event) {
-        Skript.error("How did we get here?");
     }
 
     @Override

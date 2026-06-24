@@ -1,6 +1,7 @@
 package com.novystxr.classysk.main.elements.classes;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.doc.*;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.util.SimpleExpression;
@@ -13,6 +14,20 @@ import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
+@Name("This Instance")
+@Keywords("self")
+@Description("Only available in non-static methods. Refers to the current class instance from whatever method is running it, Allowing your code to behave differently depending on what instance is running it.")
+@Example("""
+    class MyClass:
+    \tprivate counter: integer
+    
+    \tpublic getCount() :: integer:
+    \t\treturn self::counter
+
+    \tpublic increaseCounter():
+    \t\tadd 1 to self::counter
+    """)
+@Since("1.0")
 public class ExprThisInstance extends SimpleExpression<ClassInstance> {
     public static void register(SyntaxRegistry registry) {
         registry.register(

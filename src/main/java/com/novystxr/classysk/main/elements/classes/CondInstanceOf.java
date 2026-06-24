@@ -1,6 +1,10 @@
 package com.novystxr.classysk.main.elements.classes;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.doc.Description;
+import ch.njol.skript.doc.Example;
+import ch.njol.skript.doc.Name;
+import ch.njol.skript.doc.Since;
 import ch.njol.skript.lang.Condition;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
@@ -15,16 +19,19 @@ import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.SyntaxInfo;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
+@Name("Instance Of")
+@Description("Used to check if a class instance belongs to a specified class")
+@Example("if {_instance} is an instance of MyClass:")
+@Since("1.0")
 public class CondInstanceOf extends Condition {
 
     public static void register(SyntaxRegistry registry) {
         registry.register(
-                SyntaxRegistry.CONDITION,
-                SyntaxInfo.builder(CondInstanceOf.class)
-                        .addPattern("%classinstance% [(is|negated:(isn[']t|is not)) a[n]] instance of [class] <"+ Classysk.CLASSNAME_PATTERN +">")
-                        .addPattern("%classinstance% [(is|negated:(isn[']t|is not)) a[n]] instance of [class] %classs%")
-                        .supplier(CondInstanceOf::new)
-                        .build()
+            SyntaxRegistry.CONDITION,
+            SyntaxInfo.builder(CondInstanceOf.class)
+                .addPattern("%classinstance% is[negated:(n[']t| not)] a[n] instance of [class] <"+ Classysk.CLASSNAME_PATTERN +">")
+                .supplier(CondInstanceOf::new)
+                .build()
         );
     }
 
