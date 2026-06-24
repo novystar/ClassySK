@@ -28,8 +28,8 @@ class TestArgs:
 
 	public static static_mixedArgs1(arg1: number, arg2: string, arg3: boolean):
 		set {-static_mixedArgs1::arg1} to {_arg1}
-		set {-static_mixedArgs2::arg2} to {_arg2}
-		set {-static_mixedArgs3::arg3} to {_arg3}
+		set {-static_mixedArgs1::arg2} to {_arg2}
+		set {-static_mixedArgs1::arg3} to {_arg3}
 
 	public static static_mixedArgs2(arg1: string, arg2: string, arg3: integer):
 		set {-static_mixedArgs1::arg1} to {_arg1}
