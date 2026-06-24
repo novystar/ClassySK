@@ -12,7 +12,6 @@ public class MethodRunEvent extends Event {
 
     public MethodRunEvent(ClassInstance instance) {
         this.instance = instance;
-
     }
 
     @Override

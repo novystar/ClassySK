@@ -10,7 +10,6 @@ public class MethodRegistrationEvent extends Event {
 
     public MethodRegistrationEvent(SkriptClass skriptClass) {
         this.skriptClass = skriptClass;
-
     }
 
     @Override

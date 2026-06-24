@@ -72,7 +72,6 @@ public class EffField extends Effect {
         if (exprs[1] != null) {
             exprValue = (Expression<Object>) exprs[1].getConvertedExpression(Object.class);
         }
-
         return true;
     }
 

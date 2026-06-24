@@ -2,9 +2,7 @@ package com.novystxr.classysk.api.fields;
 
 import com.novystxr.classysk.api.AccessModifiable;
 import com.novystxr.classysk.api.classes.SkriptClass;
-import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.util.ConverterUtils;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
 public class SkriptField {
@@ -23,8 +21,7 @@ public class SkriptField {
 
         @Override
         public boolean checkAccess(@Nullable SkriptClass contextClass) {
-            if (accessType == AccessType.PRIVATE && parentClass != contextClass) return false;
-            return true;
+            return accessType != AccessType.PRIVATE || parentClass == contextClass;
         }
 
         @Override
@@ -32,14 +29,11 @@ public class SkriptField {
             return isStatic == this.isStatic;
         }
 
-        @Contract("null -> true")
-        public boolean canConvert(Object[] values) {
-            if (values == null) return true;
+        public boolean canConvert(@Nullable Object[] values) {
             if (values.length != 1 && !isPlural) return false;
 
             return ConverterUtils.canConvert(type, values);
         }
-
     }
 
     public FieldSignature signature;

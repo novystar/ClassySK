@@ -25,7 +25,6 @@ public class ExpressionUtils {
         } else if (changeMode == ChangeMode.REMOVE) {
             result.removeAll(List.of(delta));
         }
-
         return result.toArray();
     }
 

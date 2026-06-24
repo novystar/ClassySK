@@ -20,9 +20,7 @@ public class SkriptMethod implements AccessModifiable {
 
     @Override
     public boolean checkAccess(@Nullable SkriptClass contextClass) {
-        if (signature.accessType == AccessType.PRIVATE && contextClass != signature.parentClass) return false;
-
-        return true;
+        return signature.accessType != AccessType.PRIVATE || contextClass == signature.parentClass;
     }
 
     @Override
@@ -84,14 +82,14 @@ public class SkriptMethod implements AccessModifiable {
                 Object[] values = arg.getValue();
                 String key = arg.getKey();
 
-                if (!signature.arguments.get(key).isPlural) {
-                    Variables.setVariable(key, values[0], runEvent, true);
-                } else {
+                if (signature.arguments.get(key).isPlural) {
                     int i = 0;
                     for (Object value : values) {
                         i++;
                         Variables.setVariable(key+"::"+i, value, runEvent, true);
                     }
+                } else {
+                    Variables.setVariable(key, values[0], runEvent, true);
                 }
             }
         }
@@ -105,7 +103,7 @@ public class SkriptMethod implements AccessModifiable {
 
     public static boolean isMethodBody(ParserInstance parser) {
         if (parser.getCurrentStructure() instanceof SectionSkriptEvent secSkriptEvent) {
-            if (secSkriptEvent.getSection() instanceof SecMethod) return true;
+            return secSkriptEvent.getSection() instanceof SecMethod;
         }
         return false;
     }
