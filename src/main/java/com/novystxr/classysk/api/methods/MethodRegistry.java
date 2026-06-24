@@ -53,7 +53,8 @@ public class MethodRegistry {
         registry = new HashMap<>();
     }
 
-    public boolean registerMethod(String name, SkriptMethod method) {
+    public boolean registerMethod(SkriptMethod method) {
+        String name = method.signature.name();
         SequencedMap<String, MethodArgument> args = method.signature.arguments();
         Class<?>[] argTypes;
 

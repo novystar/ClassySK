@@ -20,7 +20,7 @@ public class SkriptMethod implements AccessModifiable {
 
     @Override
     public boolean checkAccess(@Nullable SkriptClass contextClass) {
-        return signature.accessType != AccessType.PRIVATE || contextClass == signature.parentClass;
+        return signature.accessType != AccessType.PRIVATE || contextClass == parentClass;
     }
 
     @Override
@@ -43,17 +43,18 @@ public class SkriptMethod implements AccessModifiable {
         boolean isStatic,
 
         @Nullable Class<?> returnType,
-        boolean returnPlural,
-        SkriptClass parentClass
+        boolean returnPlural
 
     ) {}
 
-    public SkriptMethod(MethodSignature signature) {
+    public SkriptMethod(MethodSignature signature, SkriptClass parentClass) {
         this.signature = signature;
+        this.parentClass = parentClass;
     }
 
     private Trigger trigger;
     public final MethodSignature signature;
+    private final SkriptClass parentClass;
 
     public void setTrigger(Trigger trigger) {
         this.trigger = trigger;

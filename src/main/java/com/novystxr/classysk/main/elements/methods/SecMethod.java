@@ -1,14 +1,15 @@
 package com.novystxr.classysk.main.elements.methods;
 
 import ch.njol.skript.Skript;
-import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.doc.*;
 import ch.njol.skript.lang.*;
-import ch.njol.skript.util.ClassInfoReference;
+import ch.njol.skript.registrations.Classes;
+import ch.njol.skript.util.Utils;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.*;
+import com.novystxr.classysk.api.AccessModifiable.AccessType;
 import com.novystxr.classysk.api.methods.MethodParser;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
@@ -58,59 +59,55 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
         registry.register(
                 SyntaxRegistry.SECTION,
                 SyntaxInfo.builder(SecMethod.class)
-                        .addPattern("(public|:private) [:static] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [(\\:\\:|returns) %-classinfo%]")
+                        .addPattern("(public|:private) [:static] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [return:(\\:\\:|returns) <.+>]")
                         .supplier(SecMethod::new)
                         .build()
-
         );
     }
 
-    private AccessModifiable.AccessType accessType;
-    private boolean isStatic;
-    private boolean returnPlural = false;
-
-    private String methodName;
-    private SequencedMap<String, MethodArgument> arguments = null;
-
-    private Expression<ClassInfo<?>> classInfoExpr;
     private SectionNode sectionNode;
-    private SkriptMethod skriptMethod;
+    private MethodSignature signature;
 
+    private SkriptMethod skriptMethod;
     public SkriptClass contextClass;
 
-    @SuppressWarnings("unchecked")
     @Override
     public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, SkriptParser.ParseResult parseResult, SectionNode sectionNode, List<TriggerItem> triggerItems) {
         if (!(getParser().getCurrentStructure() instanceof StructClass)) {
             Skript.error("Method declaration can only be used within a class structure.");
             return false;
         }
-        methodName = StringUtils.getLowerCase(parseResult.regexes.get(0));
+        boolean returnPlural = false;
+        Class<?> returnType = null;
 
-        // validate and validate method arguments
+        if (parseResult.hasTag("return")) {
+            String ref = parseResult.regexes.get(1).group().trim();
+            returnType = Classes.getClassFromUserInput(ref);
+            if (returnType == null) {
+                Skript.error("Could not resolve type: "+ref);
+                return false;
+            }
+            returnPlural = Utils.isPlural(ref).plural();
+        }
+        String methodName = StringUtils.getLowerCase(parseResult.regexes.get(0));
+        SequencedMap<String, MethodArgument> args = null;
+
+        // parse arguments
         if (parseResult.hasTag("args")) {
             String argsString = parseResult.regexes.get(1).group();
 
             if (!argsString.isEmpty()) {
-                arguments = MethodParser.parseArguments(argsString);
-
-                if (arguments == null) {
+                args = MethodParser.parseArguments(argsString);
+                if (args == null) {
                     return false;
                 }
             }
         }
+        AccessType accessType = parseResult.hasTag("private") ? AccessModifiable.AccessType.PRIVATE : AccessModifiable.AccessType.PUBLIC;
+        boolean isStatic = parseResult.hasTag("static");
 
-        // get return type, check plurality
         this.sectionNode = sectionNode;
-        classInfoExpr = (Expression<ClassInfo<?>>) expressions[0];
-        if (classInfoExpr != null) {
-            Literal<ClassInfoReference> classInfoReference = (Literal<ClassInfoReference>) ClassInfoReference.wrap(classInfoExpr);
-            returnPlural = classInfoReference.getSingle().isPlural().isTrue();
-        }
-
-        accessType = parseResult.hasTag("private") ? AccessModifiable.AccessType.PRIVATE : AccessModifiable.AccessType.PUBLIC;
-        isStatic = parseResult.hasTag("static");
-
+        this.signature = new MethodSignature(methodName, args, accessType, isStatic, returnType, returnPlural);
         return true;
     }
 
@@ -120,20 +117,13 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
         if (event instanceof MethodRegistrationEvent regEvent) {
 
             SkriptClass skriptClass = regEvent.skriptClass;
-            Class<?> returnType = null;
-            ClassInfo<?> classInfo = null;
-            if (classInfoExpr != null) classInfo = classInfoExpr.getSingle(event);
-            if (classInfo != null) returnType = classInfo.getC();
+            skriptMethod = new SkriptMethod(signature, skriptClass);
 
-            MethodSignature signature = new MethodSignature(methodName, arguments, accessType, isStatic, returnType, returnPlural, skriptClass);
-            skriptMethod = new SkriptMethod(signature);
-
-            boolean registered = skriptClass.methodRegistry.registerMethod(methodName, skriptMethod);
+            boolean registered = skriptClass.methodRegistry.registerMethod(skriptMethod);
             if (!registered) {
                 Skript.error("Method with this signature already exists in class: "+ skriptClass.name);
             }
         }
-
         return null;
     }
 
@@ -141,7 +131,7 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
     public void evaluateTrigger() {
         Trigger trigger;
 
-        if (classInfoExpr != null) {
+        if (signature.returnType() != null) {
             trigger = loadReturnableSectionCode(sectionNode, "method body", new Class[]{MethodRunEvent.class});
         } else {
             trigger = loadCode(sectionNode, "method body", MethodRunEvent.class);
@@ -158,13 +148,13 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
 
     @Override
     public boolean isSingleReturnValue() {
-        return !returnPlural;
+        return !signature.returnPlural();
     }
 
     @Override
     public @Nullable Class<?> returnValueType() {
-        return Object.class;
-    }
+        return signature.returnType();
+        }
 
     @Override
     public String toString(@Nullable Event event, boolean debug) {
