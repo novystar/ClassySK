@@ -56,7 +56,6 @@ public class MethodParser {
             return null;
         }
 
-        boolean gap = false;
         for (String arg : rawArgs) {
             Matcher matcher = ARGUMENT_PATTERN.matcher(arg);
             if (!matcher.matches()) {
@@ -66,12 +65,6 @@ public class MethodParser {
 
             String unparsedExpr = matcher.group("value");
             String argName = matcher.group("name");
-
-            if (argName != null && gap) {
-                Skript.error("Named arguments must be complete or in order");
-                return null;
-            }
-            if (argName == null) gap = true;
 
             SkriptParser parser = new SkriptParser(unparsedExpr, SkriptParser.ALL_FLAGS, ParseContext.DEFAULT);
             Expression<?> expr = LiteralUtils.defendExpression(parser.parseExpression(Object.class));
