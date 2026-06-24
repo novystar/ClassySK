@@ -32,9 +32,9 @@ class TestArgs:
 		set {-static_mixedArgs3::arg3} to {_arg3}
 
 	public static static_mixedArgs2(arg1: string, arg2: string, arg3: integer):
-		set {-static_mixedArgs2::arg1} to {_arg1}
+		set {-static_mixedArgs1::arg1} to {_arg1}
 		set {-static_mixedArgs2::arg2} to {_arg2}
-		set {-static_mixedArgs2::arg3} to {_arg3}
+		set {-static_mixedArgs3::arg3} to {_arg3}
 
 	public static static_mixedNumberTypes(numberArg: number, intArg: integer):
 		set {-static_mixedNumberTypes::numberArg} to {_numberArg}
@@ -70,12 +70,12 @@ test "ClassySK - Method Arguments":
 		
 
 	{_instance}::mixedNumberTypes(1, 2)
-	assert {-mixedNumberTypes::arg1} is 1
-	assert {-mixedNumberTypes::arg2} is 2
+	assert {-mixedNumberTypes::numberArg} is 1
+	assert {-mixedNumberTypes::intArg} is 2
 
 	{_instance}::mixedNumberTypes(1.5, 3)
-	assert {-mixedNumberTypes::arg1} is 1.5
-	assert {-mixedNumberTypes::arg2} is 3
+	assert {-mixedNumberTypes::numberArg} is 1.5
+	assert {-mixedNumberTypes::intArg} is 3
 
 	delete {-mixedNumberTypes::*}
 	{_instance}::mixedNumberTypes(1.5, 2.5)
@@ -94,12 +94,12 @@ test "ClassySK - Method Arguments":
 	assert {-static_mixedArgs2::arg3} is 1
 
 	TestArgs::static_mixedNumberTypes(1, 2)
-	assert {-static_mixedNumberTypes::arg1} is 1
-	assert {-static_mixedNumberTypes::arg2} is 2
+	assert {-static_mixedNumberTypes::numberArg} is 1
+	assert {-static_mixedNumberTypes::intArg} is 2
 
 	TestArgs::static_mixedNumberTypes(1.5, 3)
-	assert {-static_mixedNumberTypes::arg1} is 1.5
-	assert {-static_mixedNumberTypes::arg2} is 3
+	assert {-static_mixedNumberTypes::numberArg} is 1.5
+	assert {-static_mixedNumberTypes::intArg} is 3
 
 
 class TestArgDefaults:
