@@ -1,33 +1,268 @@
-class TestMethods:
-	private privateField: string = "im private"
-	private static privateStaticField: string = "im private and static"
+class TestArgs:
+	public noArgs():
+		set {-noArgs} to true
 
-	public publicMethodFired: boolean = false
+	public singleArg(arg: boolean):
+		set {-singleArg} to {_arg}
 
-	public publicMethod():
-		set self::publicMethodFired to true
+	public mixedArgs1(arg1: number, arg2: string, arg3: boolean):
+		set {-mixedArgs1::arg1} to {_arg1}
+		set {-mixedArgs2::arg2} to {_arg2}
+		set {-mixedArgs3::arg3} to {_arg3}
 
-	public publicMethodReturn() :: boolean:
-		return true
+	public mixedArgs2(arg1: string, arg2: string, arg3: integer):
+		set {-mixedArgs2::arg1} to {_arg1}
+		set {-mixedArgs2::arg2} to {_arg2}
+		set {-mixedArgs2::arg3} to {_arg3}
 
-	public publicMethodArgs(arg1: string, arg2: boolean) :: string:
-		return "arg1: %{_arg1}%, arg2: %{_arg2}%"
+	public mixedNumberTypes(numberArg: number, intArg: integer):
+		set {-mixedNumberTypes::numberArg} to {_numberArg}
+		set {-mixedNumberTypes::intArg} to {_intArg}
 
-	public privateAccessTest() :: boolean:
-		if self::privateField is "im private":
-			if TestMethods::privateStaticField is "im private and static":
-				return true
 
-test "ClassySK - Methods":
-	set {_instance} to new instance of TestMethods
+	public static static_noArgs():
+		set {-static_testNoArgs} to true
 
-	{_instance}::publicMethod()
+	public static_args(arg: boolean):
+		set {-static_args::arg} to {_arg}
 
-	assert {_instance}::publicMethodFired is true with "method void"
-	assert {_instance}::publicMethodReturn() is true with "method return"
+	public static static_mixedArgs1(arg1: number, arg2: string, arg3: boolean):
+		set {-static_mixedArgs1::arg1} to {_arg1}
+		set {-static_mixedArgs2::arg2} to {_arg2}
+		set {-static_mixedArgs3::arg3} to {_arg3}
 
-	assert {_instance}::publicMethodArgs("test", true) is "arg1: test, arg2: true" with "method valid args"
+	public static static_mixedArgs2(arg1: string, arg2: string, arg3: integer):
+		set {-static_mixedArgs2::arg1} to {_arg1}
+		set {-static_mixedArgs2::arg2} to {_arg2}
+		set {-static_mixedArgs2::arg3} to {_arg3}
 
-	assert {_instance}::publicMethodArgs("test") is not set
-	assert {_instance}::publicMethodArgs("test", true, false) is not set
-	assert {_instance}::privateAccessTest() is true with "private access from method"
+	public static static_mixedNumberTypes(numberArg: number, intArg: integer):
+		set {-static_mixedNumberTypes::numberArg} to {_numberArg}
+		set {-static_mixedNumberTypes::intArg} to {_intArg}
+
+test "ClassySK - Method Arguments":
+	set {_instance} to new instance of TestArgs
+
+	{_instance}::noArgs()
+	assert {-noArgs} is true
+
+
+	{_instance}::singleArg(true)
+	assert {-singleArg} is true
+
+	delete {-singleArg}
+	{_instance}::singleArg(false, true)
+	assert {-singleArg} is not set
+	
+	{_instance}::singleArg(1)
+	assert {-singleArg} is not set
+
+
+	{_instance}::mixedArgs1(1, "test", true)
+	assert {-mixedArgs1::arg1} is 1
+	assert {-mixedArgs1::arg2} is "test"
+	assert {-mixedArgs1::arg3} is true
+
+	{_instance}::mixedArgs2("test", "test2", 1)
+	assert {-mixedArgs2::arg1} is "test"
+	assert {-mixedArgs2::arg2} is "test2"
+	assert {-mixedArgs2::arg3} is 1
+		
+
+	{_instance}::mixedNumberTypes(1, 2)
+	assert {-mixedNumberTypes::arg1} is 1
+	assert {-mixedNumberTypes::arg2} is 2
+
+	{_instance}::mixedNumberTypes(1.5, 3)
+	assert {-mixedNumberTypes::arg1} is 1.5
+	assert {-mixedNumberTypes::arg2} is 3
+
+	delete {-mixedNumberTypes::*}
+	{_instance}::mixedNumberTypes(1.5, 2.5)
+	assert {-mixedNumberTypes::*} is not set
+
+	TestArgs::static_noArgs()
+	
+	TestArgs::static_mixedArgs1(1, "test", true)
+	assert {-static_mixedArgs1::arg1} is 1
+	assert {-static_mixedArgs1::arg2} is "test"
+	assert {-static_mixedArgs1::arg3} is true
+
+	TestArgs::static_mixedArgs2("test", "test2", 1)
+	assert {-static_mixedArgs2::arg1} is "test"
+	assert {-static_mixedArgs2::arg2} is "test2"
+	assert {-static_mixedArgs2::arg3} is 1
+
+	TestArgs::static_mixedNumberTypes(1, 2)
+	assert {-static_mixedNumberTypes::arg1} is 1
+	assert {-static_mixedNumberTypes::arg2} is 2
+
+	TestArgs::static_mixedNumberTypes(1.5, 3)
+	assert {-static_mixedNumberTypes::arg1} is 1.5
+	assert {-static_mixedNumberTypes::arg2} is 3
+
+
+class TestArgDefaults:
+
+	public x(1: integer = 1):
+		set {-x::1} to {_1}
+
+
+	public x_x(1: integer = 1, 2: integer = 2):
+		set {-x_x::1} to {_1}
+		set {-x_x::2} to {_2}
+
+	public o_x(1: integer, 2: integer = 2):
+		set {-o_x::1} to {_1}
+		set {-o_x::2} to {_2}
+
+	public x_o(1: integer = 1, 2: integer):
+		set {-x_o::1} to {_1}
+		set {-x_o::2} to {_2}
+
+
+	public x_x_x(1: integer = 1, 2: integer = 2, 3: integer = 3):
+		set {-x_x_x::1} to {_1}
+		set {-x_x_x::2} to {_2}
+		set {-x_x_x::3} to {_3}
+
+	public o_x_x(1: integer, 2: integer = 2, 3: integer = 3):
+		set {-o_x_x::1} to {_1}
+		set {-o_x_x::2} to {_2}
+		set {-o_x_x::3} to {_3}
+
+	public x_o_x(1: integer = 1, 2: integer, 3: integer = 3):
+		set {-x_o_x::1} to {_1}
+		set {-x_o_x::2} to {_2}
+		set {-x_o_x::3} to {_3}
+
+	public x_x_o(1: integer = 1, 2: integer = 2, 3: integer):
+		set {-x_x_o::1} to {_1}
+		set {-x_x_o::2} to {_2}
+		set {-x_x_o::3} to {_3}
+
+	public o_x_o(1: integer, 2: integer = 2, 3: integer):
+		set {-o_x_o::1} to {_1}
+		set {-o_x_o::2} to {_2}
+		set {-o_x_o::3} to {_3}
+
+test "ClassySK - Method Argument Defaults":
+	set {_instance} to new instance of TestArgDefaults
+
+	{_instance}::x()
+	assert {-x::1} is 1
+	{_instance}::x(0)
+	assert {-x::1} is 0
+
+	{_instance}::x_x()
+	assert {-x_x::1} is 1
+	assert {-x_x::2} is 2
+	{_instance}::x_x(0)
+	assert {-x_x::1} is 0
+	assert {-x_x::2} is 2
+	{_instance}::x_x(0, 1)
+	assert {-x_x::1} is 0
+	assert {-x_x::2} is 1
+
+	{_instance}::o_x(1)
+	assert {-o_x::1} is 1
+	assert {-o_x::2} is 2
+	{_instance}::o_x(1, 0)
+	assert {-o_x::1} is 1
+	assert {-o_x::2} is 0
+
+	{_instance}::x_o()
+	assert {-x_o::*} is not set
+	{_instance}::x_o(1)
+	assert {-x_o::*} is not set
+	{_instance}::x_o(1, 2)
+	assert {-x_o::1} is 1
+	assert {-x_o::2} is 2
+	delete {-x_o::*}
+	{_instance}::x_o(2: 2)
+	assert {-x_o::1} is 1
+	assert {-x_o::2} is 2
+
+	{_instance}::x_x_x()
+	assert {-x_x_x::1} is 1
+	assert {-x_x_x::2} is 2
+	assert {-x_x_x::3} is 3
+
+	{_instance}::x_x_x(0)
+	assert {-x_x_x::1} is 0
+	assert {-x_x_x::2} is 2
+	assert {-x_x_x::3} is 3
+	{_instance}::x_x_x(0, 0)
+	assert {-x_x_x::1} is 0
+	assert {-x_x_x::2} is 0
+	assert {-x_x_x::3} is 3
+	{_instance}::x_x_x(0, 0, 0)
+	assert {-x_x_x::1} is 0
+	assert {-x_x_x::2} is 0
+	assert {-x_x_x::3} is 0
+	{_instance}::x_x_x(2: 0)
+	assert {-x_x_x::1} is 1
+	assert {-x_x_x::2} is 0
+	assert {-x_x_x::3} is 3
+	{_instance}::x_x_x(2: 0, 3: 0)
+	assert {-x_x_x::1} is 1
+	assert {-x_x_x::2} is 0
+	assert {-x_x_x::3} is 0
+	{_instance}::x_x_x(2: 0, 3: 0, 1: -1)
+	assert {-x_x_x::1} is -1
+	assert {-x_x_x::2} is 0
+	assert {-x_x_x::3} is 0
+
+	{_instance}::o_x_x()
+	assert {-o_x_x::*} is not set
+	{_instance}::o_x_x(1)
+	assert {-o_x_x::1} is 1
+	assert {-o_x_x::2} is 2
+	assert {-o_x_x::3} is 3
+	{_instance}::o_x_x(1, 0)
+	assert {-o_x_x::1} is 1
+	assert {-o_x_x::2} is 0
+	assert {-o_x_x::3} is 3
+	delete {-o_x_x::*}
+	{_instance}::o_x_x(2: 0)
+	assert {-o_x_x::*} is not set
+
+	{_instance}::x_o_x(0, 2)
+	assert {-x_o_x::1} is 0
+	assert {-x_o_x::2} is 2
+	assert {-x_o_x::3} is 3
+	{_instance}::x_o_x(4, 5, 6)
+	assert {-x_o_x::1} is 4
+	assert {-x_o_x::2} is 5
+	assert {-x_o_x::3} is 6
+	{_instance}::x_o_x(2: 1)
+	assert {-x_o_x::1} is 1
+	assert {-x_o_x::2} is 1
+	assert {-x_o_x::3} is 3
+
+	{_instance}::x_x_o(3: 5)
+	assert {-x_x_o::1} is 1
+	assert {-x_x_o::2} is 2
+	assert {-x_x_o::3} is 5
+	{_instance}::x_x_o(4, 5, 6)
+	assert {-x_x_o::1} is 3
+	assert {-x_x_o::2} is 4
+	assert {-x_x_o::3} is 6
+	delete {-x_x_o::*}
+	{_instance}::x_x_o(2: 2)
+	assert {-x_x_o::*} is not set
+
+	{_instance}::o_x_o()
+	assert {-o_x_o::*} is not set
+	{_instance}::o_x_o(1)
+	assert {-o_x_o::*} is not set
+	{_instance}::o_x_o(1, 2)
+	assert {-o_x_o::*} is not set
+	{_instance}::o_x_o(1: 1, 3: 3)
+	assert {-o_x_o::1} is 1
+	assert {-o_x_o::2} is 2
+	assert {-o_x_o::3} is 3
+	{_instance}::o_x_o(4, 5, 6)
+	assert {-o_x_o::1} is 4
+	assert {-o_x_o::2} is 5
+	assert {-o_x_o::3} is 6
