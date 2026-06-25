@@ -36,7 +36,7 @@ public class EffField extends Effect {
         registry.register(
             SyntaxRegistry.EFFECT,
             SyntaxInfo.builder(EffField.class)
-                .addPattern("(public|:private) [:static] <"+ Classysk.NAME_PATTERN +">\\: %*classinfo% [def:= %*object%]")
+                .addPattern("(public|:private) [:static] <"+ Classysk.NAME_PATTERN +">\\: %*classinfo% [= %-*object%]")
                 .supplier(EffField::new)
                 .build()
         );
@@ -66,18 +66,21 @@ public class EffField extends Effect {
         boolean isPlural = reference.isPlural().isTrue();
         Class<?> type = reference.getClassInfo().getC();
 
-        var litDefault = (Literal<Object>) exprs[1].getConvertedExpression(type);
         Object[] defaultValue = null;
-        if (litDefault != null) {
-            defaultValue = litDefault.getArray();
 
-            if (!ConverterUtils.canConvert(type, defaultValue)) {
-                Skript.error("Default value does not match specified field type");
-                return false;
-            }
-            if (defaultValue.length != 1 && !isPlural) {
-                Skript.error("Default value is plural but field only accept single values");
-                return false;
+        if (exprs[1] != null) {
+            var litDefault = (Literal<Object>) exprs[1].getConvertedExpression(type);
+            if (litDefault != null) {
+                defaultValue = litDefault.getArray();
+
+                if (!ConverterUtils.canConvert(type, defaultValue)) {
+                    Skript.error("Default value does not match specified field type");
+                    return false;
+                }
+                if (defaultValue.length != 1 && !isPlural) {
+                    Skript.error("Default value is plural but field only accept single values");
+                    return false;
+                }
             }
         }
         signature = new FieldSignature(fieldName, type, defaultValue, accessType, isStatic, isPlural);

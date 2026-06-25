@@ -4,6 +4,7 @@ import ch.njol.skript.Skript;
 import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.doc.*;
 import ch.njol.skript.lang.*;
+import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.util.ClassInfoReference;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
@@ -58,7 +59,7 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
         registry.register(
             SyntaxRegistry.SECTION,
             SyntaxInfo.builder(SecMethod.class)
-                .addPattern("(public|:private) [:static] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [return:(\\:\\:|returns) %-*classinfo%]")
+                .addPattern("(public|:private) [:static] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [(\\:\\:|returns) %-*classinfo%]")
                 .supplier(SecMethod::new)
                 .build()
         );
@@ -71,7 +72,7 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
     public SkriptClass contextClass;
 
     @Override
-    public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean isDelayed, SkriptParser.ParseResult parseResult, SectionNode sectionNode, List<TriggerItem> triggerItems) {
+    public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result, SectionNode sectionNode, List<TriggerItem> triggerItems) {
         if (!(getParser().getCurrentStructure() instanceof StructClass)) {
             Skript.error("Method declaration can only be used within a class structure.");
             return false;
@@ -79,17 +80,17 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
         boolean returnPlural = false;
         Class<?> returnType = null;
 
-        if (parseResult.hasTag("return")) {
+        if (exprs[0] != null) {
             ClassInfoReference reference = SyntaxUtils.getClassRef(exprs[0]);
             returnPlural = reference.isPlural().isTrue();
             returnType = reference.getClassInfo().getC();
         }
-        String methodName = StringUtils.getLowerCase(parseResult.regexes.get(0));
+        String methodName = StringUtils.getLowerCase(result.regexes.get(0));
         SequencedMap<String, MethodArgument> args = null;
 
         // parse arguments
-        if (parseResult.hasTag("args")) {
-            String argsString = parseResult.regexes.get(1).group();
+        if (result.hasTag("args")) {
+            String argsString = result.regexes.get(1).group();
 
             if (!argsString.isEmpty()) {
                 args = MethodParser.parseArguments(argsString);
@@ -98,8 +99,8 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
                 }
             }
         }
-        AccessType accessType = parseResult.hasTag("private") ? AccessModifiable.AccessType.PRIVATE : AccessModifiable.AccessType.PUBLIC;
-        boolean isStatic = parseResult.hasTag("static");
+        AccessType accessType = result.hasTag("private") ? AccessModifiable.AccessType.PRIVATE : AccessModifiable.AccessType.PUBLIC;
+        boolean isStatic = result.hasTag("static");
 
         this.sectionNode = sectionNode;
         this.signature = new MethodSignature(methodName, args, accessType, isStatic, returnType, returnPlural);
