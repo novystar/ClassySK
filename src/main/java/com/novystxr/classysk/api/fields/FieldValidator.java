@@ -25,7 +25,7 @@ public class FieldValidator extends AccessValidator<FieldSignature> {
             Skript.error("Could not resolve field signature");
             return false;
         }
-        if (!signature.checkAccess(contextClass)) {
+        if (!signature.checkAccess(contextClass, instance)) {
             Skript.error("This field can't be accessed here");
             return false;
         }

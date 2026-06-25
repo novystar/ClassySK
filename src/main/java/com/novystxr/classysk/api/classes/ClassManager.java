@@ -1,7 +1,5 @@
 package com.novystxr.classysk.api.classes;
 
-import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
-
 import java.lang.ref.WeakReference;
 import java.util.*;
 import java.util.Map.Entry;
@@ -34,8 +32,8 @@ public class ClassManager {
         });
     }
 
-    public static void createClass(SkriptClass newClass) {
-        classMap.put(newClass.name, newClass);
+    public static void createClass(String name, SkriptClass newClass) {
+        classMap.put(name, newClass);
     }
 
     public static void removeClass(String name) {

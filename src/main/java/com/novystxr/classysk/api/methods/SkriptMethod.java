@@ -11,6 +11,7 @@ import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.event.MethodRunEvent;
 import com.novystxr.classysk.main.elements.methods.SecMethod;
 import org.bukkit.event.Event;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -19,8 +20,8 @@ import java.util.Map.Entry;
 public class SkriptMethod implements AccessModifiable {
 
     @Override
-    public boolean checkAccess(@Nullable SkriptClass contextClass) {
-        return signature.accessType != AccessType.PRIVATE || contextClass == parentClass;
+    public boolean checkAccess(@Nullable SkriptClass contextClass, @NotNull ClassInstance instance) {
+        return signature.accessType != AccessType.PRIVATE || contextClass == instance.getParent();
     }
 
     @Override
@@ -47,14 +48,12 @@ public class SkriptMethod implements AccessModifiable {
 
     ) {}
 
-    public SkriptMethod(MethodSignature signature, SkriptClass parentClass) {
+    public SkriptMethod(MethodSignature signature) {
         this.signature = signature;
-        this.parentClass = parentClass;
     }
 
     private Trigger trigger;
     public final MethodSignature signature;
-    private final SkriptClass parentClass;
 
     public void setTrigger(Trigger trigger) {
         this.trigger = trigger;

@@ -13,7 +13,7 @@ import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.fields.FieldValidator;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.methods.SkriptMethod;
-import com.novystxr.classysk.api.util.ExpressionUtils;
+import com.novystxr.classysk.api.util.SyntaxUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
@@ -86,9 +86,9 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
 
                 //noinspection DataFlowIssue
                 if (signature.isPlural()) {
-                    result = ExpressionUtils.mutatePlural(initialValues, delta, mode);
+                    result = SyntaxUtils.mutatePlural(initialValues, delta, mode);
                 } else {
-                    result = ExpressionUtils.mutateSingle(initialValues, delta, mode, signature.type());
+                    result = SyntaxUtils.mutateSingle(initialValues, delta, mode, signature.type());
                 }
                 if (result != null) instance.setFieldValue(fieldName, result);
             }

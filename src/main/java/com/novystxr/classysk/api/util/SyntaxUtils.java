@@ -2,7 +2,11 @@ package com.novystxr.classysk.api.util;
 
 import ch.njol.skript.classes.Changer;
 import ch.njol.skript.classes.Changer.ChangeMode;
+import ch.njol.skript.classes.ClassInfo;
+import ch.njol.skript.lang.Expression;
+import ch.njol.skript.lang.Literal;
 import ch.njol.skript.registrations.Classes;
+import ch.njol.skript.util.ClassInfoReference;
 import ch.njol.skript.util.Utils;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.arithmetic.Arithmetics;
@@ -13,7 +17,17 @@ import org.skriptlang.skript.lang.converter.Converters;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ExpressionUtils {
+public class SyntaxUtils {
+
+    /**
+     * A helper method to get the literal reference of a classinfo.
+     */
+    public static ClassInfoReference getClassRef(Expression<?> expr) {
+        //noinspection unchecked
+        var classInfoLit = (Literal<ClassInfo<?>>) expr;
+        var ref = ((Literal<ClassInfoReference>) ClassInfoReference.wrap(classInfoLit));
+        return ref.getSingle();
+    }
 
     public static Object[] mutatePlural(Object @Nullable [] initialValues, Object[] delta, ChangeMode changeMode) {
         if (initialValues == null) initialValues = new Object[]{};

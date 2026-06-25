@@ -1,8 +1,10 @@
 package com.novystxr.classysk.api.fields;
 
 import com.novystxr.classysk.api.AccessModifiable;
+import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.util.ConverterUtils;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class SkriptField {
@@ -13,15 +15,13 @@ public class SkriptField {
 
             AccessType accessType,
             boolean isStatic,
-            boolean isPlural,
-
-            SkriptClass parentClass
+            boolean isPlural
 
     ) implements AccessModifiable {
 
         @Override
-        public boolean checkAccess(@Nullable SkriptClass contextClass) {
-            return accessType != AccessType.PRIVATE || parentClass == contextClass;
+        public boolean checkAccess(@Nullable SkriptClass contextClass, @NotNull ClassInstance instance) {
+            return accessType != AccessType.PRIVATE || instance.getParent() == contextClass;
         }
 
         @Override

@@ -15,13 +15,14 @@ import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.script.Script;
 import org.skriptlang.skript.lang.structure.Structure;
 
-/** non instance skript class <br>
- holds static fields/methods, instances and signature data **/
+/**
+ * The single non-instance version of a class
+ */
 public class SkriptClass extends ClassInstance {
     public Map<ClassOption, Boolean> options = ClassOption.getDefaults();
 
     public final MethodRegistry methodRegistry = new MethodRegistry();
-    private Map<String, FieldSignature> fieldSignatures = new HashMap<>();
+    public final Map<String, FieldSignature> fieldSignatures = new HashMap<>();
 
     final List<WeakReference<ClassInstance>> instances = new ArrayList<>();
 
@@ -105,13 +106,10 @@ public class SkriptClass extends ClassInstance {
                 }
             }
         }
-
-        ClassManager.removeClass(name);
         return false;
     }
 
-    public void updateFieldSignatureMap(Map<String, FieldSignature> fieldSignatures) {
-        this.fieldSignatures = fieldSignatures;
+    public void revalidateFields() {
 
         // static field validation
         // attempt to convert, if failed, static context changes or no longer exists, remove field

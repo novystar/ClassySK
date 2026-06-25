@@ -4,8 +4,7 @@ import ch.njol.skript.Skript;
 import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.doc.*;
 import ch.njol.skript.lang.*;
-import ch.njol.skript.registrations.Classes;
-import ch.njol.skript.util.Utils;
+import ch.njol.skript.util.ClassInfoReference;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.*;
@@ -15,9 +14,9 @@ import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodSignature;
 import com.novystxr.classysk.api.classes.SkriptClass;
-import com.novystxr.classysk.api.event.MethodRegistrationEvent;
 import com.novystxr.classysk.api.event.MethodRunEvent;
 import com.novystxr.classysk.api.util.StringUtils;
+import com.novystxr.classysk.api.util.SyntaxUtils;
 import com.novystxr.classysk.main.elements.classes.StructClass;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
@@ -59,7 +58,7 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
         registry.register(
                 SyntaxRegistry.SECTION,
                 SyntaxInfo.builder(SecMethod.class)
-                        .addPattern("(public|:private) [:static] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [return:(\\:\\:|returns) <.+>]")
+                        .addPattern("(public|:private) [:static] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [return:(\\:\\:|returns) %*classinfo%]")
                         .supplier(SecMethod::new)
                         .build()
         );
@@ -72,7 +71,7 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
     public SkriptClass contextClass;
 
     @Override
-    public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, SkriptParser.ParseResult parseResult, SectionNode sectionNode, List<TriggerItem> triggerItems) {
+    public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean isDelayed, SkriptParser.ParseResult parseResult, SectionNode sectionNode, List<TriggerItem> triggerItems) {
         if (!(getParser().getCurrentStructure() instanceof StructClass)) {
             Skript.error("Method declaration can only be used within a class structure.");
             return false;
@@ -81,13 +80,9 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
         Class<?> returnType = null;
 
         if (parseResult.hasTag("return")) {
-            String ref = parseResult.regexes.get(1).group().trim();
-            returnType = Classes.getClassFromUserInput(ref);
-            if (returnType == null) {
-                Skript.error("Could not resolve type: "+ref);
-                return false;
-            }
-            returnPlural = Utils.isPlural(ref).plural();
+            ClassInfoReference reference = SyntaxUtils.getClassRef(exprs[0]);
+            returnPlural = reference.isPlural().isTrue();
+            returnType = reference.getClassInfo().getC();
         }
         String methodName = StringUtils.getLowerCase(parseResult.regexes.get(0));
         SequencedMap<String, MethodArgument> args = null;
@@ -111,24 +106,17 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
         return true;
     }
 
-    // here we are just doing registration
-    @Override
-    public @Nullable TriggerItem walk(Event event) {
-        if (event instanceof MethodRegistrationEvent regEvent) {
+    public void registerMethod() {
+        skriptMethod = new SkriptMethod(signature);
 
-            SkriptClass skriptClass = regEvent.skriptClass;
-            skriptMethod = new SkriptMethod(signature, skriptClass);
-
-            boolean registered = skriptClass.methodRegistry.registerMethod(skriptMethod);
-            if (!registered) {
-                Skript.error("Method with this signature already exists in class: "+ skriptClass.name);
-            }
+        boolean registered = contextClass.methodRegistry.registerMethod(skriptMethod);
+        if (!registered) {
+            Skript.error("Method with this signature already exists in class: "+ contextClass.name);
         }
-        return null;
     }
 
     @SuppressWarnings("unchecked")
-    public void evaluateTrigger() {
+    public void loadTrigger() {
         Trigger trigger;
 
         if (signature.returnType() != null) {
@@ -137,6 +125,11 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
             trigger = loadCode(sectionNode, "method body", MethodRunEvent.class);
         }
         skriptMethod.setTrigger(trigger);
+    }
+
+    @Override
+    public @Nullable TriggerItem walk(Event event) {
+        throw new IllegalStateException();
     }
 
     @Override

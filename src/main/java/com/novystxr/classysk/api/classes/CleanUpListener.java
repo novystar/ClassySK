@@ -20,6 +20,5 @@ public class CleanUpListener implements ScriptLoadEvent {
                 Logger.log("Cleaned up class<AQUA>", skriptClass.getEffectiveName());
             }
         }
-
     }
 }

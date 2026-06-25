@@ -60,7 +60,7 @@ public class MethodValidator extends AccessValidator<SkriptMethod> {
             method = valid.getFirst();
         }
 
-        if (!method.checkAccess(contextClass)) {
+        if (!method.checkAccess(contextClass, instance)) {
             Skript.error("This method can't be accessed here");
             return false;
         }
