@@ -144,7 +144,7 @@ test "ClassySK - Default Field Values":
 	assert {_instance}::boolsField is true, false
 	assert {_instance}::objsField is 1, 1.4, "test", true
 
-	assert size of {-testInvalidDefaults::*} is 7
+	assert size of {-testInvalidDefaults::*} is 9
 
 class TestChangers:
 	public static intsField: integers = 2, 1
