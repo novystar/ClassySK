@@ -280,7 +280,7 @@ class TypeValidation:
 		set {-typeInts::*} to {_arg::*}
 
 	public nums(arg: numbers):
-		set {-typeNums} to {_arg::*}
+		set {-typeNums::*} to {_arg::*}
 
 	public objs(arg: objects):
 		set {-typeObjs::*} to {_arg::*}
