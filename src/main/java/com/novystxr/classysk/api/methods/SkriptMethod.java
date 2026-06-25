@@ -78,6 +78,8 @@ public class SkriptMethod implements AccessModifiable {
                 Object[] values = arg.getValue();
                 String key = arg.getKey();
 
+                if (values.length == 0) continue;
+
                 if (signature.arguments.get(key).isPlural) {
                     int i = 0;
                     for (Object value : values) {
