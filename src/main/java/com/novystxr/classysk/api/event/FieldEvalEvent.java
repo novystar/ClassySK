@@ -4,7 +4,7 @@ import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
-public class EmptyEvent extends Event {
+public class FieldEvalEvent extends Event {
 
     @Override
     public @NotNull HandlerList getHandlers() {

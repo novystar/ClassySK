@@ -6,6 +6,8 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.TreeMap;
 
+import ch.njol.skript.lang.Expression;
+import com.novystxr.classysk.api.event.FieldEvalEvent;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import org.jetbrains.annotations.Nullable;
@@ -51,13 +53,29 @@ public class ClassInstance {
         fieldMap.remove(value.signature.name());
     }
 
+    public void resetField(FieldSignature signature) {
+        Expression<?> defaultExpr = signature.defaultExpr();
+        String fieldName = signature.name();
+
+        if (defaultExpr == null) {
+            removeField(fieldName);
+            return;
+        }
+        Object[] defaultValue = defaultExpr.getArray(new FieldEvalEvent());
+        if (!setFieldValue(fieldName, defaultValue)) {
+             removeField(fieldName);
+        }
+    }
+
     // lazy initialization
-    public void setFieldValue(String name, @Nullable Object[] value) {
+    public boolean setFieldValue(String name, @Nullable Object[] value) {
         FieldSignature signature = getFieldSignature(name);
-        if (signature == null) return;
+        if (signature == null) return false;
         if (signature.canConvert(value)) {
             createField(signature).setValue(value);
+            return true;
         }
+        return false;
     }
 
     public Object[] getFieldValue(String name) {

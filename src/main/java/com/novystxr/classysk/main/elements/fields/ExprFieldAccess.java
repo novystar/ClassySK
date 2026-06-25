@@ -76,15 +76,17 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
     public void change(Event event, Object @Nullable [] delta, ChangeMode mode) {
         ClassInstance instance = getValidInstance(event);
         if (instance == null) return;
+
+        FieldSignature signature = validator.getProduct();
         switch (mode) {
-            case SET -> instance.setFieldValue(fieldName, delta);
-            case DELETE, RESET -> instance.removeField(fieldName);
+            case SET -> instance.setFieldValue(signature.name(), delta);
+            case DELETE -> instance.removeField(fieldName);
+            case RESET -> instance.resetField(signature);
+
             case ADD, REMOVE -> {
                 Object[] initialValues = instance.getFieldValue(fieldName);
-                FieldSignature signature = instance.getFieldSignature(fieldName);
                 Object[] result;
 
-                //noinspection DataFlowIssue
                 if (signature.isPlural()) {
                     result = SyntaxUtils.mutatePlural(initialValues, delta, mode);
                 } else {

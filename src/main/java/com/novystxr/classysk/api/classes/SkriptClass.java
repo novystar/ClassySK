@@ -6,7 +6,7 @@ import java.util.*;
 
 import ch.njol.skript.ScriptLoader;
 import ch.njol.skript.lang.Expression;
-import com.novystxr.classysk.api.event.EmptyEvent;
+import com.novystxr.classysk.api.event.FieldEvalEvent;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.methods.MethodRegistry;
@@ -73,13 +73,15 @@ public class SkriptClass extends ClassInstance {
     private void setDefaults(ClassInstance instance) {
         for (FieldSignature signature : fieldSignatures.values()) {
             if (signature.isStatic() == instance.isInstance()) continue;
-            if (instance.fieldExists(signature.name())) continue;
+
+            String fieldName = signature.name();
+            if (instance.fieldExists(fieldName)) continue;
 
             Expression<?> defaultExpr = signature.defaultExpr();
             if (defaultExpr == null) continue;
 
-            Object[] value = defaultExpr.getArray(new EmptyEvent());
-            instance.setFieldValue(signature.name(), value);
+            Object[] value = defaultExpr.getArray(new FieldEvalEvent());
+            instance.setFieldValue(fieldName, value);
         }
     }
 
@@ -154,11 +156,12 @@ public class SkriptClass extends ClassInstance {
                     instance.getParent().option(ClassOption.STRICT_SIGNATURE_ENFORCEMENT);
 
             for (SkriptField field : instance.getFieldMap().values()) {
-                FieldSignature signature = fieldSignatures.get(field.signature.name());
+                String fieldName = field.signature.name();
+                FieldSignature signature = fieldSignatures.get(fieldName);
 
                 // if signature no longer exists or static context changed, ignore and use existing signature
                 if (signature == null || signature.isStatic() != field.signature.isStatic()) {
-                    if (strictSignatureEnforcement) instance.removeField(field);
+                    if (strictSignatureEnforcement) instance.removeField(fieldName);
                     continue;
                 }
                 // attempt to convert to new signature
