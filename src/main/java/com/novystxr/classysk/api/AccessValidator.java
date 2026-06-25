@@ -51,16 +51,18 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
         isStatic = !newInstance.isInstance();
         noRuntimeErrors = newInstance.getParent().option(ClassOption.SUPPRESS_RUNTIME_ERRORS);
 
+        LogEntry error;
         try (SimpleErrorHandler handler = new SimpleErrorHandler().start()) {
             if (validate(newInstance)) {
                 this.instance = newInstance;
                 return true;
             }
-            LogEntry error = handler.getLastError();
-            if (error != null) {
-                dynamicError(error.getMessage(), isRuntime);
-            }
+            error = handler.getLastError();
         }
+        if (error != null) {
+            dynamicError(error.getMessage(), isRuntime);
+        }
+
         return false;
     }
 
@@ -70,8 +72,8 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
     }
 
     private void dynamicError(String message, boolean isRuntime) {
-        if (isRuntime && !noRuntimeErrors) {
-            error(message);
+        if (isRuntime) {
+            if (!noRuntimeErrors) error(message);
         } else {
             Skript.error(message);
         }
