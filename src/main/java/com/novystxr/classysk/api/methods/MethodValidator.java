@@ -103,12 +103,17 @@ public class MethodValidator extends AccessValidator<SkriptMethod> {
                     }
                     hasNamedArgs = true;
                 }
-                Class<?> toClass = arguments.get(name).type();
+                MethodArgument targetArg = arguments.get(name);
+                Class<?> toClass = targetArg.type();
 
                 //noinspection unchecked
                 Expression<?> convertedExpr = arg.expr().getConvertedExpression(toClass);
                 if (convertedExpr == null) {
-                    if (printErrors) Skript.error("Argument " + (i + 1) + " (" + name + ") is not of required type: " + Classes.getExactClassName(toClass));
+                    if (printErrors) Skript.error("Argument '%s' is not of required type: %s", name, Classes.getExactClassName(toClass));
+                    return false;
+                }
+                if (!convertedExpr.isSingle() && !targetArg.isPlural()) {
+                    if (printErrors) Skript.error("Argument '%s' is single but given expression is plural", name);
                     return false;
                 }
 
