@@ -8,7 +8,6 @@ import ch.njol.skript.doc.*;
 import ch.njol.skript.expressions.base.SectionExpression;
 import ch.njol.skript.lang.*;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
-import ch.njol.skript.log.SkriptLogger;
 import ch.njol.skript.util.LiteralUtils;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
@@ -98,11 +97,13 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
                     Skript.error("This class does not permit private access in constructors");
                     return false;
                 }
-                SkriptLogger.setNode(node);
                 Expression<?> valueExpr = LiteralUtils.defendExpression(new SkriptParser(unparsedValue, SkriptParser.ALL_FLAGS, ParseContext.DEFAULT).parseExpression(signature.type()));
                 if (valueExpr == null || !LiteralUtils.canInitSafely(valueExpr)) return false;
 
                 fields.put(fieldName, valueExpr);
+            } else {
+                Skript.error("Sections are not allowed here");
+                return false;
             }
         }
         return true;
