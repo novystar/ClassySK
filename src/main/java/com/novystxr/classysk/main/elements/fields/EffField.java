@@ -69,7 +69,10 @@ public class EffField extends Effect {
 
         if (exprs[1] != null) {
             defaultExpr = exprs[1].getConvertedExpression(type);
-            if (defaultExpr == null) return false;
+            if (defaultExpr == null) {
+                Skript.error("Default value can't convert to type: "+reference.getClassInfo());
+                return false;
+            }
 
             if (!defaultExpr.isSingle() && !isPlural) {
                 Skript.error("Default value is plural but field only accept single values");

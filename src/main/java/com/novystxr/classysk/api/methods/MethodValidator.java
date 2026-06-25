@@ -10,8 +10,8 @@ import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.MethodParser.ReferenceArgument;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodSignature;
-import com.novystxr.classysk.api.util.ConverterUtils;
 import org.jetbrains.annotations.NotNull;
+import org.skriptlang.skript.lang.converter.Converters;
 import org.skriptlang.skript.log.runtime.ErrorSource;
 
 import java.util.*;
@@ -104,11 +104,11 @@ public class MethodValidator extends AccessValidator<SkriptMethod> {
                     }
                     hasNamedArgs = true;
                 }
-                Class<?> toClass = arguments.get(name).type();
                 Class<?> fromClass = arg.expr().getReturnType();
+                Class<?> toClass = arguments.get(name).type();
 
-                if (!ConverterUtils.canConvert(toClass, fromClass)) {
-                    if (printErrors) Skript.error("Argument "+ i+1 +" ("+ name +") is not of required type: "+ Classes.getExactClassName(toClass));
+                if (!Converters.converterExists(fromClass, toClass)) {
+                    if (printErrors) Skript.error("Argument "+ (i+1) +" ("+ name +") is not of required type: "+ Classes.getExactClassName(toClass));
                     return false;
                 }
 

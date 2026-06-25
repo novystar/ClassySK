@@ -11,7 +11,6 @@ import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.methods.MethodRegistry;
 import com.novystxr.classysk.api.util.StringUtils;
-import com.novystxr.classysk.api.util.ConverterUtils;
 import com.novystxr.classysk.main.elements.classes.StructClass;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.script.Script;
@@ -137,7 +136,7 @@ public class SkriptClass extends ClassInstance {
             // if signature no longer exists or static context changed, ignore and use existing signature
             if (signature == null || signature.isStatic() != field.signature.isStatic()) return true;
 
-            if (ConverterUtils.canConvert(field.signature.type(), field.getValue())) {
+            if (signature.canConvert(field.value)) {
                 field.signature = signature;
             } else {
                 return true;
@@ -165,7 +164,7 @@ public class SkriptClass extends ClassInstance {
                     continue;
                 }
                 // attempt to convert to new signature
-                if (ConverterUtils.canConvert(signature.type(), field.getValue())) {
+                if (signature.canConvert(field.value)) {
                     field.signature = signature;
                 } else if (strictSignatureEnforcement) {
                     instance.removeField(fieldName);

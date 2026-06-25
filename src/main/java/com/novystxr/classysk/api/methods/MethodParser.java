@@ -12,8 +12,8 @@ import ch.njol.skript.util.Utils;
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.util.StringUtils;
-import com.novystxr.classysk.api.util.ConverterUtils;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.lang.converter.Converters;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -128,7 +128,7 @@ public class MethodParser {
                     Skript.error("Cannot pass plural default value into single method argument");
                     return null;
                 }
-                if (!ConverterUtils.canConvert(type, defaultValue.getReturnType())) {
+                if (!Converters.converterExists(type, defaultValue.getReturnType())) {
                     Skript.error("Default value does not match the specified classInfo");
                     return null;
                 }

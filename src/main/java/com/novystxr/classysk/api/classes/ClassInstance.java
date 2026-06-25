@@ -12,6 +12,7 @@ import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.util.StringUtils;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.lang.converter.Converters;
 
 public class ClassInstance {
     public final String name;
@@ -65,20 +66,30 @@ public class ClassInstance {
     }
 
     // lazy initialization
-    public boolean setFieldValue(String name, @Nullable Object[] value) {
+    public boolean setFieldValue(String fieldName, @Nullable Object[] value) {
         FieldSignature signature = getFieldSignature(name);
         if (signature == null) return false;
-        if (signature.canConvert(value)) {
-            createField(signature).setValue(value);
+
+        SkriptField field = fieldMap.get(fieldName);
+        if (field == null) {
+            field = createField(signature);
+        }
+        if (value == null) {
+            field.value = null; // field was intentionally set to null
             return true;
         }
-        return false;
+
+        Object[] convertedValue = Converters.convert(value, signature.type());
+        if (convertedValue == null) return false; // could not convert
+
+        field.value = convertedValue;
+        return true;
     }
 
     public Object[] getFieldValue(String name) {
         SkriptField field = fieldMap.get(name);
         if (field != null) {
-            return field.getValue();
+            return field.value;
         }
         return null;
     }
@@ -101,7 +112,7 @@ public class ClassInstance {
     public Map<String, Object[]> getFieldValueMap() {
         Map<String, Object[]> result = new TreeMap<>();
         for (Entry<String, SkriptField> entry : fieldMap.entrySet()) {
-            result.put(entry.getKey(), entry.getValue().getValue());
+            result.put(entry.getKey(), entry.getValue().value);
         }
         return result;
     }
