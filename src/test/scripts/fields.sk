@@ -117,12 +117,12 @@ parse:
 	results: {-testInvalidDefaults::*}
 	code:
 		class TestInvalidDefaults:
-			public intField: integer = 1.5
+			public intField: integer = true
 			public numField: number = "not a number"
 			public strField: string = 1
 			public boolField: boolean = 1
 
-			public intsField: integers = 1, 2, 3, 4 and 1.5
+			public intsField: integers = 1, 2, 3, 4 and true
 			public numsField: numbers = 1, 2.5, 3.1, 4 and true
 			public strsField: strings = "test", "hello" and true
 			public boolsField: booleans = true, false and 1
@@ -144,7 +144,7 @@ test "ClassySK - Default Field Values":
 	assert {_instance}::boolsField is true, false
 	assert {_instance}::objsField is 1, 1.4, "test", true
 
-	assert size of {-testInvalidDefaults::*} is 9
+	assert size of {-testInvalidDefaults::*} is 7
 
 class TestChangers:
 	public static intsField: integers = 2, 1
