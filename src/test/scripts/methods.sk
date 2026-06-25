@@ -279,9 +279,6 @@ class TypeValidation:
 	public ints(arg: integers):
 		set {-typeInts::*} to {_arg::*}
 
-	public nums(arg: numbers):
-		set {-typeNums::*} to {_arg::*}
-
 	public objs(arg: objects):
 		set {-typeObjs::*} to {_arg::*}
 
@@ -291,5 +288,79 @@ class TypeValidation:
 	public int(arg: integer):
 		set {-typeInt} to {_arg}
 
-	public num(arg: number):
-		set {-typeNum} to {_arg}
+	public obj(arg: object):
+		set {-typeObj} to {_arg}
+
+test "ClassySK - Method Arguments Type Validation":
+	set {_instance} to new instance of TypeValidation
+
+	{_instance}::strings("a")
+	assert {-typeStrings::*} is "a"
+	{_instance}::strings(("a", "b", "c"))
+	assert {-typeStrings::*} is "a", "b", "c"
+	delete {-typeStrings::*}
+	{_instance}::strings(("a", 2))
+	assert {-typeStrings::*} is not set 
+
+	{_instance}::ints(1)
+	assert {-typeInts::*} is 1
+	{_instance}::ints((1, 2, 3))
+	assert {-typeInts::*} is 1, 2, 3
+	delete {-typeInts::*}
+	{_instance}::ints((1, "b"))
+	assert {-typeInts::*} is not set 
+
+	{_instance}::objs(1)
+	assert {-typeObjs::*} is 1
+	{_instance}::objs((1, "b", true, 2, 3))
+	assert {-typeObjs::*} is 1, "b", true, 2, 3
+
+
+	{_instance}::string("a")
+	assert {-typeString} is "a"
+	{_instance}::string(1)
+	assert {-typeString} is "a"
+
+	{_instance}::string("b", "c")
+	assert {-typeString} is "a"
+	{_instance}::string("d", 2)
+	assert {-typeString} is "a"
+
+	set {_int} to 1
+	{_instance}::string({_int})
+	assert {-typeString} is not set
+
+
+	{_instance}::int(2)
+	assert {-typeInt} is 2
+	{_instance}::int(3.5)
+	assert {-typeInt} is 3
+	
+	set {_test} to 1.5
+	{_instance}::int({_test})
+	assert {-typeInt} is 1
+
+	set {_test} to "test"
+	{_instance}::int({_test})
+	assert {-typeInt} is not set
+
+
+	{_instance}::obj(1)
+	assert {-typeObj} is 1
+
+	{_instance}::obj(2.5)
+	assert {-typeObj} is 2.5
+
+	{_instance}::obj("a")
+	assert {-typeObj} is "a"
+
+	{_instance}::obj(("a", 2))
+	assert {-typeObj} is "a"
+
+	set {_list::*} to "a", "b", 3
+	{_instance}::obj({_list::*})
+	assert {-typeObj} is "a"
+
+	set {_var} to 10
+	{_instance}::obj({_var})
+	assert {-typeObj} is 10
