@@ -31,11 +31,11 @@ import org.skriptlang.skript.registration.SyntaxRegistry;
 public class ExprThisInstance extends SimpleExpression<ClassInstance> {
     public static void register(SyntaxRegistry registry) {
         registry.register(
-                SyntaxRegistry.EXPRESSION,
-                DefaultSyntaxInfos.Expression.builder(ExprThisInstance.class, ClassInstance.class)
-                        .addPatterns("this instance", "self")
-                        .supplier(ExprThisInstance::new)
-                        .build()
+            SyntaxRegistry.EXPRESSION,
+            DefaultSyntaxInfos.Expression.builder(ExprThisInstance.class, ClassInstance.class)
+                .addPatterns("this instance", "self")
+                .supplier(ExprThisInstance::new)
+                .build()
         );
     }
 

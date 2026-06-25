@@ -23,12 +23,12 @@ public class ExprMethodCall extends SimpleExpression<Object> {
 
     public static void register(SyntaxRegistry registry) {
         registry.register(
-                SyntaxRegistry.EXPRESSION,
-                DefaultSyntaxInfos.Expression.builder(ExprMethodCall.class, Object.class)
-                    .addPatterns(MethodParser.METHOD_PATTERN, MethodParser.STATIC_METHOD_PATTERN)
-                    .priority(SyntaxInfo.PATTERN_MATCHES_EVERYTHING)
-                    .supplier(ExprMethodCall::new)
-                    .build()
+            SyntaxRegistry.EXPRESSION,
+            DefaultSyntaxInfos.Expression.builder(ExprMethodCall.class, Object.class)
+                .addPatterns(MethodParser.METHOD_PATTERN, MethodParser.STATIC_METHOD_PATTERN)
+                .priority(SyntaxInfo.PATTERN_MATCHES_EVERYTHING)
+                .supplier(ExprMethodCall::new)
+                .build()
         );
     }
 
