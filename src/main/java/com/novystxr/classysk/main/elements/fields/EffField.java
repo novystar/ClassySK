@@ -36,7 +36,7 @@ public class EffField extends Effect {
         registry.register(
             SyntaxRegistry.EFFECT,
             SyntaxInfo.builder(EffField.class)
-                .addPattern("(public|:private) [:static] <"+ Classysk.NAME_PATTERN +">\\: %*classinfo% [= %-*object%]")
+                .addPattern("(public|:private) [:static] <"+ Classysk.NAME_PATTERN +">\\: %*classinfo% [= %-*objects%]")
                 .supplier(EffField::new)
                 .build()
         );
