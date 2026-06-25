@@ -1,5 +1,6 @@
 package com.novystxr.classysk.api.fields;
 
+import ch.njol.skript.lang.Expression;
 import com.novystxr.classysk.api.AccessModifiable;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.SkriptClass;
@@ -9,13 +10,13 @@ import org.jetbrains.annotations.Nullable;
 
 public class SkriptField {
     public record FieldSignature (
-            String name,
-            Class<?> type,
-            @Nullable Object[] defaultValue,
+        String name,
+        Class<?> type,
+        @Nullable Expression<?> defaultExpr,
 
-            AccessType accessType,
-            boolean isStatic,
-            boolean isPlural
+        AccessType accessType,
+        boolean isStatic,
+        boolean isPlural
 
     ) implements AccessModifiable {
 
@@ -42,7 +43,6 @@ public class SkriptField {
 
     public SkriptField(FieldSignature signature) {
         this.signature = signature;
-        this.value = signature.defaultValue();
     }
 
     public void setValue(@Nullable Object[] value) {

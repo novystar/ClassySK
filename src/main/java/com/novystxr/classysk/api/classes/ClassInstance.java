@@ -12,7 +12,9 @@ import org.jetbrains.annotations.Nullable;
 
 public class ClassInstance {
     public final String name;
+
     private final Map<String, SkriptField> fieldMap = new HashMap<>();
+    protected final Map<String, Object[]> fieldDefaults = new HashMap<>();
 
     // set on deserialization for when parent class becomes known
     final Map<String, Object[]> awaitingFields = new HashMap<>();
@@ -25,11 +27,10 @@ public class ClassInstance {
         this.name = name;
     }
 
-    public void createField(SkriptField field) {
-        if (fieldExists(field.signature.name())) return;
-
-        fieldMap.put(field.signature.name(), field);
-
+    public SkriptField createField(FieldSignature signature) {
+        SkriptField field = new SkriptField(signature);
+        fieldMap.put(signature.name(), field);
+        return field;
     }
 
     public boolean isAccessible() {
@@ -52,7 +53,7 @@ public class ClassInstance {
         FieldSignature signature = getFieldSignature(name);
         if (signature == null) return;
         if (signature.canConvert(value)) {
-            getField(name).setValue(value);
+            createField(signature).setValue(value);
         }
     }
 
@@ -66,7 +67,7 @@ public class ClassInstance {
 
         FieldSignature signature = parent.getFieldSignature(name);
         if (signature != null) {
-            return signature.defaultValue();
+            return fieldDefaults.get(name);
         }
         return null;
     }
@@ -80,23 +81,6 @@ public class ClassInstance {
             return parent.getFieldSignature(name);
         }
         return field.signature;
-    }
-
-    // if field does not yet exist, instantiates one
-    SkriptField getField(String name) {
-        SkriptField field = fieldMap.get(name);
-        if (field != null) return field;
-
-        SkriptClass parent = getParent();
-        if (parent == null) return null;
-
-        SkriptField.FieldSignature signature = parent.getFieldSignature(name);
-        if (signature == null) return null;
-
-        field = new SkriptField(signature);
-        createField(field);
-
-        return field;
     }
 
     public String getEffectiveName() {
@@ -118,10 +102,6 @@ public class ClassInstance {
 
     public SkriptClass getParent() {
         return ClassManager.getClass(name);
-    }
-
-    public boolean fieldExists(String name) {
-        return fieldMap.containsKey(name);
     }
 
     public int getHashCode() {

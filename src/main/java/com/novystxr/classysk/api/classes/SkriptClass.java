@@ -5,6 +5,8 @@ import java.lang.ref.WeakReference;
 import java.util.*;
 
 import ch.njol.skript.ScriptLoader;
+import ch.njol.skript.lang.Expression;
+import com.novystxr.classysk.api.event.EmptyEvent;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.methods.MethodRegistry;
@@ -68,10 +70,28 @@ public class SkriptClass extends ClassInstance {
         return this.script;
     }
 
+    private void evaluateDefaults(ClassInstance instance) {
+        instance.fieldDefaults.clear();
+        for (var fieldEntry : fieldSignatures.entrySet()) {
+            FieldSignature signature = fieldEntry.getValue();
+
+            Expression<?> defaultExpr = signature.defaultExpr();
+            if (defaultExpr == null) continue;
+
+            Object[] evaluatedDefault = defaultExpr.getArray(new EmptyEvent());
+            if (!signature.canConvert(evaluatedDefault)) continue;
+
+            instance.fieldDefaults.put(fieldEntry.getKey(), evaluatedDefault);
+        }
+    }
+
     public ClassInstance createInstance() {
-        ClassInstance instance = new ClassInstance(name);
-        instances.add(new WeakReference<>(instance));
-        return instance;
+        ClassInstance newInstance = new ClassInstance(name);
+
+        instances.add(new WeakReference<>(newInstance));
+        evaluateDefaults(newInstance);
+
+        return newInstance;
     }
 
     @Override
@@ -129,6 +149,9 @@ public class SkriptClass extends ClassInstance {
         instances.removeIf(reference -> {
             ClassInstance instance = reference.get();
             if (instance == null) return true;
+
+            evaluateDefaults(instance);
+
             boolean strictSignatureEnforcement =
                     instance.getParent().option(ClassOption.STRICT_SIGNATURE_ENFORCEMENT);
 
