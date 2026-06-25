@@ -39,6 +39,10 @@ public class ClassInstance {
         return parent.accessible;
     }
 
+    public boolean fieldExists(String name) {
+        return fieldMap.containsKey(name);
+    }
+
     public void removeField(String name) {
         fieldMap.remove(name);
     }

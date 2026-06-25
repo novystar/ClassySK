@@ -73,7 +73,7 @@ public class SkriptClass extends ClassInstance {
     private void setDefaults(ClassInstance instance) {
         for (FieldSignature signature : fieldSignatures.values()) {
             if (signature.isStatic() == instance.isInstance()) continue;
-            if (instance.getFieldValue(signature.name()) != null) continue;
+            if (instance.fieldExists(signature.name())) continue;
 
             Expression<?> defaultExpr = signature.defaultExpr();
             if (defaultExpr == null) continue;
@@ -143,7 +143,7 @@ public class SkriptClass extends ClassInstance {
             return false;
         });
 
-        // populate any null/new static fields with default values
+        // init any non-existing static fields with default values
         setDefaults(this);
 
         instances.removeIf(reference -> {
