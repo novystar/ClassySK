@@ -67,7 +67,7 @@ public class ClassInstance {
 
     // lazy initialization
     public boolean setFieldValue(String fieldName, @Nullable Object[] value) {
-        FieldSignature signature = getFieldSignature(name);
+        FieldSignature signature = getFieldSignature(fieldName);
         if (signature == null) return false;
 
         SkriptField field = fieldMap.get(fieldName);
