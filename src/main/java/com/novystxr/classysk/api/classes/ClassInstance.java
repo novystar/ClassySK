@@ -10,12 +10,13 @@ import ch.njol.skript.lang.Expression;
 import com.novystxr.classysk.api.event.FieldEvalEvent;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
+import com.novystxr.classysk.api.util.StringUtils;
 import org.jetbrains.annotations.Nullable;
 
 public class ClassInstance {
     public final String name;
 
-    private final Map<String, SkriptField> fieldMap = new HashMap<>();
+    protected final Map<String, SkriptField> fieldMap = new HashMap<>();
 
     // set on deserialization for when parent class becomes known
     final Map<String, Object[]> awaitingFields = new HashMap<>();
@@ -47,10 +48,6 @@ public class ClassInstance {
 
     public void removeField(String name) {
         fieldMap.remove(name);
-    }
-
-    public void removeField(SkriptField value) {
-        fieldMap.remove(value.signature.name());
     }
 
     public void resetField(FieldSignature signature) {
@@ -98,11 +95,7 @@ public class ClassInstance {
     }
 
     public String getEffectiveName() {
-        return "%"+name+"%";
-    }
-
-    protected Map<String, SkriptField> getFieldMap() {
-        return fieldMap;
+        return "%"+ StringUtils.titleCase(name) +"%";
     }
 
     public Map<String, Object[]> getFieldValueMap() {
@@ -110,7 +103,6 @@ public class ClassInstance {
         for (Entry<String, SkriptField> entry : fieldMap.entrySet()) {
             result.put(entry.getKey(), entry.getValue().getValue());
         }
-
         return result;
     }
 
@@ -119,7 +111,7 @@ public class ClassInstance {
     }
 
     public int getHashCode() {
-        return Objects.hash(name, fieldMap);
+        return Objects.hash(isInstance(), name, getFieldValueMap());
     }
 
     public boolean isInstance() {

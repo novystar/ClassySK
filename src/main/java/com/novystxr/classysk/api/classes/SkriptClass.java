@@ -131,7 +131,7 @@ public class SkriptClass extends ClassInstance {
 
         // static field validation
         // attempt to convert, if failed, static context changes or no longer exists, remove field
-        getFieldMap().values().removeIf(field -> {
+        fieldMap.values().removeIf(field -> {
             FieldSignature signature = fieldSignatures.get(field.signature.name());
 
             // if signature no longer exists or static context changed, ignore and use existing signature
@@ -155,7 +155,7 @@ public class SkriptClass extends ClassInstance {
             boolean strictSignatureEnforcement =
                     instance.getParent().option(ClassOption.STRICT_SIGNATURE_ENFORCEMENT);
 
-            for (SkriptField field : instance.getFieldMap().values()) {
+            for (SkriptField field : instance.fieldMap.values()) {
                 String fieldName = field.signature.name();
                 FieldSignature signature = fieldSignatures.get(fieldName);
 
@@ -168,7 +168,7 @@ public class SkriptClass extends ClassInstance {
                 if (ConverterUtils.canConvert(signature.type(), field.getValue())) {
                     field.signature = signature;
                 } else if (strictSignatureEnforcement) {
-                    instance.removeField(field);
+                    instance.removeField(fieldName);
                 }
             }
             return false;
