@@ -70,27 +70,24 @@ public class SkriptClass extends ClassInstance {
         return this.script;
     }
 
-    private void evaluateDefaults(ClassInstance instance) {
-        instance.fieldDefaults.clear();
-        for (var fieldEntry : fieldSignatures.entrySet()) {
-            FieldSignature signature = fieldEntry.getValue();
+    private void setDefaults(ClassInstance instance) {
+        for (FieldSignature signature : fieldSignatures.values()) {
+            if (signature.isStatic() == instance.isInstance()) continue;
+            if (instance.getFieldValue(signature.name()) != null) continue;
 
             Expression<?> defaultExpr = signature.defaultExpr();
             if (defaultExpr == null) continue;
 
-            Object[] evaluatedDefault = defaultExpr.getArray(new EmptyEvent());
-            if (!signature.canConvert(evaluatedDefault)) continue;
-
-            instance.fieldDefaults.put(fieldEntry.getKey(), evaluatedDefault);
+            Object[] value = defaultExpr.getArray(new EmptyEvent());
+            instance.setFieldValue(signature.name(), value);
         }
     }
 
     public ClassInstance createInstance() {
         ClassInstance newInstance = new ClassInstance(name);
-
         instances.add(new WeakReference<>(newInstance));
-        evaluateDefaults(newInstance);
 
+        setDefaults(newInstance);
         return newInstance;
     }
 
@@ -114,7 +111,6 @@ public class SkriptClass extends ClassInstance {
      */
     public boolean validateStructure() {
         Script script = this.script;
-
         if (script == null) return false;
 
         List<Structure> structures = script.getStructures();
@@ -146,11 +142,13 @@ public class SkriptClass extends ClassInstance {
             }
             return false;
         });
+
+        // populate any null/new static fields with default values
+        setDefaults(this);
+
         instances.removeIf(reference -> {
             ClassInstance instance = reference.get();
             if (instance == null) return true;
-
-            evaluateDefaults(instance);
 
             boolean strictSignatureEnforcement =
                     instance.getParent().option(ClassOption.STRICT_SIGNATURE_ENFORCEMENT);

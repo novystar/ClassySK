@@ -14,7 +14,6 @@ public class ClassInstance {
     public final String name;
 
     private final Map<String, SkriptField> fieldMap = new HashMap<>();
-    protected final Map<String, Object[]> fieldDefaults = new HashMap<>();
 
     // set on deserialization for when parent class becomes known
     final Map<String, Object[]> awaitingFields = new HashMap<>();
@@ -61,13 +60,6 @@ public class ClassInstance {
         SkriptField field = fieldMap.get(name);
         if (field != null) {
             return field.getValue();
-        }
-        SkriptClass parent = getParent();
-        if (parent == null) return null;
-
-        FieldSignature signature = parent.getFieldSignature(name);
-        if (signature != null) {
-            return fieldDefaults.get(name);
         }
         return null;
     }
