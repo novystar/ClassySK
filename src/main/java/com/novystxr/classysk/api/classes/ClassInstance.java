@@ -80,7 +80,7 @@ public class ClassInstance {
         }
 
         Object[] convertedValue = Converters.convert(value, signature.type());
-        if (convertedValue == null) return false; // could not convert
+        if (convertedValue.length == 0) return false; // could not convert
 
         field.value = convertedValue;
         return true;
