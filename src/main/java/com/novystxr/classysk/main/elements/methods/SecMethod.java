@@ -56,11 +56,11 @@ import java.util.*;
 public class SecMethod extends Section implements ReturnHandler<Object> {
     public static void register(SyntaxRegistry registry) {
         registry.register(
-                SyntaxRegistry.SECTION,
-                SyntaxInfo.builder(SecMethod.class)
-                        .addPattern("(public|:private) [:static] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [return:(\\:\\:|returns) %*classinfo%]")
-                        .supplier(SecMethod::new)
-                        .build()
+            SyntaxRegistry.SECTION,
+            SyntaxInfo.builder(SecMethod.class)
+                .addPattern("(public|:private) [:static] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [return:(\\:\\:|returns) %-*classinfo%]")
+                .supplier(SecMethod::new)
+                .build()
         );
     }
 
