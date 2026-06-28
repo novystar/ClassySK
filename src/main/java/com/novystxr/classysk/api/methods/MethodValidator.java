@@ -53,7 +53,7 @@ public class MethodValidator extends AccessValidator<SkriptMethod> {
                 if (validateReference(candidate, false)) valid.add(candidate);
             }
             if (valid.size() != 1) {
-                Skript.error("Could not identify method out of multiple overloads");
+                Skript.error("Could not identify method out of %s overloads", candidates.size());
                 return false;
             }
             method = valid.getFirst();
