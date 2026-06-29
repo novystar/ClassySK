@@ -144,22 +144,6 @@ public class StructClass extends Structure {
         return true;
     }
 
-    private boolean classAlreadyExists() {
-        boolean exists = false;
-
-        for (Structure structure : getParser().getCurrentScript().getStructures()) {
-            if (structure instanceof StructClass structClass) {
-                if (structClass == this) continue;
-                if (!structClass.name.equals(name)) continue;
-                exists = true;
-            }
-        }
-        if (ClassManager.classExists(name)) {
-            if (ClassManager.getClass(name).getValidScript() == getParser().getCurrentScript()) exists = true;
-        }
-        return exists;
-    }
-
     @Override
     public boolean load() {
         // load method triggers after initial registration so it will always know about other methods within a class
@@ -174,6 +158,22 @@ public class StructClass extends Structure {
     public void unload() {
         SkriptClass skriptClass = ClassManager.getClass(name);
         skriptClass.accessible = false;
+    }
+
+    private boolean classAlreadyExists() {
+        boolean exists = false;
+
+        for (Structure structure : getParser().getCurrentScript().getStructures()) {
+            if (structure instanceof StructClass structClass) {
+                if (structClass == this) continue;
+                if (!structClass.name.equals(name)) continue;
+                exists = true;
+            }
+        }
+        if (ClassManager.classExists(name)) {
+            if (ClassManager.getClass(name).getValidScript() == getParser().getCurrentScript()) exists = true;
+        }
+        return exists;
     }
 
     public String getName() {
