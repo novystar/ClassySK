@@ -110,7 +110,7 @@ public class StructClass extends Structure {
         for (Node node : nodes) {
             SkriptLogger.setNode(node);
             if (!(node instanceof SectionNode) && node.getKey() != null) {
-                Effect effect = Effect.parse(node.getKey(), "Invalid field declaration");
+                Effect effect = Effect.parse(node.getKey(), "Invalid field pattern");
 
                 if (effect instanceof EffField fieldEffect) {
                     fieldEffect.registerField(newClass);
@@ -131,7 +131,7 @@ public class StructClass extends Structure {
                 } else {
                     newClass.resetOptions();
                 }
-                Section section = Section.parse(node.getKey(), null, sectionNode, null);
+                Section section = Section.parse(node.getKey(), "Invalid method pattern", sectionNode, null);
 
                 if (section instanceof SecMethod secMethod) {
                     secMethod.contextClass = newClass;
