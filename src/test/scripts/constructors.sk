@@ -1,0 +1,79 @@
+class TestConstruct:
+	public int: integer
+	public intDefault: integer = 1
+	private intPrivate: integer
+
+	public str: string
+	public strPrivate: string
+
+	public static createAll() :: class instance:
+		set {_instance} to new instance of TestConstruct:
+			int: 1
+			intDefault: 2
+			intPrivate: 3
+
+			str: "test"
+			strPrivate: "testPrivate"
+
+		return {_instance}
+
+class TestConstructPrivate:
+	options:
+		private access on create: true
+
+	public int: integer
+	public intDefault: integer = 1
+	private intPrivate: integer
+
+	public str: string
+	public strPrivate: string
+
+test "ClassySK - Constructors":
+	set {_test} to new instance of TestConstruct
+	assert {_test} is an instance of TestConstruct
+
+	delete {_test}
+
+	set {_test} to new instance of TestConstruct:
+		int: 1
+		intDefault: 2
+
+	assert {_test}::int is 1
+	assert {_test}::intDefault is 2
+
+	set {_test} to new instance of TestConstruct:
+		int: 3
+
+	assert {_test}::int is 3
+	assert {_test}::intDefault is 1
+
+	parse:
+		set {_test} to new instance of TestConstruct:
+			int: 1
+			intPrivate: 3
+	assert last parse logs is set with "Attempt to set private field from external constructor"
+
+	set {_instance} to TestConstruct::createAll()
+	assert {_instance}::int is 1
+	assert {_instance}::intDefault is 2
+	assert {_instance}::intPrivate is 3
+
+	assert {_instance}::str is "test"
+	assert {_instance}::intDefault is "testPrivate"
+
+	set {_instance} to new instance of TestConstructPrivate:
+		int: 1
+		intDefault: 2
+		intPrivate: 3
+
+		str: "test"
+		strPrivate: "testPrivate"
+
+	assert {_instance} is an instance of TestConstructPrivate
+
+	assert {_instance}::int is 1
+	assert {_instance}::intDefault is 2
+	assert {_instance}::intPrivate is 3
+
+	assert {_instance}::str is "test"
+	assert {_instance}::intDefault is "testPrivate"
