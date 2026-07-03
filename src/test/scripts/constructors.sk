@@ -19,6 +19,13 @@ class TestConstruct:
 
 		return {_instance}
 
+	public checkPrivate() :: boolean:
+		if self::intPrivate is 3:
+			self::strPrivate is "testPrivate"
+			return true
+
+		return false
+
 class TestConstructPrivate:
 	options:
 		private access on create: true
@@ -29,6 +36,13 @@ class TestConstructPrivate:
 
 	public str: string
 	public strPrivate: string
+
+	public checkPrivate() :: boolean:
+		if self::intPrivate is 3:
+			self::strPrivate is "testPrivate"
+			return true
+
+		return false
 
 class TestExternalCreation:
 	options:
@@ -71,10 +85,9 @@ test "ClassySK - Constructors":
 	set {_instance} to TestConstruct::createAll()
 	assert {_instance}::int is 1
 	assert {_instance}::intDefault is 2
-	assert {_instance}::intPrivate is 3
 
 	assert {_instance}::str is "test"
-	assert {_instance}::intDefault is "testPrivate"
+	assert {_instance}::checkPrivate() is true
 
 	set {_instance} to new instance of TestConstructPrivate:
 		int: 1
@@ -88,10 +101,10 @@ test "ClassySK - Constructors":
 
 	assert {_instance}::int is 1
 	assert {_instance}::intDefault is 2
-	assert {_instance}::intPrivate is 3
 
 	assert {_instance}::str is "test"
-	assert {_instance}::intDefault is "testPrivate"
+
+	assert {_instance}::checkPrivate() is true
 
 	parse:
 		set {_instance} to new instance of TestConstruct:
