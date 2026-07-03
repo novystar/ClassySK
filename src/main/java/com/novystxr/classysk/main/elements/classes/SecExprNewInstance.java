@@ -17,6 +17,7 @@ import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.methods.SkriptMethod;
+import com.novystxr.classysk.api.util.Logger;
 import com.novystxr.classysk.api.util.StringUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
@@ -65,15 +66,15 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
             return false;
         }
         skriptClass = ClassManager.getClass(name);
-        boolean inParent = SkriptMethod.getContextClass(getParser()) != skriptClass;
+        boolean inParent = SkriptMethod.getContextClass(getParser()) == skriptClass;
 
         if (!inParent && !skriptClass.option(ClassOption.EXTERNAL_CREATION)) {
-            Skript.error("External constructors are not permitted for this class");
+            Skript.error("External creation is not permitted for this class");
             return false;
         }
         if (sectionNode == null) return true;
 
-        boolean allowPrivate = skriptClass.option(ClassOption.PRIVATE_ACCESS_ON_CREATE);
+        boolean allowPrivate = inParent || skriptClass.option(ClassOption.PRIVATE_ACCESS_ON_CREATE);
 
         for (Node node : sectionNode) {
             String key = node.getKey();
@@ -91,6 +92,10 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
                 FieldSignature signature = skriptClass.getFieldSignature(fieldName);
                 if (signature == null) {
                     Skript.error("Could not find field from class: " + skriptClass.getEffectiveName());
+                    return false;
+                }
+                if (signature.isStatic()) {
+                    Skript.error("Static field cannot be set on an instance");
                     return false;
                 }
                 if (signature.accessType().isPrivate() && !allowPrivate) {
