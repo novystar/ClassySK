@@ -409,7 +409,7 @@ test "ClassySK - Method Overloading":
 	assert {-objOL} is true
 
 	set {_instance} to new instance of TestOverload
-	TestOverload::obj({_instance})
+	TestOverload::obj(obj: {_instance})
 	assert {-objOL} is {_instance}
 	
 	TestOverload::obj(obj: 1)
