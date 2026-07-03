@@ -40,4 +40,4 @@ jobs:
         with:
           test_script_directory: src/test/scripts
           extra_plugins_directory: extra-plugins/
-          run_vanilla_tests: false
+          run_vanilla_tests: true
