@@ -373,7 +373,7 @@ class TestOverload:
 		set {-1ArgOL} to {_str}
 
 	public static 1Arg(bool: boolean):
-		set {-1ArgOL} to {_int}
+		set {-1ArgOL} to {_bool}
 
 
 	public static obj(int: integer):
@@ -426,13 +426,13 @@ class TestReturns:
 		return true
 
 
-	public returnReturnInt() :: integer:
+	public returnReturnInt() :: integers:
 		return self::returnInt()
 
-	public returnReturnStr() :: string:
+	public returnReturnStr() :: strings:
 		return self::returnStr()
 
-	public returnReturnBool() :: boolean:
+	public returnReturnBool() :: booleans:
 		return self::returnBool()
 
 	
@@ -459,7 +459,7 @@ class TestReturns:
 	public returnSelf() :: class instance:
 		return self
 
-test "ClassySK - Method returns":
+test "ClassySK - Method Returns":
 	set {_instance} to new instance of TestReturns
 
 	assert {_instance}::returnInt() is 1
