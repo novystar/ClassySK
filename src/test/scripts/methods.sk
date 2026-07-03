@@ -108,6 +108,10 @@ test "ClassySK - Method Arguments":
 
 class TestArgDefaults:
 
+	public list(strs: strings = ("this", "is", "a", "test")):
+		set {-def_list::*} to {_strs::*}
+
+
 	public x(1: integer = 1):
 		set {-x::1} to {_1}
 
@@ -152,6 +156,13 @@ class TestArgDefaults:
 
 test "ClassySK - Method Argument Defaults":
 	set {_instance} to new instance of TestArgDefaults
+
+	{_instance}::list()
+	assert {-def_list::*} is "this", "is", "a", "test"
+	{_instance}::list("test")
+	assert {-def_list::*} is "test"
+	{_instance}::list("test", "test")
+	assert {-def_list::*} is "test", "test"
 
 	{_instance}::x()
 	assert {-x::1} is 1
@@ -479,3 +490,41 @@ test "ClassySK - Method Returns":
 	assert {_instance}::returnReturnBools() is true, false
 
 	assert {_instance}::returnSelf() is {_instance}
+
+
+parse:
+	results: {-testInvalidMethods::*}
+	code:
+		class TestInvalidMethods:
+			public test1()):
+				broadcast true
+
+			public test2()():
+				broadcast true
+
+			public test3(int: integer = "string"):
+				broadcast true
+
+			public test4(int: integer str: string):
+				broadcast true
+
+			public test5(int, str, obj):
+				broadcast true
+
+			public test6() :: notarealandvalidtype:
+				broadcast true
+
+			public test7(test2: integer, test: notarealandvalidtype):
+				broadcast true
+
+			public test8(test: notarealandvalidtype):
+				broadcast true
+
+			public test9(test: integer, test: string):
+				broadcast true
+
+			public test10(()):
+				broadcast true
+
+test "ClassySK - Invalid Methods":
+	assert size of {-testInvalidMethods::*} is 10
