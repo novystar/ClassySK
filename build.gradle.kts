@@ -22,6 +22,7 @@ java {
 
 tasks {
     shadowJar {
+        archiveClassifier.set("")
         configurations = project.configurations.runtimeClasspath.map { setOf(it) }
 
         dependencies {
@@ -47,5 +48,14 @@ tasks {
         filesMatching("plugin.yml") {
             expand(props)
         }
+    }
+
+    build {
+        dependsOn(shadowJar)
+    }
+
+    jar {
+        enabled = false
+        dependsOn(shadowJar)
     }
 }
