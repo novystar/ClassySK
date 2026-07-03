@@ -426,16 +426,13 @@ class TestReturns:
 		return true
 
 
-	public returnSelf() :: class instance:
-		return self
-
 	public returnReturnInt() :: integer:
 		return self::returnInt()
 
 	public returnReturnStr() :: string:
 		return self::returnStr()
 
-	public returnReturnBool() :: booolean:
+	public returnReturnBool() :: boolean:
 		return self::returnBool()
 
 	
@@ -458,6 +455,10 @@ class TestReturns:
 	public returnReturnBools() :: booleans:
 		return self::returnBools()
 
+	
+	public returnSelf() :: class instance:
+		return self
+
 test "ClassySK - Method returns":
 	set {_instance} to new instance of TestReturns
 
@@ -476,3 +477,5 @@ test "ClassySK - Method returns":
 	assert {_instance}::returnReturnInts() is 1, 2, 3
 	assert {_instance}::returnReturnStrs() is "this", "is", "a", "test"
 	assert {_instance}::returnReturnBools() is true, false
+
+	assert {_instance}::returnSelf() is {_instance}
