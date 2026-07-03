@@ -4,6 +4,7 @@ import ch.njol.skript.ScriptLoader;
 import ch.njol.skript.Skript;
 import com.novystxr.classysk.api.classes.CleanUpListener;
 import com.novystxr.classysk.main.MainModule;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.skriptlang.skript.addon.SkriptAddon;
 
@@ -17,5 +18,8 @@ public class Classysk extends JavaPlugin {
         SkriptAddon addon = Skript.instance().registerAddon(Classysk.class, "ClassySK");
         ScriptLoader.eventRegistry().register(new CleanUpListener());
         addon.loadModules(new MainModule());
+
+        int pluginId = 31871;
+        new Metrics(this, pluginId);
     }
 }
