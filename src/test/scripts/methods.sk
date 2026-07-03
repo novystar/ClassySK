@@ -364,3 +364,115 @@ test "ClassySK - Method Arguments Type Validation":
 	set {_var} to 10
 	{_instance}::obj({_var})
 	assert {-typeObj} is 10
+
+class TestOverload:
+	public static 1Arg(int: integer):
+		set {-1ArgOL} to {_int}
+
+	public static 1Arg(str: string):
+		set {-1ArgOL} to {_str}
+
+	public static 1Arg(bool: boolean):
+		set {-1ArgOL} to {_int}
+
+
+	public static obj(int: integer):
+		set {-objOL} to {_int}
+
+	public static obj(str: string):
+		set {-objOL} to {_str}
+
+	public static obj(bool: boolean):
+		set {-objOL} to {_bool}
+
+	public static obj(obj: object):
+		set {-objOL} to {_obj}
+
+
+test "ClassySK - Method Overloading":
+	TestOverload::1Arg(1)
+	assert {-1ArgOL} is 1
+
+	TestOverload::1Arg("string")
+	assert {-1ArgOL} is "string"
+
+	TestOverload::1Arg(true)
+	assert {-1ArgOL} is true
+
+	TestOverload::obj(int: 1)
+	assert {-objOL} is 1
+
+	TestOverload::obj(str: "string")
+	assert {-objOL} is "string"
+
+	TestOverload::obj(bool: true)
+	assert {-objOL} is true
+
+	set {_instance} to new instance of TestOverload
+	TestOverload::obj({_instance})
+	assert {-objOL} is {_instance}
+	
+	TestOverload::obj(obj: 1)
+	assert {-objOL} is 1
+
+class TestReturns:
+	public returnInt() :: integer:
+		return 1
+
+	public returnStr() :: string:
+		return "string"
+
+	public returnBool() :: boolean:
+		return true
+
+
+	public returnSelf() :: class instance:
+		return self
+
+	public returnReturnInt() :: integer:
+		return self::returnInt()
+
+	public returnReturnStr() :: string:
+		return self::returnStr()
+
+	public returnReturnBool() :: booolean:
+		return self::returnBool()
+
+	
+	public returnInts() :: integers:
+		return 1, 2, 3
+
+	public returnStrs() :: strings:
+		return "this", "is", "a", "test"
+
+	public returnBools() :: booleans:
+		return true, false
+
+
+	public returnReturnInts() :: integers:
+		return self::returnInts()
+
+	public returnReturnStrs() :: strings:
+		return self::returnStrs()
+
+	public returnReturnBools() :: booleans:
+		return self::returnBools()
+
+test "ClassySK - Method returns":
+	set {_instance} to new instance of TestReturns
+
+	assert {_instance}::returnInt() is 1
+	assert {_instance}::returnStr() is "string"
+	assert {_instance}::returnBool() is true
+
+	assert {_instance}::returnInts() is 1, 2, 3
+	assert {_instance}::returnStrs() is "this", "is", "a", "test"
+	assert {_instance}::returnBools() is true, false
+
+	assert {_instance}::returnReturnInt() is 1
+	assert {_instance}::returnReturnStr() is "string"
+	assert {_instance}::returnReturnBool() is true
+
+	assert {_instance}::returnReturnInts() is 1, 2, 3
+	assert {_instance}::returnReturnStrs() is "this", "is", "a", "test"
+	assert {_instance}::returnReturnBools() is true, false
