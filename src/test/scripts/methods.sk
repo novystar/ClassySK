@@ -161,7 +161,7 @@ test "ClassySK - Method Argument Defaults":
 	assert {-def_list::*} is "this", "is", "a", "test"
 	{_instance}::list("test")
 	assert {-def_list::*} is "test"
-	{_instance}::list("test", "test")
+	{_instance}::list(("test", "test"))
 	assert {-def_list::*} is "test", "test"
 
 	{_instance}::x()
