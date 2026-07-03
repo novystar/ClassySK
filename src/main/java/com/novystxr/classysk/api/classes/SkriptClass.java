@@ -39,7 +39,7 @@ public class SkriptClass extends ClassInstance {
     }
 
     public void setOption(ClassOption option, boolean value) {
-        options.replace(option, value);
+        options.put(option, value);
     }
 
     public boolean option(ClassOption option) {

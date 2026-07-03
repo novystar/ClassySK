@@ -120,16 +120,22 @@ public class StructClass extends Structure {
         newClass.revalidateFields();
         EntryValidator optionValidator = ClassOption.getValidator();
 
+        newClass.resetOptions();
+        boolean hasOptions = false;
+
         // register methods & options
         for (Node node : nodes) {
             if (node.getKey() == null) continue;
 
             if (node instanceof SectionNode sectionNode) {
                 if (node.getKey().equals("options")) {
-                    ClassOption.setOptions(newClass, optionValidator.validate(sectionNode));
+                    if (hasOptions) {
+                        Skript.error("Options section can only occur once");
+                    } else {
+                        ClassOption.setOptions(newClass, optionValidator.validate(sectionNode));
+                        hasOptions = true;
+                    }
                     continue;
-                } else {
-                    newClass.resetOptions();
                 }
                 Section section = Section.parse(node.getKey(), "Invalid method pattern", sectionNode, null);
 

@@ -34,7 +34,6 @@ public enum ClassOption {
 
     public static void setOptions(SkriptClass skriptClass, @Nullable EntryContainer container) {
         if (container == null) return;
-        skriptClass.resetOptions();
         for (ClassOption option : values()) {
             boolean value = container.get(option.pattern, Boolean.class, true);
             if (value == option.defaultValue) continue;
