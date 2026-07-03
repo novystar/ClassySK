@@ -6,6 +6,8 @@ class TestConstruct:
 	public str: string
 	public strPrivate: string
 
+	public static staticField: boolean
+
 	public static createAll() :: class instance:
 		set {_instance} to new instance of TestConstruct:
 			int: 1
@@ -27,6 +29,19 @@ class TestConstructPrivate:
 
 	public str: string
 	public strPrivate: string
+
+class TestExternalCreation:
+	options:
+		external creation: false
+
+	public bool: boolean
+
+	public static create() :: class instance:
+		set {_instance} to new instance of TestExternalCreation:
+			bool: true
+
+		return {_instance}
+
 
 test "ClassySK - Constructors":
 	set {_test} to new instance of TestConstruct
@@ -77,3 +92,16 @@ test "ClassySK - Constructors":
 
 	assert {_instance}::str is "test"
 	assert {_instance}::intDefault is "testPrivate"
+
+	parse:
+		set {_instance} to new instance of TestConstruct:
+			staticField: true
+	assert last parse logs is set with "Attempt to set static field in constructor"
+
+	parse:
+		set {_instance} to new instance of TestExternalCreation
+	assert last parse logs is set with "Attempt to create class that can't be created externally outside of class"
+
+	set {_instance} to TestExternalCreation::create()
+	assert {_instance} is an instance of TestExternalCreation
+	assert {_instance}::bool is true
