@@ -11,7 +11,6 @@ import java.util.Map;
 
 public enum ClassOption {
     STRICT_SIGNATURE_ENFORCEMENT(false, "strict signature enforcement"),
-    STORABLE(true, "storable"),
     EXTERNAL_CREATION(true, "external creation"),
     PRIVATE_ACCESS_ON_CREATE(false, "private access on create"),
     SUPPRESS_RUNTIME_ERRORS(false, "suppress runtime errors");

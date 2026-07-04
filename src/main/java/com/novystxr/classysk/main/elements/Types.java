@@ -8,12 +8,9 @@ import ch.njol.skript.registrations.Classes;
 import ch.njol.yggdrasil.Fields;
 import ch.njol.yggdrasil.Fields.FieldContext;
 import com.novystxr.classysk.api.classes.SkriptClass;
-import com.novystxr.classysk.api.classes.ClassOption;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.ClassInstance;
-import com.novystxr.classysk.api.util.EmptyIOException;
 
-import java.io.NotSerializableException;
 import java.io.StreamCorruptedException;
 import java.util.Map.Entry;
 
@@ -65,10 +62,7 @@ public class Types {
             })
             .serializer(new Serializer<>() {
                 @Override
-                public Fields serialize(ClassInstance o) throws NotSerializableException {
-                    if (!o.getParent().option(ClassOption.STORABLE)) {
-                        throw new EmptyIOException("Tried to store instance of class marked as not storable: '"+o.name+"' (THIS IS NOT A BUG)");
-                    }
+                public Fields serialize(ClassInstance o) {
                     Fields fields = new Fields();
                     fields.putObject("name", o.name);
 
