@@ -10,6 +10,7 @@ import ch.njol.yggdrasil.Fields.FieldContext;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.ClassInstance;
+import com.novystxr.classysk.api.util.StringUtils;
 
 import java.io.StreamCorruptedException;
 import java.util.Map.Entry;
@@ -29,12 +30,12 @@ public class Types {
 
                 @Override
                 public String toString(SkriptClass o, int flags) {
-                    return "Static Class " + o.name;
+                    return "Class " + StringUtils.titleCase(o.name);
                 }
 
                 @Override
                 public String toVariableNameString(SkriptClass o) {
-                    return "Static Class " + o.name;
+                    return "Class " + o.name;
                 }
             })
         );
@@ -52,7 +53,7 @@ public class Types {
 
                 @Override
                 public String toString(ClassInstance o, int flags) {
-                    return "Class Instance " + o.name;
+                    return "Class Instance " + StringUtils.titleCase(o.name);
                 }
 
                 @Override
