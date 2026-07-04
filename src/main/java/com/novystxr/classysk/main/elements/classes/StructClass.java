@@ -33,7 +33,6 @@ import java.util.*;
     "Creates a class, see the [**Official Wiki**](https://github.com/novystar/ClassySK/wiki/Tutorials%3A-Classes-%26-Fields) for more detail",
     "",
     "`Options` - Optional section which is used to set certain rules about how your class should be used.",
-    "- `storable (true)` - The class instance may be saved between restarts",
     "- `external creation (true)` - Instances can be created from outside of the class",
     "- `strict signature enforcement (false)` - Invalid fields will be aggressively removed from all existing instances when it's structure is updated",
     "- `private access on create (false)` - Private fields can be set within constructors from outside the class",
