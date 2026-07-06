@@ -41,7 +41,7 @@ public class Types {
         );
 
         Classes.registerClass(new ClassInfo<>(ClassInstance.class, "classinstance")
-            .user("class instance(es)?")
+            .user("class instance(s)?")
             .name("Class Instance")
             .description("Instance version of a class, holds non-static methods and fields, representing a created instance of a class.")
             .parser(new Parser<>() {

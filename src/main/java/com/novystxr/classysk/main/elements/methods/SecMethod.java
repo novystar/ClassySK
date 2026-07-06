@@ -17,7 +17,7 @@ import com.novystxr.classysk.api.methods.SkriptMethod.MethodSignature;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.event.MethodRunEvent;
 import com.novystxr.classysk.api.util.StringUtils;
-import com.novystxr.classysk.api.util.SyntaxUtils;
+import com.novystxr.classysk.api.util.ExprUtils;
 import com.novystxr.classysk.main.elements.classes.StructClass;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
@@ -81,7 +81,7 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
         Class<?> returnType = null;
 
         if (exprs[0] != null) {
-            ClassInfoReference reference = SyntaxUtils.getClassRef(exprs[0]);
+            ClassInfoReference reference = ExprUtils.getClassRef(exprs[0]);
             returnPlural = reference.isPlural().isTrue();
             returnType = reference.getClassInfo().getC();
         }

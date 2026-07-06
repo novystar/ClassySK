@@ -1,10 +1,7 @@
 package com.novystxr.classysk.api.classes;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.TreeMap;
 
 import ch.njol.skript.lang.Expression;
 import com.novystxr.classysk.api.event.FieldEvalEvent;
@@ -66,7 +63,7 @@ public class ClassInstance {
     }
 
     // lazy initialization
-    public boolean setFieldValue(String fieldName, @Nullable Object[] value) {
+    public boolean setFieldValue(String fieldName, @Nullable Object... value) {
         FieldSignature signature = getFieldSignature(fieldName);
         if (signature == null) return false;
 
@@ -86,12 +83,14 @@ public class ClassInstance {
         return true;
     }
 
-    public Object[] getFieldValue(String name) {
+    public @Nullable Object[] getFieldValue(String name) {
         SkriptField field = fieldMap.get(name);
-        if (field != null) {
-            return field.value;
-        }
-        return null;
+        if (field == null) return null;
+
+        Object[] value = field.value;
+        if (value == null) return null;
+
+        return Arrays.copyOf(value, value.length);
     }
 
     // gets existing signature and falls back to parent

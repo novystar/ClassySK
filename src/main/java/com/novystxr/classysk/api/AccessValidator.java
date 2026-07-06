@@ -32,7 +32,8 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
     protected void setProduct(T product) {
         this.product = product;
     }
-    public T getProduct() {
+
+    public final T getProduct() {
         return product;
     }
 

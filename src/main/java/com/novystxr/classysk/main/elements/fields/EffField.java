@@ -14,7 +14,7 @@ import com.novystxr.classysk.api.AccessModifiable.AccessType;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.util.StringUtils;
-import com.novystxr.classysk.api.util.SyntaxUtils;
+import com.novystxr.classysk.api.util.ExprUtils;
 import com.novystxr.classysk.main.elements.classes.StructClass;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
@@ -61,7 +61,7 @@ public class EffField extends Effect {
         AccessType accessType = result.hasTag("private") ? PRIVATE : PUBLIC;
         boolean isStatic = result.hasTag("static");
 
-        ClassInfoReference reference = SyntaxUtils.getClassRef(exprs[0]);
+        ClassInfoReference reference = ExprUtils.getClassRef(exprs[0]);
         boolean isPlural = reference.isPlural().isTrue();
         Class<?> type = reference.getClassInfo().getC();
 

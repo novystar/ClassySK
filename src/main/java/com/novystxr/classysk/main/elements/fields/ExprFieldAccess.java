@@ -3,7 +3,6 @@ package com.novystxr.classysk.main.elements.fields;
 import ch.njol.skript.classes.Changer.ChangeMode;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
-import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import ch.njol.util.coll.CollectionUtils;
 import com.novystxr.classysk.Classysk;
@@ -13,16 +12,21 @@ import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.fields.FieldValidator;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.methods.SkriptMethod;
-import com.novystxr.classysk.api.util.SyntaxUtils;
+import com.novystxr.classysk.api.util.SafePluralityExpression;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
 import org.skriptlang.skript.registration.SyntaxInfo;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
-import static com.novystxr.classysk.api.util.StringUtils.getLowerCase;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
-public class ExprFieldAccess extends SimpleExpression<Object> {
+import static com.novystxr.classysk.api.util.StringUtils.getLowerCase;
+import static ch.njol.skript.classes.Changer.ChangeMode.*;
+
+public class ExprFieldAccess extends SafePluralityExpression<Object> {
     public static void register(SyntaxRegistry registry) {
         registry.register(SyntaxRegistry.EXPRESSION,
             DefaultSyntaxInfos.Expression.builder(ExprFieldAccess.class, Object.class)
@@ -79,20 +83,29 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
 
         FieldSignature signature = validator.getProduct();
         switch (mode) {
-            case SET -> instance.setFieldValue(signature.name(), delta);
+            case SET -> instance.setFieldValue(fieldName, delta);
             case DELETE -> instance.removeField(fieldName);
             case RESET -> instance.resetField(signature);
 
             case ADD, REMOVE -> {
-                Object[] initialValues = instance.getFieldValue(fieldName);
-                Object[] result;
+                if (delta == null) return;
+                Object[] initialValue = instance.getFieldValue(fieldName);
 
                 if (signature.isPlural()) {
-                    result = SyntaxUtils.mutatePlural(initialValues, delta, mode);
+                    List<Object> mutatedValue = new ArrayList<>(Arrays.asList(initialValue));
+
+                    if (mode == ADD) mutatedValue.addAll(Arrays.asList(delta));
+                    else mutatedValue.removeAll(Arrays.asList(delta));
+
+                    instance.setFieldValue(signature.name(), mutatedValue);
                 } else {
-                    result = SyntaxUtils.mutateSingle(initialValues, delta, mode, signature.type());
+                    Object singleValue = initialValue != null ? initialValue[0] : null;
+                    mutateSingle(singleValue, delta, mode, value ->  {
+                        if (!instance.fieldExists(fieldName) && value == null) return;
+                        instance.setFieldValue(fieldName, value);
+                    });
                 }
-                if (result != null) instance.setFieldValue(fieldName, result);
+
             }
         }
     }
@@ -124,14 +137,6 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
 
     @Override
     public boolean isSingle() {
-        if (isStaticReference) {
-            return !validator.getProduct().isPlural();
-        }
-        return false;
-    }
-
-    @Override
-    public boolean canBeSingle() {
         if (isStaticReference) {
             return !validator.getProduct().isPlural();
         }
