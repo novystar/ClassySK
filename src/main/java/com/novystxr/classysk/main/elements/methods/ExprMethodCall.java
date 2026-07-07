@@ -49,7 +49,6 @@ public class ExprMethodCall extends SimpleExpression<Object> {
 
         SkriptClass contextClass = SkriptMethod.getContextClass(getParser());
         MethodReference reference = MethodParser.parseReference(methodName, args);
-
         if (reference == null) return false;
         validator = new MethodValidator(getErrorSource(), contextClass, reference, true);
 

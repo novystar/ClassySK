@@ -98,12 +98,12 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
                     if (mode == ADD) mutatedValue.addAll(Arrays.asList(delta));
                     else mutatedValue.removeAll(Arrays.asList(delta));
 
-                    instance.setFieldValue(signature.name(), mutatedValue);
+                    instance.setFieldValue(fieldName, mutatedValue.toArray());
                 } else {
                     Object singleValue = initialValue != null ? initialValue[0] : null;
                     ExprUtils.mutateSingle(singleValue, delta, mode, value ->  {
                         if (!instance.fieldExists(fieldName) && value == null) return;
-                        instance.setFieldValue(fieldName, value);
+                        instance.setFieldValue(fieldName, new Object[]{value});
                     });
                 }
 

@@ -32,7 +32,7 @@ public class SkriptField {
 
         public boolean canConvert(@Nullable Object[] values) {
             if (values == null) return true;
-            if (values.length != 1 && !isPlural) return false;
+            if (values.length > 1 && !isPlural) return false;
 
             for (Object value : values) {
                 if (value == null) continue;

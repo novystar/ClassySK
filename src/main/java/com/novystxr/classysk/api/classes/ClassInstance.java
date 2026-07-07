@@ -63,7 +63,7 @@ public class ClassInstance {
     }
 
     // lazy initialization
-    public boolean setFieldValue(String fieldName, @Nullable Object... value) {
+    public boolean setFieldValue(String fieldName, @Nullable Object[] value) {
         FieldSignature signature = getFieldSignature(fieldName);
         if (signature == null) return false;
 
