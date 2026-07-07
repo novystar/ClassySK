@@ -2,6 +2,7 @@ package com.novystxr.classysk.main.elements.methods;
 
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
+import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.ClassManager;
@@ -10,7 +11,6 @@ import com.novystxr.classysk.api.methods.MethodParser;
 import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.MethodValidator;
 import com.novystxr.classysk.api.methods.SkriptMethod;
-import com.novystxr.classysk.api.util.SafePluralityExpression;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
@@ -19,7 +19,7 @@ import org.skriptlang.skript.registration.SyntaxRegistry;
 
 import static com.novystxr.classysk.api.util.StringUtils.getLowerCase;
 
-public class ExprMethodCall extends SafePluralityExpression<Object> {
+public class ExprMethodCall extends SimpleExpression<Object> {
 
     public static void register(SyntaxRegistry registry) {
         registry.register(
@@ -74,6 +74,14 @@ public class ExprMethodCall extends SafePluralityExpression<Object> {
 
     @Override
     public boolean isSingle() {
+        if (isStaticReference) {
+            return !validator.getProduct().signature.returnPlural();
+        }
+        return false;
+    }
+
+    @Override
+    public boolean canBeSingle() {
         if (isStaticReference) {
             return !validator.getProduct().signature.returnPlural();
         }

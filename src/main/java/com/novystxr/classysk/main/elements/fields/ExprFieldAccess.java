@@ -3,6 +3,7 @@ package com.novystxr.classysk.main.elements.fields;
 import ch.njol.skript.classes.Changer.ChangeMode;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
+import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import ch.njol.util.coll.CollectionUtils;
 import com.novystxr.classysk.Classysk;
@@ -12,7 +13,7 @@ import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.fields.FieldValidator;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.methods.SkriptMethod;
-import com.novystxr.classysk.api.util.SafePluralityExpression;
+import com.novystxr.classysk.api.util.ExprUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
@@ -26,7 +27,7 @@ import java.util.List;
 import static com.novystxr.classysk.api.util.StringUtils.getLowerCase;
 import static ch.njol.skript.classes.Changer.ChangeMode.*;
 
-public class ExprFieldAccess extends SafePluralityExpression<Object> {
+public class ExprFieldAccess extends SimpleExpression<Object> {
     public static void register(SyntaxRegistry registry) {
         registry.register(SyntaxRegistry.EXPRESSION,
             DefaultSyntaxInfos.Expression.builder(ExprFieldAccess.class, Object.class)
@@ -100,7 +101,7 @@ public class ExprFieldAccess extends SafePluralityExpression<Object> {
                     instance.setFieldValue(signature.name(), mutatedValue);
                 } else {
                     Object singleValue = initialValue != null ? initialValue[0] : null;
-                    mutateSingle(singleValue, delta, mode, value ->  {
+                    ExprUtils.mutateSingle(singleValue, delta, mode, value ->  {
                         if (!instance.fieldExists(fieldName) && value == null) return;
                         instance.setFieldValue(fieldName, value);
                     });
@@ -137,6 +138,14 @@ public class ExprFieldAccess extends SafePluralityExpression<Object> {
 
     @Override
     public boolean isSingle() {
+        if (isStaticReference) {
+            return !validator.getProduct().isPlural();
+        }
+        return false;
+    }
+
+    @Override
+    public boolean canBeSingle() {
         if (isStaticReference) {
             return !validator.getProduct().isPlural();
         }
