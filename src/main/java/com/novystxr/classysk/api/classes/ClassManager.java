@@ -32,7 +32,7 @@ public class ClassManager {
 
                     if (instance.getParent().option(ClassOption.STRICT_SIGNATURE_ENFORCEMENT)) {
                         instance.setFieldValue(fieldName, sField.value);
-                        return true;
+                        continue;
                     }
 
                     FieldSignature targetSignature = instance.getFieldSignature(fieldName);
