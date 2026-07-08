@@ -1,8 +1,11 @@
 package com.novystxr.classysk.api.classes;
 
+import com.novystxr.classysk.api.fields.SerializableField;
+import com.novystxr.classysk.api.fields.SkriptField;
+import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
+
 import java.lang.ref.WeakReference;
 import java.util.*;
-import java.util.Map.Entry;
 
 public class ClassManager {
 
@@ -23,8 +26,30 @@ public class ClassManager {
             if (instance.name.equals(parent.name)) {
                 parent.instances.add(ref);
 
-                for (Entry<String, Object[]> entry : instance.awaitingFields.entrySet()) {
-                    instance.setFieldValue(entry.getKey(), entry.getValue());
+                for (var entry : instance.awaitingFields.entrySet()) {
+                    String fieldName = entry.getKey();
+                    SerializableField sField = entry.getValue();
+
+                    if (instance.getParent().option(ClassOption.STRICT_SIGNATURE_ENFORCEMENT)) {
+                        instance.setFieldValue(fieldName, sField.value);
+                        return true;
+                    }
+
+                    FieldSignature targetSignature = instance.getFieldSignature(fieldName);
+                    SkriptField createdField;
+
+                    if (targetSignature == null) {
+                        FieldSignature newSignature = FieldSignature.fromSerializableField(instance, fieldName, sField);
+                        createdField = instance.createField(newSignature);
+
+                    } else if (targetSignature.canConvert(sField.value)) {
+                        createdField = instance.createField(targetSignature);
+                    } else {
+                        FieldSignature newSignature = sField.mergeSignature(instance, targetSignature);
+                        createdField = instance.createField(newSignature);
+                    }
+
+                    createdField.value = sField.value;
                 }
                 return true;
             }

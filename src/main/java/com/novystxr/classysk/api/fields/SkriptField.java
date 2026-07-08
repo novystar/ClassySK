@@ -20,6 +20,16 @@ public class SkriptField {
 
     ) implements AccessModifiable {
 
+        /**
+         * Creates a field signature with sensible defaults that should be able to hold the target data -
+         * should only be used as a last resort to preserve data if the field no longer exists on deserialization.
+         */
+        public static FieldSignature fromSerializableField(ClassInstance instance, String fieldName, SerializableField sField) {
+            boolean isStatic = !instance.isInstance();
+
+            return new FieldSignature(fieldName, sField.signatureType, null, AccessType.PUBLIC, isStatic, sField.isPlural);
+        }
+
         @Override
         public boolean checkAccess(@Nullable SkriptClass contextClass, @NotNull ClassInstance instance) {
             return accessType != AccessType.PRIVATE || instance.getParent() == contextClass;

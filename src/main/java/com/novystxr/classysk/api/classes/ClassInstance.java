@@ -5,6 +5,7 @@ import java.util.Map.Entry;
 
 import ch.njol.skript.lang.Expression;
 import com.novystxr.classysk.api.event.FieldEvalEvent;
+import com.novystxr.classysk.api.fields.SerializableField;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.util.StringUtils;
@@ -14,13 +15,13 @@ import org.skriptlang.skript.lang.converter.Converters;
 public class ClassInstance {
     public final String name;
 
-    protected final Map<String, SkriptField> fieldMap = new HashMap<>();
+    public final Map<String, SkriptField> fieldMap = new HashMap<>();
 
     // set on deserialization for when parent class becomes known
-    final Map<String, Object[]> awaitingFields = new HashMap<>();
+    final Map<String, SerializableField> awaitingFields = new HashMap<>();
 
-    public void putAwaitingField(String name, Object[] value) {
-        awaitingFields.put(name, value);
+    public void putAwaitingField(String name, SerializableField field) {
+        awaitingFields.put(name, field);
     }
 
     public ClassInstance(String name) {

@@ -10,13 +10,16 @@ import ch.njol.yggdrasil.Fields.FieldContext;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.ClassInstance;
+import com.novystxr.classysk.api.fields.SerializableField;
+import com.novystxr.classysk.api.fields.SkriptField;
+import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.util.StringUtils;
 
 import java.io.StreamCorruptedException;
-import java.util.Map.Entry;
 
 public class Types {
     public static void register() {
+
         Classes.registerClass(new ClassInfo<>(SkriptClass.class, "class")
             .user("class(es)?")
             .name("Class")
@@ -67,8 +70,13 @@ public class Types {
                     Fields fields = new Fields();
                     fields.putObject("name", o.name);
 
-                    for (Entry<String, Object[]> entry : o.getFieldValueMap().entrySet()) {
-                        fields.putObject("field:"+entry.getKey(), entry.getValue());
+                    for (SkriptField skriptField : o.fieldMap.values()) {
+                        FieldSignature signature = skriptField.signature;
+                        SerializableField sField = new SerializableField(skriptField.value, signature.type(), signature.isPlural());
+
+                        if (!sField.canBeSaved()) continue;
+
+                        fields.putObject("field:"+signature.name(), sField);
                     }
                     return fields;
                 }
@@ -89,9 +97,9 @@ public class Types {
                         if (!context.getID().startsWith("field:")) continue;
 
                         String fieldName = context.getID().substring("field:".length());
-                        Object[] value = context.getObject(Object[].class);
+                        SerializableField sField = context.getObject(SerializableField.class);
 
-                        instance.putAwaitingField(fieldName, value);
+                        instance.putAwaitingField(fieldName, sField);
                     }
                     return instance;
                 }

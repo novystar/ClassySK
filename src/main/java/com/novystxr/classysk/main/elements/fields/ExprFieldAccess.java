@@ -3,6 +3,7 @@ package com.novystxr.classysk.main.elements.fields;
 import ch.njol.skript.classes.Changer.ChangeMode;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
+import ch.njol.skript.lang.Variable;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import ch.njol.util.coll.CollectionUtils;
@@ -84,10 +85,15 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
 
         FieldSignature signature = validator.getProduct();
         switch (mode) {
-            case SET -> instance.setFieldValue(fieldName, delta);
-            case DELETE -> instance.removeField(fieldName);
-            case RESET -> instance.resetField(signature);
-
+            case SET -> setValueAndSave(delta, instance, event);
+            case DELETE -> {
+                instance.removeField(fieldName);
+                save(event);
+            }
+            case RESET -> {
+                instance.resetField(signature);
+                save(event);
+            }
             case ADD, REMOVE -> {
                 if (delta == null) return;
                 Object[] initialValue = instance.getFieldValue(fieldName);
@@ -98,16 +104,27 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
                     if (mode == ADD) mutatedValue.addAll(Arrays.asList(delta));
                     else mutatedValue.removeAll(Arrays.asList(delta));
 
-                    instance.setFieldValue(fieldName, mutatedValue.toArray());
+                    setValueAndSave(mutatedValue.toArray(), instance, event);
                 } else {
                     Object singleValue = initialValue != null ? initialValue[0] : null;
                     ExprUtils.mutateSingle(singleValue, delta, mode, value ->  {
                         if (!instance.fieldExists(fieldName) && value == null) return;
-                        instance.setFieldValue(fieldName, new Object[]{value});
+                        setValueAndSave(new Object[]{value}, instance, event);
                     });
                 }
-
             }
+        }
+    }
+
+    private void setValueAndSave(Object[] value, ClassInstance instance, Event event) {
+        if (instance.setFieldValue(fieldName, value)) save(event);
+    }
+
+    private void save(Event event) {
+        if (isStaticReference) return;
+        if (instanceExpr.getSource() instanceof Variable<?> variable) {
+            // set variable to the same value it is to trigger serialization
+            variable.changeInPlace(event, value -> value);
         }
     }
 
