@@ -78,15 +78,35 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
         return Kleenean.UNKNOWN;
     }
 
-    public final Kleenean guessProductAndValidate(boolean isSelf) {
-        guesses = evaluateGuesses(isSelf);
+    public final Kleenean validatePossible(boolean isSelf, @Nullable SkriptClass hintClass) {
+        guesses = new ArrayList<>();
+        LogEntry error;
+
+        try (var handler = new SimpleErrorHandler().start()) {
+            if (isSelf) {
+                T product = getProductFromClass(contextClass);
+                if (product != null) guesses.add(product);
+            } else if (hintClass != null) {
+                T product = getProductFromClass(hintClass);
+                if (product != null) guesses.add(product);
+            } else {
+                for (SkriptClass skriptClass : ClassManager.getClasses()) {
+                    T product = getProductFromClass(skriptClass);
+                    if (product != null) guesses.add(product);
+                }
+            }
+            error = handler.getLastError();
+        }
+        if (guesses.isEmpty() && error != null) {
+            dynamicError(error.getMessage(), false);
+        }
         if (guesses.isEmpty()) {
             return Kleenean.FALSE;
         }
         if (guesses.size() != 1) return Kleenean.UNKNOWN;
+
         T product = guesses.getFirst();
 
-        LogEntry error;
         try (var handler = new SimpleErrorHandler().start()) {
             if (validate(product, false, isSelf)) {
                 this.product = product;
@@ -98,28 +118,6 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
             dynamicError(error.getMessage(), false);
         }
         return Kleenean.FALSE;
-    }
-
-    private List<T> evaluateGuesses(boolean isSelf) {
-        LogEntry error;
-        List<T> products = new ArrayList<>();
-
-        try (var handler = new SimpleErrorHandler().start()) {
-            if (isSelf) {
-                T product = getProductFromClass(contextClass);
-                if (product != null) products.add(product);
-            } else {
-                for (SkriptClass skriptClass : ClassManager.getClasses()) {
-                    T product = getProductFromClass(skriptClass);
-                    if (product != null) products.add(product);
-                }
-            }
-            error = handler.getLastError();
-        }
-        if (products.isEmpty() && error != null) {
-            dynamicError(error.getMessage(), false);
-        }
-        return products;
     }
 
     public final boolean validateInstance(@Nullable ClassInstance newInstance, boolean isRuntime) {
