@@ -47,31 +47,30 @@ public class ExprMethodCall extends SimpleExpression<Object> {
     @Override
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result) {
         isStaticReference = pattern == 1;
+
         MatchResult regex = result.regexes.getFirst();
+        SkriptClass contextClass = SkriptMethod.getContextClass(getParser());
 
         String className = getLowerCase(regex.group(1));
         String name = getLowerCase(regex.group(2));
         String args = getLowerCase(regex.group(3));
 
-        SkriptClass contextClass = SkriptMethod.getContextClass(getParser());
         MethodReference reference = MethodParser.parseReference(name, args);
-
         if (reference == null) return false;
-        validator = new MethodValidator(getErrorSource(), contextClass, reference, true);
 
         if (className != null && (skriptClass = ClassManager.getClass(className)) == null) {
             Skript.error("Class '%s' does not exist", titleCase(className));
             return false;
         }
+        validator = new MethodValidator(getErrorSource(), contextClass, reference, true);
 
         if (isStaticReference)
             return validator.validateInstance(skriptClass, false);
         else {
             instanceExpr = (Expression<ClassInstance>) exprs[0];
-
-            if (instanceExpr.getSource() instanceof ExprThisInstance) {
+            if (instanceExpr.getSource() instanceof ExprThisInstance)
                 skriptClass = contextClass;
-            }
+
             return !validator.validateUnknown(skriptClass).isFalse();
         }
     }
