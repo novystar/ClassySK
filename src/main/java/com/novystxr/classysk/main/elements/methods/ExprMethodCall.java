@@ -64,7 +64,8 @@ public class ExprMethodCall extends SimpleExpression<Object> {
             return false;
         }
 
-        if (isStaticReference) return validator.validateInstance(skriptClass, false);
+        if (isStaticReference)
+            return validator.validateInstance(skriptClass, false);
         else {
             instanceExpr = (Expression<ClassInstance>) exprs[0];
 
