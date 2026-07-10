@@ -2,7 +2,6 @@ package com.novystxr.classysk.api;
 
 import ch.njol.skript.Skript;
 import ch.njol.skript.log.LogEntry;
-import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.util.Utils;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.classes.ClassInstance;
@@ -10,7 +9,6 @@ import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.ClassOption;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.util.SimpleErrorHandler;
-import com.novystxr.classysk.api.util.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.log.runtime.ErrorSource;
@@ -30,6 +28,10 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
 
     private List<T> guesses = null;
 
+    public final T getProduct() {
+        return product;
+    }
+
     /**
      * Extend with extra data that is necessary
      */
@@ -39,7 +41,7 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
     }
 
     /**
-     * Validate your signature and set mutable data
+     * Validate your signature and set any extra data
      */
     protected abstract boolean validate(T product, boolean isStatic, boolean isSameContext);
 
@@ -78,45 +80,48 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
         return Kleenean.UNKNOWN;
     }
 
-    public final Kleenean validatePossible(boolean isSelf, @Nullable SkriptClass hintClass) {
+    public final Kleenean validateUnknown(@Nullable SkriptClass hintClass) {
         guesses = new ArrayList<>();
         LogEntry error;
 
+        SkriptClass resultClass = null;
+
         try (var handler = new SimpleErrorHandler().start()) {
-            if (isSelf) {
-                T product = getProductFromClass(contextClass);
-                if (product != null) guesses.add(product);
-            } else if (hintClass != null) {
+            if (hintClass != null) {
                 T product = getProductFromClass(hintClass);
-                if (product != null) guesses.add(product);
+                if (product != null) {
+                    guesses.add(product);
+                    resultClass = hintClass;
+                }
             } else {
                 for (SkriptClass skriptClass : ClassManager.getClasses()) {
                     T product = getProductFromClass(skriptClass);
-                    if (product != null) guesses.add(product);
+                    if (product != null) {
+                        guesses.add(product);
+                        resultClass = skriptClass;
+                    }
                 }
             }
             error = handler.getLastError();
         }
-        if (guesses.isEmpty() && error != null) {
-            dynamicError(error.getMessage(), false);
-        }
-        if (guesses.isEmpty()) {
-            return Kleenean.FALSE;
-        }
-        if (guesses.size() != 1) return Kleenean.UNKNOWN;
+        if (guesses.isEmpty() && error != null)
+            Skript.error(error.getMessage());
 
-        T product = guesses.getFirst();
+        if (guesses.isEmpty())
+            return Kleenean.FALSE;
+        if (guesses.size() != 1)
+            return Kleenean.UNKNOWN;
+
+        this.product = guesses.getFirst();
+        boolean isSameContext = contextClass == resultClass;
 
         try (var handler = new SimpleErrorHandler().start()) {
-            if (validate(product, false, isSelf)) {
-                this.product = product;
+            if (validate(product, false, isSameContext)) {
                 return Kleenean.TRUE;
             }
             error = handler.getLastError();
         }
-        if (error != null) {
-            dynamicError(error.getMessage(), false);
-        }
+        if (error != null) Skript.error(error.getMessage());
         return Kleenean.FALSE;
     }
 
@@ -124,7 +129,7 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
         if (this.instance == newInstance) return true;
 
         if (newInstance == null || !newInstance.isAccessible()) {
-            dynamicError("Passed instance is null or non-accessible", isRuntime);
+            dynamicError("Class is null or non-accessible", isRuntime);
             return false;
         }
         boolean isStatic = !newInstance.isInstance();
@@ -136,16 +141,20 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
         }
         LogEntry error;
         try (var handler = new SimpleErrorHandler().start()) {
-            if (validate(newInstance)) {
-                this.instance = newInstance;
-                return true;
+            this.product = getProductFromInstance(newInstance);
+            if (product != null) {
+                boolean isSameContext = contextClass == newInstance.getParent();
+
+                if (validate(product, isStatic, isSameContext)) {
+                    this.instance = newInstance;
+                    return true;
+                }
             }
             error = handler.getLastError();
         }
         if (error != null) {
             dynamicError(error.getMessage(), isRuntime);
         }
-
         return false;
     }
 

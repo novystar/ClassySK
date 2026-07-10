@@ -9,7 +9,6 @@ import ch.njol.skript.lang.Variable;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.util.LiteralUtils;
 import ch.njol.skript.util.Utils;
-import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.util.StringUtils;
 import org.jetbrains.annotations.Nullable;
@@ -23,6 +22,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.novystxr.classysk.api.util.StringUtils.splitArgs;
+import static com.novystxr.classysk.Classysk.CLASSNAME_PATTERN;
+import static com.novystxr.classysk.Classysk.NAME_PATTERN;
 
 public class MethodParser {
 
@@ -30,8 +31,10 @@ public class MethodParser {
         Pattern.compile("^\\s*(?<name>[^:(){}\",]+?)\\s*:\\s*(?<type>[a-zA-Z ]+?)\\s*(?:\\s*=\\s*(?<def>.+))?\\s*$");
     private static final Pattern ARGUMENT_PATTERN = Pattern.compile("(?:\\s*(?<name>[_a-zA-Z0-9]+):)?(?<value>.+)");
 
-    public static final String METHOD_PATTERN = "%classinstance%\\:\\:<"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\)";
-    public static final String STATIC_METHOD_PATTERN = "<"+ Classysk.CLASSNAME_PATTERN +">\\:\\:<"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\)";
+    private static final String HINT_PATTERN = "(?:<("+CLASSNAME_PATTERN+")\\u003E)?";
+
+    public static final String METHOD_PATTERN = "%classinstance%<"+HINT_PATTERN+"::("+NAME_PATTERN+")\\((.*)\\)>";
+    public static final String STATIC_METHOD_PATTERN = "<("+CLASSNAME_PATTERN+")::("+NAME_PATTERN+")\\((.*)\\)>";
 
     public record ReferenceArgument(
         @Nullable String name,
@@ -43,11 +46,11 @@ public class MethodParser {
         List<ReferenceArgument> args
     ) {}
 
-    public static @Nullable MethodReference parseReference(String name, @Nullable String args) {
+    public static @Nullable MethodReference parseReference(String name, String args) {
         List<ReferenceArgument> referenceArguments = new ArrayList<>();
 
-        if (args == null) {
-            return new MethodReference(name, new ArrayList<>(){});
+        if (args.isEmpty()) {
+            return new MethodReference(name, new ArrayList<>());
         }
 
         List<String> rawArgs = splitArgs(args);
