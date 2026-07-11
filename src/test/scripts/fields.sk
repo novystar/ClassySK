@@ -8,7 +8,11 @@ class TestFields:
 test "ClassySK - Field Access":
 	set {_instance} to new instance of TestFields
 
-	assert {_instance}::publicStaticField is not set with "Attempt to access static field from instance"
+	parse:
+		set {_} to {_instance}<TestFields>::publicStaticField
+
+	assert last parse logs is set with "Attempt to access static field from instance"
+
 	assert TestFields::publicStaticField is "im public and static" with "public access (static)"
 	parse:
 		set {_var} to TestFields::privateStaticField
@@ -18,6 +22,10 @@ test "ClassySK - Field Access":
 	assert last parse logs is set with "Attempt to access instance field from static context"
 	
 	assert {_instance}::publicField is "im public" with "public access (instance)"
+	parse:
+		set {_} to {_instance}<TestFields>::privateField
+
+	assert last parse logs is set with "Attempt to access private field from outside class structure (instance)"
 	assert {_instance}::privateField is not set with "Attempt to access private field from outside class structure (instance)"
 
 class TestTyped:
