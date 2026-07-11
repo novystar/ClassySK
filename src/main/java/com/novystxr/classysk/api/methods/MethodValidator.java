@@ -78,7 +78,7 @@ public class MethodValidator extends AccessValidator<SkriptMethod> {
             Skript.error("This method can't be accessed here");
             return false;
         }
-        if (method.isStatic() != isSameContext) {
+        if (method.isStatic() != isStatic) {
             Skript.error("Method accessed from improper context");
             return false;
         }
