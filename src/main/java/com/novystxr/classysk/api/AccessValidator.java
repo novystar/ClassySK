@@ -15,6 +15,7 @@ import org.skriptlang.skript.log.runtime.ErrorSource;
 import org.skriptlang.skript.log.runtime.RuntimeErrorProducer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public abstract class AccessValidator<T extends AccessModifiable> implements RuntimeErrorProducer {
@@ -50,16 +51,24 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
 
     public abstract String productName();
 
-    public final Class<?> getReturnType() {
-        if (product != null) return product.type();
-        if (guesses == null || guesses.isEmpty()) return Object.class;
-
+    public final Class<?>[] possibleReturnTypes() {
         Class<?>[] possibleTypes = new Class[guesses.size()];
 
         int i = 0;
         for (T guess : guesses) {
-            possibleTypes[i++] = guess.type();
+            Class<?> type = guess.type();
+            if (type != null) possibleTypes[i++] = guess.type();
         }
+        if (i == 0) return new Class<?>[]{Object.class};
+        return i == possibleTypes.length ? possibleTypes : Arrays.copyOf(possibleTypes, i);
+    }
+
+    public final Class<?> getReturnType() {
+        if (product != null) return product.type();
+        if (guesses == null || guesses.isEmpty()) return Object.class;
+
+        Class<?>[] possibleTypes = possibleReturnTypes();
+
         if (possibleTypes.length == 1) {
             return possibleTypes[0];
         }

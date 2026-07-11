@@ -189,6 +189,11 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
     }
 
     @Override
+    public Class<?>[] possibleReturnTypes() {
+        return validator.possibleReturnTypes();
+    }
+
+    @Override
     public String toString(@Nullable Event event, boolean debug) {
         return "field "+fieldName;
     }

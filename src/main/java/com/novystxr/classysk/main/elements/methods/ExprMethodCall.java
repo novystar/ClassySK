@@ -107,6 +107,11 @@ public class ExprMethodCall extends SimpleExpression<Object> {
         return validator.getReturnType();
     }
 
+    @Override
+    public Class<?>[] possibleReturnTypes() {
+        return validator.possibleReturnTypes();
+    }
+
     private @Nullable ClassInstance getValidInstance(Event event) {
         if (isStaticReference) return skriptClass;
 
