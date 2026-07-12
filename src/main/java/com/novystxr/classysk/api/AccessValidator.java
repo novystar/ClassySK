@@ -21,13 +21,13 @@ import java.util.List;
 
 public abstract class AccessValidator<T extends AccessModifiable> implements RuntimeErrorProducer {
     private ClassInstance instance;
-
     private final SkriptClass contextClass;
+
     private T product = null;
+    private List<T> guesses = null;
 
     private final ErrorSource errorSource;
 
-    private List<T> guesses = null;
     public final T getProduct() {
         return product;
     }

@@ -82,7 +82,7 @@ public class MethodValidator extends AccessValidator<SkriptMethod> {
             Skript.error("Method accessed from improper context");
             return false;
         }
-        if (expectsReturn && method.signature.returnType() == null) {
+        if (expectsReturn && method.type() == null) {
             Skript.error("This method can't return anything");
             return false;
         }
