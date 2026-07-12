@@ -60,7 +60,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
 
         validator = new MethodValidator(getErrorSource(), contextClass, reference, true);
 
-        if (className != null || !isStaticReference) {
+        if (className != null && !isStaticReference) {
             instanceExpr = (Expression<ClassInstance>) exprs[0];
         }
         if (className != null) {

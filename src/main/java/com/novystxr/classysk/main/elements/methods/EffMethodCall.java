@@ -59,7 +59,7 @@ public class EffMethodCall extends Effect {
 
         validator = new MethodValidator(getErrorSource(), contextClass, reference, false);
 
-        if (className != null || !isStaticReference) {
+        if (className != null && !isStaticReference) {
             instanceExpr = (Expression<ClassInstance>) exprs[0];
         }
         if (className != null) {
