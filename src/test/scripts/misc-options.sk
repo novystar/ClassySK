@@ -4,24 +4,24 @@ class TestSuppressErrors:
 	options:
 		suppress runtime errors: true
 
-	private privateField: string
-	public stringField: string
+	private unique_privateField: string
+	public unique_stringField: string
 
-	private privateMethod():
+	private unique_privateMethod():
 		broadcast true
 
-	public stringArg(str: string):
+	public unique_stringArg(str: string):
 		broadcast {_str}
 
 test "ClassySK - Suppress Runtime Errors":
 	set {_instance} to new instance of TestSuppressErrors
 
 	catch runtime errors:
-		set {_test} to {_instance}::nonExistingField
-		set {_test} to {_instance}::privateField
-		set {_instance}::stringField to 1
-		{_instance}::privateMethod()
-		{_instance}::nonExistingMethod()
-		{_instance}::stringArg(true)
+		set {_test} to {_instance}::unique_nonExistingField
+		set {_test} to {_instance}::unique_privateField
+		set {_instance}::unique_stringField to 1
+		{_instance}::unique_privateMethod()
+		{_instance}::unique_nonExistingMethod()
+		{_instance}::unique_tringArg(true)
 
 	assert last caught runtime errors is not set
