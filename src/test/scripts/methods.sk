@@ -234,8 +234,10 @@ test "ClassySK - Method Argument Defaults":
 	assert {-x_x_x::2} is 0
 	assert {-x_x_x::3} is 0
 
-	{_instance}::o_x_x()
-	assert {-o_x_x::*} is not set
+	parse:
+		{_instance}::o_x_x()
+	assert last parse logs is set
+
 	{_instance}::o_x_x(1)
 	assert {-o_x_x::1} is 1
 	assert {-o_x_x::2} is 2
@@ -244,9 +246,10 @@ test "ClassySK - Method Argument Defaults":
 	assert {-o_x_x::1} is 1
 	assert {-o_x_x::2} is 0
 	assert {-o_x_x::3} is 3
-	delete {-o_x_x::*}
-	{_instance}::o_x_x(2: 0)
-	assert {-o_x_x::*} is not set
+
+	parse:
+		{_instance}::o_x_x(2: 0)
+	assert last parse logs is set
 
 	{_instance}::x_o_x(0, 2)
 	assert {-x_o_x::1} is 0
@@ -269,9 +272,10 @@ test "ClassySK - Method Argument Defaults":
 	assert {-x_x_o::1} is 4
 	assert {-x_x_o::2} is 5
 	assert {-x_x_o::3} is 6
-	delete {-x_x_o::*}
-	{_instance}::x_x_o(2: 2)
-	assert {-x_x_o::*} is not set
+
+	parse:
+		{_instance}::x_x_o(2: 2)
+	assert last parse logs is set
 
 	parse:
 		{_instance}::o_x_o()
