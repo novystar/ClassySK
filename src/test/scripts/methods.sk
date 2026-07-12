@@ -358,9 +358,9 @@ test "ClassySK - Method Arguments Type Validation":
 		{_instance}<TypeValidation>::string("d", 2)
 	assert last parse logs is set
 
-	parse:
-		{_instance}<TypeValidation>::string({_int})
-	assert last parse logs is set
+	delete {-typeString}
+	{_instance}<TypeValidation>::string({_int})
+	assert {-typeString} is not set
 
 
 	{_instance}::int(2)
