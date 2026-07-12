@@ -7,7 +7,6 @@ import ch.njol.skript.util.Utils;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.ClassManager;
-import com.novystxr.classysk.api.classes.ClassOption;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.util.SimpleErrorHandler;
 import org.bukkit.event.Event;
@@ -27,10 +26,8 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
     private T product = null;
 
     private final ErrorSource errorSource;
-    private boolean noRuntimeErrors = false;
 
     private List<T> guesses = null;
-
     public final T getProduct() {
         return product;
     }
@@ -118,21 +115,33 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
      * @param hintClass The hint class retrieved at init, null if unspecified
      * @return The instance which has been validated against the reference OR null if it wasn't valid
      */
-    public @Nullable ClassInstance getValidInstance(Event event, Expression<ClassInstance> instanceExpr, @Nullable SkriptClass hintClass) {
+    public final @Nullable ClassInstance getValidInstance(Event event, Expression<ClassInstance> instanceExpr, @Nullable SkriptClass hintClass) {
         ClassInstance newInstance = instanceExpr.getSingle(event);
 
         if (newInstance == null || !newInstance.isAccessible()) {
-            dynamicError("Passed instance is null or non-accessible", true);
+            error("Passed instance is null or non-accessible");
             return null;
         }
         if (this.instance == newInstance) return newInstance;
 
         if (hintClass != null && hintClass != newInstance.getParent()) {
-            dynamicError("Given instance does not match '"+ hintClass.getEffectiveName() +"'", true);
+            error("Given instance does not match '"+ hintClass.getEffectiveName() +"'");
             return null;
         }
-        if (validateInstance(newInstance, false)) {
-            return newInstance;
+        if (!newInstance.isInstance()) {
+            Skript.error("Static %ss cannot be accessed at runtime", productName());
+            return null;
+        }
+
+        LogEntry error;
+        try (var handler = new SimpleErrorHandler()) {
+            if (validateInstance(newInstance)) {
+                return newInstance;
+            }
+            error = handler.getLastError();
+        }
+        if (error != null) {
+            error(error.getMessage());
         }
         return null;
     }
@@ -194,33 +203,20 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
      * Validates an instance against the reference, also works for {@link SkriptClass} validating it as a static reference
      *
      * @param newInstance The instance to validate
-     * @param isRuntime If this method is being called at runtime or not (used for errors and static validation)
      * @return true if the instance was valid, false if it was not
      *
      */
-    public final boolean validateInstance(@NotNull ClassInstance newInstance, boolean isRuntime) {
+    public final boolean validateInstance(@NotNull ClassInstance newInstance) {
         boolean isStatic = !newInstance.isInstance();
-        noRuntimeErrors = newInstance.getParent().option(ClassOption.SUPPRESS_RUNTIME_ERRORS);
 
-        if (isRuntime && isStatic) {
-            dynamicError("Static "+productName()+"s cannot be accessed at runtime", true);
-            return false;
-        }
-        LogEntry error;
-        try (var handler = new SimpleErrorHandler().start()) {
-            this.product = getProductFromInstance(newInstance);
-            if (product != null) {
-                boolean isSameContext = contextClass == newInstance.getParent();
+        this.product = getProductFromInstance(newInstance);
+        if (product != null) {
+            boolean isSameContext = contextClass == newInstance.getParent();
 
-                if (validate(product, isStatic, isSameContext)) {
-                    this.instance = newInstance;
-                    return true;
-                }
+            if (validate(product, isStatic, isSameContext)) {
+                this.instance = newInstance;
+                return true;
             }
-            error = handler.getLastError();
-        }
-        if (error != null) {
-            dynamicError(error.getMessage(), isRuntime);
         }
         return false;
     }
@@ -228,13 +224,5 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
     @Override
     public @NotNull ErrorSource getErrorSource() {
         return errorSource;
-    }
-
-    private void dynamicError(String message, boolean isRuntime) {
-        if (isRuntime) {
-            if (!noRuntimeErrors) error(message);
-        } else {
-            Skript.error(message);
-        }
     }
 }

@@ -64,7 +64,7 @@ public class EffMethodCall extends Effect {
         validator = new MethodValidator(getErrorSource(), contextClass, reference, false);
 
         if (isStaticReference)
-            return validator.validateInstance(skriptClass, false);
+            return validator.validateInstance(skriptClass);
         else {
             instanceExpr = (Expression<ClassInstance>) exprs[0];
             if (instanceExpr.getSource() instanceof ExprThisInstance)

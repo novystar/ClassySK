@@ -72,7 +72,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
         validator = new FieldValidator(getErrorSource(), contextClass, fieldName);
 
         if (isStaticReference)
-            return validator.validateInstance(skriptClass, false);
+            return validator.validateInstance(skriptClass);
         else {
             instanceExpr = (Expression<ClassInstance>) exprs[0];
             if (instanceExpr.getSource() instanceof ExprThisInstance)
