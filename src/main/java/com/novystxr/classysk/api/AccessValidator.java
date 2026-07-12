@@ -56,6 +56,7 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
      */
     public final Class<?>[] possibleReturnTypes() {
         if (product != null) return new Class<?>[]{product.type()};
+        if (guesses == null || guesses.isEmpty()) return new Class<?>[]{Object.class};
 
         Class<?>[] possibleTypes = new Class[guesses.size()];
 
