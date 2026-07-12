@@ -48,7 +48,7 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
         registry.register(
             SyntaxRegistry.EXPRESSION,
             DefaultSyntaxInfos.Expression.builder(SecExprNewInstance.class, ClassInstance.class)
-                .addPattern("new instance of [class] <"+ Classysk.CLASSNAME_PATTERN +">")
+                .addPattern("[a] new instance of <"+ Classysk.CLASSNAME_PATTERN +">")
                 .supplier(SecExprNewInstance::new)
                 .build()
         );

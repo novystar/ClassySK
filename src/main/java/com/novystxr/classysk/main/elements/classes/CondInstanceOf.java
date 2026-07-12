@@ -29,7 +29,7 @@ public class CondInstanceOf extends Condition {
         registry.register(
             SyntaxRegistry.CONDITION,
             SyntaxInfo.builder(CondInstanceOf.class)
-                .addPattern("%classinstance% is[negated:(n[']t| not)] a[n] instance of [class] <"+ Classysk.CLASSNAME_PATTERN +">")
+                .addPattern("%classinstance% is[negated:(n[']t| not)] a[n] instance of <"+ Classysk.CLASSNAME_PATTERN +">")
                 .supplier(CondInstanceOf::new)
                 .build()
         );

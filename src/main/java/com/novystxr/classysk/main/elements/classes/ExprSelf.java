@@ -28,13 +28,13 @@ import org.skriptlang.skript.registration.SyntaxRegistry;
     \t\tadd 1 to self::counter
     """)
 @Since("1.0")
-public class ExprThisInstance extends SimpleExpression<ClassInstance> {
+public class ExprSelf extends SimpleExpression<ClassInstance> {
     public static void register(SyntaxRegistry registry) {
         registry.register(
             SyntaxRegistry.EXPRESSION,
-            DefaultSyntaxInfos.Expression.builder(ExprThisInstance.class, ClassInstance.class)
-                .addPatterns("this instance", "self")
-                .supplier(ExprThisInstance::new)
+            DefaultSyntaxInfos.Expression.builder(ExprSelf.class, ClassInstance.class)
+                .addPatterns("self", "(this|[the] current) instance")
+                .supplier(ExprSelf::new)
                 .build()
         );
     }

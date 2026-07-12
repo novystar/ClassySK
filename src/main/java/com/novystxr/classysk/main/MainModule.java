@@ -22,7 +22,7 @@ public class MainModule implements AddonModule {
             ExprStaticInstance::register,
             SecExprNewInstance::register,
             ExprFieldAccess::register,
-            ExprThisInstance::register,
+            ExprSelf::register,
             SecMethod::register,
             EffMethodCall::register,
             ExprMethodCall::register,

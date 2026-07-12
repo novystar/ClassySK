@@ -13,7 +13,7 @@ import com.novystxr.classysk.api.methods.MethodParser;
 import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.MethodValidator;
 import com.novystxr.classysk.api.methods.SkriptMethod;
-import com.novystxr.classysk.main.elements.classes.ExprThisInstance;
+import com.novystxr.classysk.main.elements.classes.ExprSelf;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
@@ -75,7 +75,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
         if (isStaticReference)
             return validator.validateInstance(skriptClass);
         else {
-            if (instanceExpr.getSource() instanceof ExprThisInstance)
+            if (instanceExpr.getSource() instanceof ExprSelf)
                 skriptClass = contextClass;
 
             return !validator.validateUnknown(skriptClass).isFalse();

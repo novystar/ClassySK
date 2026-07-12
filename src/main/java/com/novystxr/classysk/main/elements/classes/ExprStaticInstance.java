@@ -32,7 +32,7 @@ public class ExprStaticInstance extends SimpleExpression<SkriptClass> {
     public static void register(SyntaxRegistry registry) {
         registry.register(SyntaxRegistry.EXPRESSION,
             DefaultSyntaxInfos.Expression.builder(ExprStaticInstance.class, SkriptClass.class)
-                .addPattern("static instance of [class] <"+ Classysk.CLASSNAME_PATTERN +">")
+                .addPattern("[the] static instance of <"+ Classysk.CLASSNAME_PATTERN +">")
                 .supplier(ExprStaticInstance::new)
                 .build()
         );
