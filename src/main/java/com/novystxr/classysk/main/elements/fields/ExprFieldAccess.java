@@ -65,16 +65,23 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
         String className = getLowerCase(regex.group(1));
         fieldName = getLowerCase(regex.group(2));
 
-        if (className != null && (skriptClass = ClassManager.getClass(className)) == null) {
-            Skript.error("Class '%s' does not exist", titleCase(className));
-            return false;
-        }
         validator = new FieldValidator(getErrorSource(), contextClass, fieldName);
 
+        if (className != null || !isStaticReference) {
+            instanceExpr = (Expression<ClassInstance>) exprs[0];
+        }
+        if (className != null) {
+            if (className.isEmpty()) return true;
+
+            skriptClass = ClassManager.getClass(className);
+            if (skriptClass == null) {
+                Skript.error("Class '%s' does not exist", titleCase(className));
+                return false;
+            }
+        }
         if (isStaticReference)
             return validator.validateInstance(skriptClass);
         else {
-            instanceExpr = (Expression<ClassInstance>) exprs[0];
             if (instanceExpr.getSource() instanceof ExprThisInstance)
                 skriptClass = contextClass;
 
