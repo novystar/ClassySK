@@ -345,13 +345,17 @@ test "ClassySK - Method Arguments Type Validation":
 
 	{_instance}::string("a")
 	assert {-typeString} is "a"
-	{_instance}::string(1)
-	assert {-typeString} is "a"
+	parse:
+		{_instance}::string(1)
+	assert last parse logs is set
 
-	{_instance}::string("b", "c")
-	assert {-typeString} is "a"
-	{_instance}::string("d", 2)
-	assert {-typeString} is "a"
+	parse:
+		{_instance}::string("b", "c")
+	assert last parse logs is set
+
+	parse:
+		{_instance}::string("d", 2)
+	assert last parse logs is set
 
 	set {_int} to 1
 	{_instance}::string({_int})
