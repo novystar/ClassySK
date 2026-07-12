@@ -26,7 +26,10 @@ test "ClassySK - Field Access":
 		set {_} to {_instance}<TestFields>::privateField
 
 	assert last parse logs is set with "Attempt to access private field from outside class structure (instance)"
-	assert {_instance}::privateField is not set with "Attempt to access private field from outside class structure (instance)"
+
+	parse:
+		set {_} to {_instance}::privateField
+	assert last parse logs is set with "Attempt to access private field from outside class structure (instance)"
 
 class TestTyped:
 	public intField: integer
