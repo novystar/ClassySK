@@ -129,7 +129,7 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
             return null;
         }
         if (!newInstance.isInstance()) {
-            Skript.error("Static %ss cannot be accessed at runtime", productName());
+            error("Static "+productName()+"s cannot be accessed at runtime");
             return null;
         }
 
