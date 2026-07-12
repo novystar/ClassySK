@@ -67,7 +67,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
 
         validator = new FieldValidator(getErrorSource(), contextClass, fieldName);
 
-        if (className != null && !isStaticReference) {
+        if (!isStaticReference) {
             instanceExpr = (Expression<ClassInstance>) exprs[0];
         }
         if (className != null) {
