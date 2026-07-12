@@ -5,7 +5,7 @@ import com.novystxr.classysk.api.AccessValidator;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.Nullable;
 import org.skriptlang.skript.log.runtime.ErrorSource;
 
 public class FieldValidator extends AccessValidator<FieldSignature> {
@@ -18,23 +18,35 @@ public class FieldValidator extends AccessValidator<FieldSignature> {
     }
 
     @Override
-    protected boolean validate(@NotNull ClassInstance instance) {
-        FieldSignature signature = instance.getFieldSignature(fieldName);
+    public String productName() {
+        return "field";
+    }
 
-        if (signature == null) {
-            Skript.error("Could not resolve field signature");
+    @Override
+    protected boolean validate(FieldSignature signature, boolean isStatic, boolean isSameContext) {
+
+        if (signature.accessType().isPrivate() && !isSameContext) {
+            Skript.error("Private fields can't be accessed here");
             return false;
         }
-        if (!signature.checkAccess(contextClass, instance)) {
-            Skript.error("This field can't be accessed here");
-            return false;
-        }
-        if (!signature.checkContext(isStatic)) {
+        if (signature.isStatic() != isStatic) {
             Skript.error("Field accessed from improper context");
             return false;
         }
-
-        setProduct(signature);
         return true;
+    }
+
+    @Override
+    protected @Nullable FieldSignature getProductFromClass(SkriptClass skriptClass) {
+        return getProductFromInstance(skriptClass);
+    }
+
+    @Override
+    protected @Nullable FieldSignature getProductFromInstance(ClassInstance instance) {
+        FieldSignature signature = instance.getFieldSignature(fieldName);
+        if (signature == null) {
+            Skript.error("Could not resolve field signature");
+        }
+        return signature;
     }
 }

@@ -1,5 +1,6 @@
 package com.novystxr.classysk.main.elements.fields;
 
+import ch.njol.skript.Skript;
 import ch.njol.skript.classes.Changer.ChangeMode;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
@@ -15,29 +16,34 @@ import com.novystxr.classysk.api.fields.FieldValidator;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.api.util.ExprUtils;
+import com.novystxr.classysk.main.elements.classes.ExprThisInstance;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
-import org.skriptlang.skript.registration.SyntaxInfo;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.MatchResult;
 
+import static com.novystxr.classysk.Classysk.CLASSNAME_PATTERN;
+import static com.novystxr.classysk.Classysk.NAME_PATTERN;
+import static com.novystxr.classysk.api.methods.MethodParser.HINT_PATTERN;
 import static com.novystxr.classysk.api.util.StringUtils.getLowerCase;
 import static ch.njol.skript.classes.Changer.ChangeMode.*;
+import static com.novystxr.classysk.api.util.StringUtils.titleCase;
 
 public class ExprFieldAccess extends SimpleExpression<Object> {
     public static void register(SyntaxRegistry registry) {
         registry.register(SyntaxRegistry.EXPRESSION,
             DefaultSyntaxInfos.Expression.builder(ExprFieldAccess.class, Object.class)
                 .addPatterns(
-                    "%classinstance%\\:\\:<"+ Classysk.NAME_PATTERN +">",
-                    "<"+ Classysk.CLASSNAME_PATTERN +">\\:\\:<"+ Classysk.NAME_PATTERN +">"
+                "%classinstance%<"+HINT_PATTERN+"::("+NAME_PATTERN+")>",
+                    "<("+CLASSNAME_PATTERN+")::("+NAME_PATTERN+")>"
                 )
                 .supplier(ExprFieldAccess::new)
-                .priority(SyntaxInfo.PATTERN_MATCHES_EVERYTHING)
+                .priority(Classysk.SHADOW_REALM)
                 .build()
         );
     }
@@ -50,24 +56,30 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
 
     @SuppressWarnings("unchecked")
     @Override
-    public boolean init(Expression<?>[] expressions, int pattern, Kleenean isDelayed, ParseResult parseResult) {
+    public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result) {
         isStaticReference = pattern == 1;
 
-        if (isStaticReference) {
-            String className = getLowerCase(parseResult.regexes.get(0));
-            fieldName = getLowerCase(parseResult.regexes.get(1));
-            skriptClass = ClassManager.getClass(className);
-        } else {
-            fieldName = getLowerCase(parseResult.regexes.getFirst());
-            instanceExpr = (Expression<ClassInstance>) expressions[0];
-        }
+        MatchResult regex = result.regexes.getFirst();
         SkriptClass contextClass = SkriptMethod.getContextClass(getParser());
+
+        String className = getLowerCase(regex.group(1));
+        fieldName = getLowerCase(regex.group(2));
+
+        if (className != null && (skriptClass = ClassManager.getClass(className)) == null) {
+            Skript.error("Class '%s' does not exist", titleCase(className));
+            return false;
+        }
         validator = new FieldValidator(getErrorSource(), contextClass, fieldName);
 
-        if (isStaticReference) {
-            return validator.validateInstance(skriptClass, false);
+        if (isStaticReference)
+            return validator.validateInstance(skriptClass);
+        else {
+            instanceExpr = (Expression<ClassInstance>) exprs[0];
+            if (instanceExpr.getSource() instanceof ExprThisInstance)
+                skriptClass = contextClass;
+
+            return !validator.validateUnknown(skriptClass).isFalse();
         }
-        return true;
     }
 
     @Override
@@ -145,36 +157,35 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
 
     private @Nullable ClassInstance getValidInstance(Event event) {
         if (isStaticReference) return skriptClass;
-        ClassInstance newInstance = instanceExpr.getSingle(event);
-
-        if (validator.validateInstance(newInstance, true)) {
-            return newInstance;
-        }
-        return null;
+        return validator.getValidInstance(event, instanceExpr, skriptClass);
     }
 
     @Override
     public boolean isSingle() {
-        if (isStaticReference) {
-            return !validator.getProduct().isPlural();
+        Kleenean shouldBeSingle = validator.shouldBeSingle();
+        if (shouldBeSingle.isUnknown()) {
+            return false;
         }
-        return false;
+        return shouldBeSingle.isTrue();
     }
 
     @Override
     public boolean canBeSingle() {
-        if (isStaticReference) {
-            return !validator.getProduct().isPlural();
+        Kleenean shouldBeSingle = validator.shouldBeSingle();
+        if (shouldBeSingle.isUnknown()) {
+            return true;
         }
-        return true;
+        return shouldBeSingle.isTrue();
     }
 
     @Override
     public Class<?> getReturnType() {
-        if (isStaticReference) {
-            return validator.getProduct().type();
-        }
-        return Object.class;
+        return validator.getReturnType();
+    }
+
+    @Override
+    public Class<?>[] possibleReturnTypes() {
+        return validator.possibleReturnTypes();
     }
 
     @Override

@@ -11,6 +11,7 @@ import com.novystxr.classysk.api.methods.MethodParser.ReferenceArgument;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodSignature;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.Nullable;
 import org.skriptlang.skript.log.runtime.ErrorSource;
 
 import java.util.*;
@@ -22,7 +23,7 @@ public class MethodValidator extends AccessValidator<SkriptMethod> {
 
     private Map<String, Expression<?>> validatedArgs;
 
-    public MethodValidator(ErrorSource errorSource, SkriptClass contextClass, MethodReference reference, boolean expectsReturn) {
+    public MethodValidator(ErrorSource errorSource, SkriptClass contextClass, @NotNull MethodReference reference, boolean expectsReturn) {
         super(errorSource, contextClass);
         this.reference = reference;
         this.expectsReturn = expectsReturn;
@@ -33,18 +34,18 @@ public class MethodValidator extends AccessValidator<SkriptMethod> {
     }
 
     @Override
-    protected boolean validate(@NotNull ClassInstance instance) {
-        List<SkriptMethod> candidates = instance.getParent().methodRegistry.getCandidates(reference);
+    protected @Nullable SkriptMethod getProductFromClass(SkriptClass skriptClass) {
+        List<SkriptMethod> candidates = skriptClass.methodRegistry.getCandidates(reference);
         if (candidates.isEmpty()) {
             Skript.error("Could not identify method signature from reference: "+reference.name());
-            return false;
+            return null;
         }
         SkriptMethod method;
 
         if (candidates.size() == 1) {
             method = candidates.getFirst();
             if (!validateReference(method, true)) {
-                return false;
+                return null;
             }
 
         } else {
@@ -54,16 +55,30 @@ public class MethodValidator extends AccessValidator<SkriptMethod> {
             }
             if (valid.size() != 1) {
                 Skript.error("Could not identify method out of %s overloads", candidates.size());
-                return false;
+                return null;
             }
             method = valid.getFirst();
         }
+        return method;
+    }
 
-        if (!method.checkAccess(contextClass, instance)) {
+    @Override
+    protected @Nullable SkriptMethod getProductFromInstance(ClassInstance instance) {
+        return getProductFromClass(instance.getParent());
+    }
+
+    @Override
+    public String productName() {
+        return "method";
+    }
+
+    @Override
+    protected boolean validate(SkriptMethod method, boolean isStatic, boolean isSameContext) {
+        if (method.accessType().isPrivate() && !isSameContext) {
             Skript.error("This method can't be accessed here");
             return false;
         }
-        if (!method.checkContext(isStatic)) {
+        if (method.isStatic() != isStatic) {
             Skript.error("Method accessed from improper context");
             return false;
         }
@@ -71,8 +86,6 @@ public class MethodValidator extends AccessValidator<SkriptMethod> {
             Skript.error("This method can't return anything");
             return false;
         }
-
-        setProduct(method);
         return true;
     }
 

@@ -18,15 +18,24 @@ import java.util.*;
 import java.util.Map.Entry;
 
 public class SkriptMethod implements AccessModifiable {
-
     @Override
-    public boolean checkAccess(@Nullable SkriptClass contextClass, @NotNull ClassInstance instance) {
-        return signature.accessType != AccessType.PRIVATE || contextClass == instance.getParent();
+    public boolean isStatic() {
+        return signature.isStatic;
     }
 
     @Override
-    public boolean checkContext(boolean isStatic) {
-        return signature.isStatic == isStatic;
+    public AccessType accessType() {
+        return signature.accessType;
+    }
+
+    @Override
+    public Class<?> type() {
+        return signature.returnType;
+    }
+
+    @Override
+    public boolean isPlural() {
+        return signature.returnPlural;
     }
 
     public record MethodArgument(

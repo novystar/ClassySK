@@ -1,9 +1,11 @@
 package com.novystxr.classysk.main.elements.methods;
 
+import ch.njol.skript.Skript;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
+import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
@@ -11,13 +13,16 @@ import com.novystxr.classysk.api.methods.MethodParser;
 import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.MethodValidator;
 import com.novystxr.classysk.api.methods.SkriptMethod;
+import com.novystxr.classysk.main.elements.classes.ExprThisInstance;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
-import org.skriptlang.skript.registration.SyntaxInfo;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
+import java.util.regex.MatchResult;
+
 import static com.novystxr.classysk.api.util.StringUtils.getLowerCase;
+import static com.novystxr.classysk.api.util.StringUtils.titleCase;
 
 public class ExprMethodCall extends SimpleExpression<Object> {
 
@@ -26,7 +31,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
             SyntaxRegistry.EXPRESSION,
             DefaultSyntaxInfos.Expression.builder(ExprMethodCall.class, Object.class)
                 .addPatterns(MethodParser.METHOD_PATTERN, MethodParser.STATIC_METHOD_PATTERN)
-                .priority(SyntaxInfo.PATTERN_MATCHES_EVERYTHING)
+                .priority(Classysk.SHADOW_REALM)
                 .supplier(ExprMethodCall::new)
                 .build()
         );
@@ -35,7 +40,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
     private MethodValidator validator;
     private boolean isStaticReference;
 
-    private SkriptClass skriptClass;
+    private SkriptClass skriptClass = null;
     private Expression<ClassInstance> instanceExpr;
 
     @SuppressWarnings("unchecked")
@@ -43,23 +48,31 @@ public class ExprMethodCall extends SimpleExpression<Object> {
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result) {
         isStaticReference = pattern == 1;
 
-        String methodName = getLowerCase(result.regexes.get(pattern));
-        String args = (result.hasTag("args")) ?
-            getLowerCase(result.regexes.get(pattern+1)) : null;
-
+        MatchResult regex = result.regexes.getFirst();
         SkriptClass contextClass = SkriptMethod.getContextClass(getParser());
-        MethodReference reference = MethodParser.parseReference(methodName, args);
+
+        String className = getLowerCase(regex.group(1));
+        String name = getLowerCase(regex.group(2));
+        String args = getLowerCase(regex.group(3));
+
+        MethodReference reference = MethodParser.parseReference(name, args);
         if (reference == null) return false;
+
+        if (className != null && (skriptClass = ClassManager.getClass(className)) == null) {
+            Skript.error("Class '%s' does not exist", titleCase(className));
+            return false;
+        }
         validator = new MethodValidator(getErrorSource(), contextClass, reference, true);
 
-        if (isStaticReference) {
-            String className = getLowerCase(result.regexes.getFirst());
-            skriptClass = ClassManager.getClass(className);
-            return validator.validateInstance(skriptClass, false);
-        } else {
+        if (isStaticReference)
+            return validator.validateInstance(skriptClass);
+        else {
             instanceExpr = (Expression<ClassInstance>) exprs[0];
+            if (instanceExpr.getSource() instanceof ExprThisInstance)
+                skriptClass = contextClass;
+
+            return !validator.validateUnknown(skriptClass).isFalse();
         }
-        return true;
     }
 
     @Override
@@ -73,36 +86,35 @@ public class ExprMethodCall extends SimpleExpression<Object> {
 
     @Override
     public boolean isSingle() {
-        if (isStaticReference) {
-            return !validator.getProduct().signature.returnPlural();
+        Kleenean shouldBeSingle = validator.shouldBeSingle();
+        if (shouldBeSingle.isUnknown()) {
+            return false;
         }
-        return false;
+        return shouldBeSingle.isTrue();
     }
 
     @Override
     public boolean canBeSingle() {
-        if (isStaticReference) {
-            return !validator.getProduct().signature.returnPlural();
+        Kleenean shouldBeSingle = validator.shouldBeSingle();
+        if (shouldBeSingle.isUnknown()) {
+            return true;
         }
-        return true;
+        return shouldBeSingle.isTrue();
     }
 
     @Override
     public Class<?> getReturnType() {
-        if (isStaticReference) {
-            return validator.getProduct().signature.returnType();
-        }
-        return Object.class;
+        return validator.getReturnType();
+    }
+
+    @Override
+    public Class<?>[] possibleReturnTypes() {
+        return validator.possibleReturnTypes();
     }
 
     private @Nullable ClassInstance getValidInstance(Event event) {
         if (isStaticReference) return skriptClass;
-
-        ClassInstance newInstance = instanceExpr.getSingle(event);
-        if (validator.validateInstance(newInstance, true)) {
-            return newInstance;
-        }
-        return null;
+        return validator.getValidInstance(event, instanceExpr, skriptClass);
     }
 
     @Override

@@ -29,17 +29,6 @@ public class SkriptField {
 
             return new FieldSignature(fieldName, sField.signatureType, null, AccessType.PUBLIC, isStatic, sField.isPlural);
         }
-
-        @Override
-        public boolean checkAccess(@Nullable SkriptClass contextClass, @NotNull ClassInstance instance) {
-            return accessType != AccessType.PRIVATE || instance.getParent() == contextClass;
-        }
-
-        @Override
-        public boolean checkContext(boolean isStatic) {
-            return isStatic == this.isStatic;
-        }
-
         public boolean canConvert(@Nullable Object[] values) {
             if (values == null) return true;
             if (values.length > 1 && !isPlural) return false;

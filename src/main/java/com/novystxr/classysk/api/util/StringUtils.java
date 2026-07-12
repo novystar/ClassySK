@@ -32,6 +32,7 @@ public class StringUtils {
     }
 
     public static String getLowerCase(String value) {
+        if (value == null) return null;
         if (SkriptConfig.caseInsensitiveVariables.value()) {
             return value.trim().toLowerCase(Locale.ENGLISH);
         }
