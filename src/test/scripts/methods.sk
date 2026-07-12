@@ -381,8 +381,9 @@ test "ClassySK - Method Arguments Type Validation":
 	{_instance}::obj("a")
 	assert {-typeObj} is "a"
 
-	{_instance}::obj(("a", 2))
-	assert {-typeObj} is "a"
+	parse:
+		{_instance}::obj(("a", 2))
+	assert last parse logs is set
 
 	set {_list::*} to "a", "b", 3
 	parse:

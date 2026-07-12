@@ -10,9 +10,6 @@ class TestSuppressErrors:
 	private unique_privateMethod():
 		broadcast true
 
-	public unique_stringArg(str: string):
-		broadcast {_str}
-
 test "ClassySK - Suppress Runtime Errors":
 	set {_instance} to new instance of TestSuppressErrors
 
@@ -22,6 +19,5 @@ test "ClassySK - Suppress Runtime Errors":
 		set {_instance}::unique_stringField to 1
 		{_instance}::unique_privateMethod()
 		{_instance}::unique_nonExistingMethod()
-		{_instance}::unique_stringArg(true)
 
 	assert last caught runtime errors is not set
