@@ -1,6 +1,7 @@
 package com.novystxr.classysk.api;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.lang.Expression;
 import ch.njol.skript.log.LogEntry;
 import ch.njol.skript.util.Utils;
 import ch.njol.util.Kleenean;
@@ -9,6 +10,7 @@ import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.ClassOption;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.util.SimpleErrorHandler;
+import org.bukkit.event.Event;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.log.runtime.ErrorSource;
@@ -51,7 +53,13 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
 
     public abstract String productName();
 
+    /**
+     * Similar to {@link AccessValidator#getReturnType()} but instead of finding the highest common super type it returns all possible types
+     * @return The {@link AccessValidator#product} return type, OR all return types of {@link AccessValidator#guesses}
+     */
     public final Class<?>[] possibleReturnTypes() {
+        if (product != null) return new Class<?>[]{product.type()};
+
         Class<?>[] possibleTypes = new Class[guesses.size()];
 
         int i = 0;
@@ -63,6 +71,13 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
         return i == possibleTypes.length ? possibleTypes : Arrays.copyOf(possibleTypes, i);
     }
 
+
+    /**
+     * Tries to find the best possible return type for that pattern to report
+     *
+     * @return The {@link AccessValidator#product} return type if it could be determined at parse time,
+     * OR the highest denominator of all possible return types of classes containing the same signature
+     */
     public final Class<?> getReturnType() {
         if (product != null) return product.type();
         if (guesses == null || guesses.isEmpty()) return Object.class;
@@ -75,6 +90,12 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
         return Utils.highestDenominator(Object.class, possibleTypes);
     }
 
+    /**
+     *
+     * @return TRUE if the pattern is known to be single,
+     * FALSE if the pattern is known to be plural,
+     * UNKNOWN if the correct class could not be determined at parse time
+     */
     public final Kleenean shouldBeSingle() {
         if (product != null) return Kleenean.get(!product.isPlural());
         if (guesses == null || guesses.isEmpty()) return Kleenean.UNKNOWN;
@@ -89,6 +110,41 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
         return Kleenean.UNKNOWN;
     }
 
+    /**
+     * Helper method for validating instances at runtime
+     *
+     * @param event The event to grab the instance with
+     * @param instanceExpr The expression to grab the instance from
+     * @param hintClass The hint class retrieved at init, null if unspecified
+     * @return The instance which has been validated against the reference OR null if it wasn't valid
+     */
+    public @Nullable ClassInstance getValidInstance(Event event, Expression<ClassInstance> instanceExpr, @Nullable SkriptClass hintClass) {
+        ClassInstance newInstance = instanceExpr.getSingle(event);
+
+        if (newInstance == null || !newInstance.isAccessible()) {
+            dynamicError("Passed instance is null or non-accessible", true);
+            return null;
+        }
+        if (this.instance == newInstance) return newInstance;
+
+        if (hintClass != null && hintClass != newInstance.getParent()) {
+            dynamicError("Given instance does not match '"+ hintClass.getEffectiveName() +"'", true);
+            return null;
+        }
+        if (validateInstance(newInstance, false)) {
+            return newInstance;
+        }
+        return null;
+    }
+
+    /**
+     * Used for validating instances at parse time
+     *
+     * @param hintClass Either the context class from 'self' or user defined. If null, the validator will attempt to check every class
+     * @return TRUE if could find the right class,
+     * FALSE if could find the right class but the reference is not valid,
+     * UNKNOWN if could not find the right class
+     */
     public final Kleenean validateUnknown(@Nullable SkriptClass hintClass) {
         guesses = new ArrayList<>();
         LogEntry error;
@@ -134,13 +190,15 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
         return Kleenean.FALSE;
     }
 
-    public final boolean validateInstance(@Nullable ClassInstance newInstance, boolean isRuntime) {
-        if (this.instance == newInstance) return true;
-
-        if (newInstance == null || !newInstance.isAccessible()) {
-            dynamicError("Class is null or non-accessible", isRuntime);
-            return false;
-        }
+    /**
+     * Validates an instance against the reference, also works for {@link SkriptClass} validating it as a static reference
+     *
+     * @param newInstance The instance to validate
+     * @param isRuntime If this method is being called at runtime or not (used for errors and static validation)
+     * @return true if the instance was valid, false if it was not
+     *
+     */
+    public final boolean validateInstance(@NotNull ClassInstance newInstance, boolean isRuntime) {
         boolean isStatic = !newInstance.isInstance();
         noRuntimeErrors = newInstance.getParent().option(ClassOption.SUPPRESS_RUNTIME_ERRORS);
 

@@ -114,12 +114,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
 
     private @Nullable ClassInstance getValidInstance(Event event) {
         if (isStaticReference) return skriptClass;
-
-        ClassInstance newInstance = instanceExpr.getSingle(event);
-        if (validator.validateInstance(newInstance, true)) {
-            return newInstance;
-        }
-        return null;
+        return validator.getValidInstance(event, instanceExpr, skriptClass);
     }
 
     @Override
