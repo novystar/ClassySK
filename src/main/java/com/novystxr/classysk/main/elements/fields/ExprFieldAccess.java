@@ -24,6 +24,7 @@ import org.skriptlang.skript.registration.SyntaxRegistry;
 
 import java.util.regex.MatchResult;
 
+import static ch.njol.skript.classes.Changer.ChangeMode.*;
 import static com.novystxr.classysk.Classysk.CLASSNAME_PATTERN;
 import static com.novystxr.classysk.Classysk.NAME_PATTERN;
 import static com.novystxr.classysk.api.methods.MethodParser.HINT_PATTERN;
@@ -141,16 +142,20 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
 
     @Override
     public Class<?> @Nullable [] acceptChange(ChangeMode mode) {
-        return switch (mode) {
-            case DELETE, RESET -> new Class[]{};
-            case REMOVE_ALL -> {
-                if (validator.shouldBeSingle().isTrue()) yield null;
-                yield CollectionUtils.array(
-                    validator.exactTypeOr(Object.class));
-            }
-            case SET, ADD, REMOVE -> CollectionUtils.array(
-                validator.exactTypeOr(Object.class));
-        };
+        if (mode == DELETE || mode == RESET) {
+            return new Class[]{};
+        }
+        Class<?> type = validator.exactTypeOr(Object.class);
+        boolean isPlural = !canBeSingle();
+        if (isPlural) {
+            type = type.arrayType();
+        }
+        Class<?>[] typeArray = CollectionUtils.array(type);
+
+        if ((mode == REMOVE_ALL && isPlural) || mode == SET || mode == ADD || mode == REMOVE) {
+            return typeArray;
+        }
+        return null;
     }
 
     private @Nullable ClassInstance getValidInstance(Event event) {
