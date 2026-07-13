@@ -87,7 +87,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
         ClassInstance instance = getValidInstance(event);
         if (instance == null) return null;
 
-        SkriptMethod method = validator.getProduct();
+        SkriptMethod method = validator.product();
         return method.run(event, instance, validator.getValidatedArgs());
     }
 

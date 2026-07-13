@@ -86,7 +86,7 @@ public class EffMethodCall extends Effect {
         ClassInstance instance = getValidInstance(event);
         if (instance == null) return;
 
-        SkriptMethod method = validator.getProduct();
+        SkriptMethod method = validator.product();
         method.run(event, instance, validator.getValidatedArgs());
     }
 

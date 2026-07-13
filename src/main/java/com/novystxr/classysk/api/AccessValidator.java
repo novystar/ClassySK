@@ -28,7 +28,7 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
 
     private final ErrorSource errorSource;
 
-    public final T getProduct() {
+    public final T product() {
         return product;
     }
 
@@ -86,6 +86,11 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
             return possibleTypes[0];
         }
         return Utils.highestDenominator(Object.class, possibleTypes);
+    }
+
+    public final Class<?> exactTypeOr(@Nullable Class<?> type) {
+        if (product == null) return type;
+        return product.type();
     }
 
     /**

@@ -22,16 +22,12 @@ import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.regex.MatchResult;
 
 import static com.novystxr.classysk.Classysk.CLASSNAME_PATTERN;
 import static com.novystxr.classysk.Classysk.NAME_PATTERN;
 import static com.novystxr.classysk.api.methods.MethodParser.HINT_PATTERN;
 import static com.novystxr.classysk.api.util.StringUtils.getLowerCase;
-import static ch.njol.skript.classes.Changer.ChangeMode.*;
 import static com.novystxr.classysk.api.util.StringUtils.titleCase;
 
 public class ExprFieldAccess extends SimpleExpression<Object> {
@@ -102,7 +98,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
         ClassInstance instance = getValidInstance(event);
         if (instance == null) return;
 
-        FieldSignature signature = validator.getProduct();
+        FieldSignature signature = validator.product();
         switch (mode) {
             case SET -> setValueAndSave(delta, instance, event);
             case DELETE -> {
@@ -113,17 +109,14 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
                 instance.resetField(signature);
                 save(event);
             }
-            case ADD, REMOVE -> {
+            case ADD, REMOVE, REMOVE_ALL -> {
                 if (delta == null) return;
                 Object[] initialValue = instance.getFieldValue(fieldName);
 
                 if (signature.isPlural()) {
-                    List<Object> mutatedValue = new ArrayList<>(Arrays.asList(initialValue));
-
-                    if (mode == ADD) mutatedValue.addAll(Arrays.asList(delta));
-                    else mutatedValue.removeAll(Arrays.asList(delta));
-
-                    setValueAndSave(mutatedValue.toArray(), instance, event);
+                    ExprUtils.mutatePlural(initialValue, delta, mode, result -> {
+                        setValueAndSave(result, instance, event);
+                    });
                 } else {
                     Object singleValue = initialValue != null ? initialValue[0] : null;
                     ExprUtils.mutateSingle(singleValue, delta, mode, value ->  {
@@ -136,7 +129,9 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
     }
 
     private void setValueAndSave(Object[] value, ClassInstance instance, Event event) {
-        if (instance.setFieldValue(fieldName, value)) save(event);
+        if (instance.setFieldValue(fieldName, value)) {
+            save(event);
+        }
     }
 
     private void save(Event event) {
@@ -149,17 +144,16 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
 
     @Override
     public Class<?> @Nullable [] acceptChange(ChangeMode mode) {
-        boolean result = switch (mode) {
-            case SET, RESET, DELETE, REMOVE, ADD -> true;
-            default -> false;
-        };
-        if (result) {
-            if (isStaticReference) {
-                return CollectionUtils.array(validator.getProduct().type());
+        return switch (mode) {
+            case DELETE, RESET -> new Class[]{};
+            case REMOVE_ALL -> {
+                if (validator.shouldBeSingle().isTrue()) yield null;
+                yield CollectionUtils.array(
+                    validator.exactTypeOr(Object.class));
             }
-            return CollectionUtils.array(Object.class);
-        }
-        return null;
+            case SET, ADD, REMOVE -> CollectionUtils.array(
+                validator.exactTypeOr(Object.class));
+        };
     }
 
     private @Nullable ClassInstance getValidInstance(Event event) {
