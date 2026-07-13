@@ -98,7 +98,6 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
         ClassInstance instance = getValidInstance(event);
         if (instance == null) return;
 
-        FieldSignature signature = validator.product();
         switch (mode) {
             case SET -> setValueAndSave(delta, instance, event);
             case DELETE -> {
@@ -106,23 +105,21 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
                 save(event);
             }
             case RESET -> {
-                instance.resetField(signature);
+                instance.resetField(fieldName);
                 save(event);
             }
             case ADD, REMOVE, REMOVE_ALL -> {
                 if (delta == null) return;
                 Object[] initialValue = instance.getFieldValue(fieldName);
+                FieldSignature signature = validator.product();
 
                 if (signature.isPlural()) {
-                    ExprUtils.mutatePlural(initialValue, delta, mode, result -> {
-                        setValueAndSave(result, instance, event);
-                    });
+                    ExprUtils.mutatePlural(initialValue, delta, mode, result ->
+                        setValueAndSave(result, instance, event));
                 } else {
                     Object singleValue = initialValue != null ? initialValue[0] : null;
-                    ExprUtils.mutateSingle(singleValue, delta, mode, value ->  {
-                        if (!instance.fieldExists(fieldName) && value == null) return;
-                        setValueAndSave(new Object[]{value}, instance, event);
-                    });
+                    ExprUtils.mutateSingle(singleValue, delta, mode, value ->
+                        setValueAndSave(new Object[]{value}, instance, event));
                 }
             }
         }
