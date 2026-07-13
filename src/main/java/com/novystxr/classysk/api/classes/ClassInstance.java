@@ -49,17 +49,19 @@ public class ClassInstance {
         fieldMap.remove(name);
     }
 
-    public void resetField(FieldSignature signature) {
-        Expression<?> defaultExpr = signature.defaultExpr();
-        String fieldName = signature.name();
+    public void resetField(String fieldName) {
+        removeField(fieldName);
 
-        if (defaultExpr == null) {
-            removeField(fieldName);
-            return;
-        }
-        Object[] defaultValue = defaultExpr.getArray(new FieldEvalEvent());
-        if (!setFieldValue(fieldName, defaultValue)) {
-             removeField(fieldName);
+        FieldSignature signature = getFieldSignature(fieldName);
+        if (signature == null) return;
+
+        Expression<?> defaultExpr = signature.defaultExpr();
+        if (defaultExpr != null) {
+
+            Object[] convertedValue = Converters.convert(defaultExpr.getArray(new FieldEvalEvent()), signature.type());
+            if (convertedValue.length == 0) return;
+
+            createField(signature).value = convertedValue;
         }
     }
 
@@ -70,9 +72,11 @@ public class ClassInstance {
 
         SkriptField field = fieldMap.get(fieldName);
         if (field == null) {
+            if (value == null || value.length == 0) {
+                return false; // nothing would have changed so we don't initialize the field
+            }
             field = createField(signature);
-        }
-        if (value == null) {
+        } else if (value == null || value.length == 0) {
             field.value = null; // field was intentionally set to null
             return true;
         }
