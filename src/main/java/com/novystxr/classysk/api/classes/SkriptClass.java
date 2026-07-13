@@ -27,6 +27,7 @@ public class SkriptClass extends ClassInstance {
 
     final List<WeakReference<ClassInstance>> instances = new ArrayList<>();
 
+    SkriptClassWrapper wrapper = null;
     private Script script;
 
     // whether the abstract instance of this class is accessible in scripts
@@ -45,8 +46,16 @@ public class SkriptClass extends ClassInstance {
     public boolean option(ClassOption option) {
         return options.get(option);
     }
+
     public void resetOptions() {
         options = ClassOption.getDefaults();
+    }
+
+    public SkriptClassWrapper getWrapper() {
+        if (wrapper == null) {
+            wrapper = new SkriptClassWrapper(this);
+        }
+        return wrapper;
     }
 
     @Override

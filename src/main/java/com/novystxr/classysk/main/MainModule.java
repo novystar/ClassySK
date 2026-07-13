@@ -14,7 +14,7 @@ public class MainModule implements AddonModule {
 
     @Override
     public void load(SkriptAddon addon) {
-        Types.register();
+        Types.register(addon);
 
         register(addon,
             StructClass::register,
@@ -25,7 +25,9 @@ public class MainModule implements AddonModule {
             SecMethod::register,
             EffMethodCall::register,
             ExprMethodCall::register,
-            CondInstanceOf::register
+            CondInstanceOf::register,
+            PropExprClass::register,
+            ExprClass::register
             );
 
     }

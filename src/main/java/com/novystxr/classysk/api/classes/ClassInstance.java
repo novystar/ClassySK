@@ -15,6 +15,10 @@ import org.skriptlang.skript.lang.converter.Converters;
 public class ClassInstance {
     public final String name;
 
+    public String name() {
+        return name;
+    }
+
     public final Map<String, SkriptField> fieldMap = new HashMap<>();
 
     // set on deserialization for when parent class becomes known
