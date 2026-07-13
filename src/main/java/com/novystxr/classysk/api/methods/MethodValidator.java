@@ -68,11 +68,6 @@ public class MethodValidator extends AccessValidator<SkriptMethod> {
     }
 
     @Override
-    public String productName() {
-        return "method";
-    }
-
-    @Override
     protected boolean validate(SkriptMethod method, boolean isStatic, boolean isSameContext) {
         if (method.accessType().isPrivate() && !isSameContext) {
             Skript.error("This method can't be accessed here");

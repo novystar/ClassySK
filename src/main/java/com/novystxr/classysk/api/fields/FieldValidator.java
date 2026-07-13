@@ -18,11 +18,6 @@ public class FieldValidator extends AccessValidator<FieldSignature> {
     }
 
     @Override
-    public String productName() {
-        return "field";
-    }
-
-    @Override
     protected boolean validate(FieldSignature signature, boolean isStatic, boolean isSameContext) {
 
         if (signature.accessType().isPrivate() && !isSameContext) {

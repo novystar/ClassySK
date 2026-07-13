@@ -48,8 +48,6 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
     protected abstract @Nullable T getProductFromClass(SkriptClass skriptClass);
     protected abstract @Nullable T getProductFromInstance(ClassInstance instance);
 
-    public abstract String productName();
-
     /**
      * Similar to {@link AccessValidator#getReturnType()} but instead of finding the highest common super type it returns all possible types
      * @return The {@link AccessValidator#product} return type, OR all return types of {@link AccessValidator#guesses}
