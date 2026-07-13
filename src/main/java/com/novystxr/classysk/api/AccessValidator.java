@@ -134,10 +134,6 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
             error("Given instance does not match '"+ hintClass.getEffectiveName() +"'");
             return null;
         }
-        if (!newInstance.isInstance()) {
-            error("Static "+productName()+"s cannot be validated at runtime");
-            return null;
-        }
 
         LogEntry error;
         try (var handler = new SimpleErrorHandler()) {

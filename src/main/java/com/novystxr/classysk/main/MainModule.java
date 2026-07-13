@@ -19,7 +19,6 @@ public class MainModule implements AddonModule {
         register(addon,
             StructClass::register,
             EffField::register,
-            ExprStaticInstance::register,
             SecExprNewInstance::register,
             ExprFieldAccess::register,
             ExprSelf::register,
