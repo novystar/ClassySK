@@ -9,6 +9,7 @@ import com.novystxr.classysk.api.fields.SerializableField;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.util.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.converter.Converters;
 
@@ -71,17 +72,19 @@ public class ClassInstance {
 
     // lazy initialization
     public boolean setFieldValue(String fieldName, @Nullable Object[] value) {
+        if (value == null) value = new Object[0];
+
         FieldSignature signature = getFieldSignature(fieldName);
         if (signature == null) return false;
 
         SkriptField field = fieldMap.get(fieldName);
         if (field == null) {
-            if (value == null || value.length == 0) {
+            if (value.length == 0) {
                 return false; // nothing would have changed so we don't initialize the field
             }
             field = createField(signature);
-        } else if (value == null || value.length == 0) {
-            field.value = null; // field was intentionally set to null
+        } else if (value.length == 0) {
+            field.value = new Object[0]; // field was intentionally set to null
             return true;
         }
 
@@ -92,13 +95,11 @@ public class ClassInstance {
         return true;
     }
 
-    public @Nullable Object[] getFieldValue(String name) {
+    public @NotNull Object[] getFieldValue(String name) {
         SkriptField field = fieldMap.get(name);
-        if (field == null) return null;
+        if (field == null) return new Object[0];
 
         Object[] value = field.value;
-        if (value == null) return null;
-
         return Arrays.copyOf(value, value.length);
     }
 

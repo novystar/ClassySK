@@ -3,8 +3,6 @@ package com.novystxr.classysk.api.fields;
 import ch.njol.skript.lang.Expression;
 import com.novystxr.classysk.api.AccessModifiable;
 import com.novystxr.classysk.api.classes.ClassInstance;
-import com.novystxr.classysk.api.classes.SkriptClass;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.converter.Converters;
 
@@ -44,7 +42,7 @@ public class SkriptField {
     }
 
     public FieldSignature signature;
-    public Object[] value;
+    public Object[] value = new Object[0];
 
     public SkriptField(FieldSignature signature) {
         this.signature = signature;
