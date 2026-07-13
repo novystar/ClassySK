@@ -160,20 +160,13 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
 
     @Override
     public boolean isSingle() {
-        Kleenean shouldBeSingle = validator.shouldBeSingle();
-        if (shouldBeSingle.isUnknown()) {
-            return false;
-        }
-        return shouldBeSingle.isTrue();
+        return validator.shouldBeSingle().isTrue();
     }
 
     @Override
     public boolean canBeSingle() {
         Kleenean shouldBeSingle = validator.shouldBeSingle();
-        if (shouldBeSingle.isUnknown()) {
-            return true;
-        }
-        return shouldBeSingle.isTrue();
+        return shouldBeSingle.isUnknown() || shouldBeSingle.isTrue();
     }
 
     @Override
