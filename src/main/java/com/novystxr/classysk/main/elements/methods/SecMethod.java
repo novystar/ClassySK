@@ -53,7 +53,7 @@ import java.util.*;
     {_myClass}::setPlayer(player)
     set {_player} to {_myClass}::getPlayer()
     """)
-@Since("1.0")
+@Since("1.0.0")
 public class SecMethod extends Section implements ReturnHandler<Object> {
     public static void register(SyntaxRegistry registry) {
         registry.register(

@@ -29,7 +29,7 @@ import static com.novystxr.classysk.api.AccessModifiable.AccessType.PUBLIC;
     "Fields hold data of a specified type relating to a class. They can have default values",
     "See the [**Official Wiki**](https://github.com/novystar/ClassySK/wiki/Tutorials%3A-Classes-%26-Fields) for more information."
 })
-@Since("1.0")
+@Since("1.0.0")
 public class EffField extends Effect {
     public static void register(SyntaxRegistry registry) {
         registry.register(

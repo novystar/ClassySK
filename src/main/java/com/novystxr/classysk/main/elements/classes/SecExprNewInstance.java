@@ -39,7 +39,7 @@ import java.util.regex.Pattern;
     \tkills: 30
     \tbalance: 5000
     """)
-@Since("1.0")
+@Since("1.0.0")
 public class SecExprNewInstance extends SectionExpression<ClassInstance> {
 
     private static final Pattern VALID_NODE_PATTERN = Pattern.compile("("+ Classysk.NAME_PATTERN +"): (.+)");

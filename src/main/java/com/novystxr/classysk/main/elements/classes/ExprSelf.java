@@ -27,7 +27,7 @@ import org.skriptlang.skript.registration.SyntaxRegistry;
     \tpublic increaseCounter():
     \t\tadd 1 to self::counter
     """)
-@Since("1.0")
+@Since("1.0.0")
 public class ExprSelf extends SimpleExpression<ClassInstance> {
     public static void register(SyntaxRegistry registry) {
         registry.register(

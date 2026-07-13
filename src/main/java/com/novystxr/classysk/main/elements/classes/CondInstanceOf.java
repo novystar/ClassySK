@@ -22,7 +22,7 @@ import org.skriptlang.skript.registration.SyntaxRegistry;
 @Name("Instance Of")
 @Description("Used to check if a class instance belongs to a specified class")
 @Example("if {_instance} is an instance of MyClass:")
-@Since("1.0")
+@Since("1.0.0")
 public class CondInstanceOf extends Condition {
 
     public static void register(SyntaxRegistry registry) {

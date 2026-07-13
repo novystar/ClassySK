@@ -56,7 +56,7 @@ import java.util.*;
     \tpublic getLevel() :: number:
     \t\treturn 1 + floor(self::xp / PlayerStats::levelXP)
     """)
-@Since("1.0")
+@Since("1.0.0")
 public class StructClass extends Structure {
     public static void register(SyntaxRegistry registry) {
         registry.register(
