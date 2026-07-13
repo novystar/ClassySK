@@ -7,7 +7,7 @@ main: com.novystxr.classysk.Classysk
 api-version: '1.21.11'
 load: POSTWORLD
 
-authors: [ novanovy ]
+authors: [ novystar ]
 website: https://github.com/novystar/ClassySK
 depend:
   - Skript
