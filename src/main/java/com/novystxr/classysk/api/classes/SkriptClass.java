@@ -30,7 +30,7 @@ public class SkriptClass extends ClassInstance {
     SkriptClassWrapper wrapper = null;
     private Script script;
 
-    // whether the abstract instance of this class is accessible in scripts
+    // whether the class is accessible in scripts
     // this is set to false when the corresponding structure is unloaded
     public boolean accessible = true;
 

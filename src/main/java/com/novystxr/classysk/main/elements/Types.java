@@ -27,7 +27,7 @@ public class Types {
 
         Classes.registerClass(new ClassInfo<>(SkriptClassWrapper.class, "classwrapper")
             .user("class wrapper(s)?")
-            .name("Class")
+            .name("Class Wrapper")
             .property(Property.NAME, "The name of the class", addon,
                 ExpressionPropertyHandler.of(SkriptClassWrapper::name, String.class))
             .description("Non-instance wrapper for a class, represents the class as a whole")

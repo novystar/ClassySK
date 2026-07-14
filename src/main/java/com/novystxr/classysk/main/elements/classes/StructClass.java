@@ -35,8 +35,7 @@ import java.util.*;
     "`Options` - Optional section which is used to set certain rules about how your class should be used.",
     "- `external creation (true)` - Instances can be created from outside of the class",
     "- `strict signature enforcement (false)` - Invalid fields will be aggressively removed from all existing instances when it's structure is updated",
-    "- `private access on create (false)` - Private fields can be set within constructors from outside the class",
-    "- `suppress runtime errors (false)` - Runtime errors regarding instances of this class will be ignored"
+    "- `private access on create (false)` - Private fields can be set within constructors from outside the class"
 })
 @Examples("""
     class PlayerStats:
