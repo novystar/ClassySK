@@ -14,8 +14,8 @@ import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
-@Name("This Instance")
-@Keywords("self")
+@Name("Self")
+@Keywords({"current instance", "this instance"})
 @Description("Only available in non-static methods. Refers to the current class instance from whatever method is running it, Allowing your code to behave differently depending on what instance is running it.")
 @Example("""
     class MyClass:
