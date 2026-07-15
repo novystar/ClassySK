@@ -2,6 +2,8 @@ ClassySK is an addon that adds proper object orientation capabilities to skript 
 
 #### [Wiki](https://github.com/novystar/ClassySK/wiki) | [Download](https://github.com/novystar/ClassySK/releases) | [Report a bug](https://github.com/novystar/ClassySK/issues)
 
+[![SkriptHubViewTheDocs](http://skripthub.net/static/addon/ViewTheDocsButton.png)](http://skripthub.net/docs/?addon=ClassySK)
+
 ## Roadmap
 Nothing here is set in stone but these are my future ambitions regarding the project (in no particular order)
 -  Inheritance: extending other classes
