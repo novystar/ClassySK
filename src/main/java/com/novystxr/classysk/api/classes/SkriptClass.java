@@ -82,12 +82,12 @@ public class SkriptClass extends ClassInstance {
      * @return The full inheritance chain from top -> bottom
      */
     public List<SkriptClass> getInheritanceChain() {
-        SkriptClass target = this;
         List<SkriptClass> result = new ArrayList<>();
         result.add(this);
-        while (target != null) {
-            result.add(target.extendsClass);
-            target = target.extendsClass;
+
+        SkriptClass target = this;
+        while ((target = target.extendsClass) != null) {
+            result.add(target);
         }
 
         return result.reversed();
