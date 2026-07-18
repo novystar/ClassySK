@@ -32,9 +32,8 @@ public class MethodRegistry {
     private Map<MethodIdentifier, SkriptMethod> registry = new HashMap<>();
 
     public static List<SkriptMethod> getCandidatesFromChain(List<SkriptClass> chain, MethodReference reference) {
-        chain = chain.reversed();
         Map<MethodIdentifier, SkriptMethod> result = new HashMap<>();
-        for (SkriptClass target : chain)  {
+        for (SkriptClass target : chain.reversed())  {
             result.putAll(target.methodRegistry.getCandidates(reference));
         }
 
