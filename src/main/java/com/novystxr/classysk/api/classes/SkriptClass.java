@@ -89,8 +89,7 @@ public class SkriptClass extends ClassInstance {
         while ((target = target.extendsClass) != null) {
             result.add(target);
         }
-
-        return result.reversed();
+        return result;
     }
 
     public @Nullable Script getValidScript() {
