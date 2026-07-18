@@ -35,7 +35,9 @@ public class MethodValidator extends AccessValidator<SkriptMethod> {
 
     @Override
     protected @Nullable SkriptMethod getProductFromClass(SkriptClass skriptClass) {
-        List<SkriptMethod> candidates = skriptClass.methodRegistry.getCandidates(reference);
+        List<SkriptMethod> candidates = MethodRegistry.getCandidatesFromChain(
+            skriptClass.getInheritanceChain(), reference);
+
         if (candidates.isEmpty()) {
             Skript.error("Could not identify method signature from reference: "+reference.name());
             return null;

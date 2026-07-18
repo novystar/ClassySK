@@ -8,8 +8,8 @@ import ch.njol.skript.doc.Examples;
 import ch.njol.skript.doc.Name;
 import ch.njol.skript.doc.Since;
 import ch.njol.skript.lang.*;
+import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.log.SkriptLogger;
-import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.classes.ClassOption;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassManager;
@@ -27,6 +27,8 @@ import org.skriptlang.skript.registration.SyntaxInfo;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
 import java.util.*;
+
+import static com.novystxr.classysk.Classysk.CLASSNAME_PATTERN;
 
 @Name("Class")
 @Description({
@@ -61,7 +63,7 @@ public class StructClass extends Structure {
         registry.register(
             SyntaxRegistry.STRUCTURE,
             SyntaxInfo.Structure.builder(StructClass.class)
-                .addPattern("class <"+ Classysk.CLASSNAME_PATTERN +">")
+                .addPattern("class <"+ CLASSNAME_PATTERN +"> [ext:extends <"+CLASSNAME_PATTERN+">]")
                 .supplier(StructClass::new)
                 .nodeType(DefaultSyntaxInfos.Structure.NodeType.BOTH)
                 .build()
@@ -70,19 +72,22 @@ public class StructClass extends Structure {
 
     private EntryContainer entryContainer;
     private String name;
+    private String extendsName = null;
 
     private final List<SecMethod> methodSections = new ArrayList<>();
 
     @Override
-    public boolean init(Literal<?>[] args, int matchedPattern, SkriptParser.ParseResult parseResult, @UnknownNullability EntryContainer entryContainer) {
+    public boolean init(Literal<?>[] args, int pattern, ParseResult result, @UnknownNullability EntryContainer entryContainer) {
         this.entryContainer = entryContainer;
-        name = StringUtils.getLowerCase(parseResult.regexes.getFirst());
+        name = StringUtils.getLowerCase(result.regexes.get(0));
 
+        if (result.hasTag("ext")) {
+            extendsName = StringUtils.getLowerCase(result.regexes.get(1));
+        }
         if (classAlreadyExists()) {
             Skript.error("A class structure named '%s' already exists in a script", name);
             return false;
         }
-
         return true;
     }
 
@@ -103,6 +108,17 @@ public class StructClass extends Structure {
         newClass.methodRegistry.init();
 
         List<Node> nodes = this.entryContainer.getUnhandledNodes();
+
+        if (extendsName != null) {
+            SkriptClass extendsClass = ClassManager.getClass(extendsName);
+            if (extendsClass == null) {
+                Skript.error("Class '%s' does not exist", extendsName);
+            } else {
+                newClass.extendsClass = extendsClass;
+            }
+        } else {
+            newClass.extendsClass = null;
+        }
 
         // register fields
         for (Node node : nodes) {

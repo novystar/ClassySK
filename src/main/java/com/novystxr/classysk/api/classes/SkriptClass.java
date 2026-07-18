@@ -27,6 +27,8 @@ public class SkriptClass extends ClassInstance {
 
     final List<WeakReference<ClassInstance>> instances = new ArrayList<>();
 
+    public SkriptClass extendsClass = null;
+
     SkriptClassWrapper wrapper = null;
     private Script script;
 
@@ -43,6 +45,11 @@ public class SkriptClass extends ClassInstance {
         options.put(option, value);
     }
 
+    /**
+     *
+     * @param option What option key to check for
+     * @return The boolean value of the specified option
+     */
     public boolean option(ClassOption option) {
         return options.get(option);
     }
@@ -60,7 +67,30 @@ public class SkriptClass extends ClassInstance {
 
     @Override
     public FieldSignature getFieldSignature(String key) {
-        return fieldSignatures.get(key);
+        for (SkriptClass target : getInheritanceChain()) {
+            FieldSignature signature = target.fieldSignatures.get(key);
+            if (signature != null)
+                return signature;
+        }
+        return null;
+    }
+
+    /**
+     * If A extends B, B extends C and C extends D, this method will return A, B, C, D
+     * If it doesn't inherit anything it will return a list containing only the class.
+     *
+     * @return The full inheritance chain from top -> bottom
+     */
+    public List<SkriptClass> getInheritanceChain() {
+        SkriptClass target = this;
+        List<SkriptClass> result = new ArrayList<>();
+        result.add(this);
+        while (target != null) {
+            result.add(target.extendsClass);
+            target = target.extendsClass;
+        }
+
+        return result.reversed();
     }
 
     public @Nullable Script getValidScript() {
@@ -140,7 +170,7 @@ public class SkriptClass extends ClassInstance {
         // static field validation
         // attempt to convert, if failed, static context changes or no longer exists, remove field
         fieldMap.values().removeIf(field -> {
-            FieldSignature signature = fieldSignatures.get(field.signature.name());
+            FieldSignature signature = getFieldSignature(field.signature.name());
 
             // if signature no longer exists or static context changed, ignore and use existing signature
             if (signature == null || signature.isStatic() != field.signature.isStatic()) return true;
@@ -165,7 +195,7 @@ public class SkriptClass extends ClassInstance {
 
             for (SkriptField field : instance.fieldMap.values()) {
                 String fieldName = field.signature.name();
-                FieldSignature signature = fieldSignatures.get(fieldName);
+                FieldSignature signature = getFieldSignature(fieldName);
 
                 // if signature no longer exists or static context changed, ignore and use existing signature
                 if (signature == null || signature.isStatic() != field.signature.isStatic()) {

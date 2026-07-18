@@ -1,5 +1,6 @@
 package com.novystxr.classysk.api.methods;
 
+import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 
@@ -30,8 +31,18 @@ public class MethodRegistry {
 
     private Map<MethodIdentifier, SkriptMethod> registry = new HashMap<>();
 
-    public List<SkriptMethod> getCandidates(MethodReference reference) {
-        List<SkriptMethod> result = new ArrayList<>();
+    public static List<SkriptMethod> getCandidatesFromChain(List<SkriptClass> chain, MethodReference reference) {
+        chain = chain.reversed();
+        Map<MethodIdentifier, SkriptMethod> result = new HashMap<>();
+        for (SkriptClass target : chain)  {
+            result.putAll(target.methodRegistry.getCandidates(reference));
+        }
+
+        return result.values().stream().toList();
+    }
+
+    public Map<MethodIdentifier, SkriptMethod> getCandidates(MethodReference reference) {
+        Map<MethodIdentifier, SkriptMethod> result = new HashMap<>();
 
         for (var entry : registry.entrySet()) {
             MethodIdentifier identifier = entry.getKey();
@@ -44,7 +55,7 @@ public class MethodRegistry {
             if (refArgCount < identifier.minArgCount ||
                 refArgCount > identifier.argTypes.length) continue;
 
-            result.add(method);
+            result.put(identifier, method);
         }
         return result;
     }
