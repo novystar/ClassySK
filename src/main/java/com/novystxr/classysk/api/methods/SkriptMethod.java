@@ -11,7 +11,6 @@ import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.event.MethodRunEvent;
 import com.novystxr.classysk.main.elements.methods.SecMethod;
 import org.bukkit.event.Event;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -74,7 +73,7 @@ public class SkriptMethod implements AccessModifiable {
 
         if (argExprs != null) {
             args = new HashMap<>();
-            for (Map.Entry<String, Expression<?>> entry : argExprs.entrySet()) {
+            for (Entry<String, Expression<?>> entry : argExprs.entrySet()) {
                 args.put(entry.getKey(), entry.getValue().getArray(event));
             }
         } else {
