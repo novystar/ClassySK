@@ -6,6 +6,7 @@ import java.util.*;
 
 import ch.njol.skript.ScriptLoader;
 import ch.njol.skript.lang.Expression;
+import ch.njol.skript.lang.parser.ParserInstance;
 import com.novystxr.classysk.api.event.FieldEvalEvent;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
@@ -41,6 +42,17 @@ public class SkriptClass extends ClassInstance {
         this.script = script;
     }
 
+    /**
+     *
+     * Helper method that resets the class back to a pre-registration state
+     *
+     */
+    public void initForRegistration() {
+        options = ClassOption.getDefaults();
+        methodRegistry.init();
+        fieldSignatures.clear();
+    }
+
     public void setOption(ClassOption option, boolean value) {
         options.put(option, value);
     }
@@ -52,10 +64,6 @@ public class SkriptClass extends ClassInstance {
      */
     public boolean option(ClassOption option) {
         return options.get(option);
-    }
-
-    public void resetOptions() {
-        options = ClassOption.getDefaults();
     }
 
     public SkriptClassWrapper getWrapper() {
@@ -76,7 +84,7 @@ public class SkriptClass extends ClassInstance {
     }
 
     /**
-     * If A extends B, B extends C and C extends D, this method will return A, B, C, D
+     * If this is A and: A extends B, B extends C and C extends D, this method will return A, B, C, D
      * If it doesn't inherit anything it will return a list containing only the class.
      *
      * @return The full inheritance chain from top -> bottom
@@ -155,7 +163,7 @@ public class SkriptClass extends ClassInstance {
         List<Structure> structures = script.getStructures();
         for (Structure structure : structures) {
             if (structure instanceof StructClass classStruct) {
-                Script structScript = classStruct.getParser().getCurrentScript();
+                Script structScript = ParserInstance.get().getCurrentScript();
                 if (classStruct.getName().equals(name) && structScript.nameAndPath().equals(script.nameAndPath())) {
                     return true;
                 }
