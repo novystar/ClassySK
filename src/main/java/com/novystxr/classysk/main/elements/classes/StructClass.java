@@ -9,6 +9,7 @@ import ch.njol.skript.doc.Name;
 import ch.njol.skript.doc.Since;
 import ch.njol.skript.lang.*;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
+import ch.njol.skript.log.SkriptLogger;
 import com.novystxr.classysk.api.classes.ClassOption;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassManager;
@@ -81,7 +82,7 @@ public class StructClass extends Structure {
                 }
             })
             .unexpectedNodeTester(node ->
-                node.getKey() != null && DEF_NODE.matcher(node.getKey()).matches())
+                node.getKey() == null || !DEF_NODE.matcher(node.getKey()).matches())
             .build();
 
         registry.register(
@@ -122,8 +123,8 @@ public class StructClass extends Structure {
             newClass = new SkriptClass(name, getParser().getCurrentScript());
             ClassManager.createClass(name, newClass);
         }
-        newClass.extendsClass = entryContainer.get("extends", SkriptClass.class, true);
-        SectionNode optionNode = entryContainer.get("options", SectionNode.class, true);
+        newClass.extendsClass = entryContainer.getOptional("extends", SkriptClass.class, true);
+        SectionNode optionNode = entryContainer.getOptional("options", SectionNode.class, true);
         if (optionNode != null) {
             EntryContainer optionsContainer = optionValidator.validate(optionNode);
             if (optionsContainer == null) return false;
@@ -136,6 +137,8 @@ public class StructClass extends Structure {
             }
         }
         for (Node node : entryContainer.getUnhandledNodes()) {
+            SkriptLogger.setNode(node);
+
             String key = node.getKey();
             if (key == null) continue;
 
@@ -149,7 +152,7 @@ public class StructClass extends Structure {
                     return false;
                 }
             } else if (parseElement instanceof SecMethod secMethod) {
-                if (secMethod.registerMethod(newClass)) {
+                if (secMethod.registerMethod(newClass, node)) {
                     methodSections.add(secMethod);
                 } else {
                     Skript.error("Method with that signature already exists in this class");
