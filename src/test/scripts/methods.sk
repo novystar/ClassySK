@@ -516,38 +516,83 @@ test "ClassySK - Method Returns":
 
 
 parse:
-	results: {-testInvalidMethods::*}
+	results: {-testInvalidMethods::1::*}
 	code:
 		class TestInvalidMethods:
 			public test1()):
 				broadcast true
 
+parse:
+	results: {-testInvalidMethods::2::*}
+	code:
+		class TestInvalidMethods:
 			public test2()():
 				broadcast true
 
+parse:
+	results: {-testInvalidMethods::3::*}
+	code:
+		class TestInvalidMethods:
 			public test3(int: integer = "string"):
 				broadcast true
 
+parse:
+	results: {-testInvalidMethods::4::*}
+	code:
+		class TestInvalidMethods:
 			public test4(int: integer str: string):
 				broadcast true
 
+parse:
+	results: {-testInvalidMethods::5::*}
+	code:
+		class TestInvalidMethods:
 			public test5(int, str, obj):
 				broadcast true
 
+parse:
+	results: {-testInvalidMethods::6::*}
+	code:
+		class TestInvalidMethods:
 			public test6() :: notarealandvalidtype:
 				broadcast true
 
+parse:
+	results: {-testInvalidMethods::7::*}
+	code:
+		class TestInvalidMethods:
 			public test7(test2: integer, test: notarealandvalidtype):
 				broadcast true
 
+parse:
+	results: {-testInvalidMethods::8::*}
+	code:
+		class TestInvalidMethods:
 			public test8(test: notarealandvalidtype):
 				broadcast true
 
+parse:
+	results: {-testInvalidMethods::9::*}
+	code:
+		class TestInvalidMethods:
 			public test9(test: integer, test: string):
 				broadcast true
 
+parse:
+	results: {-testInvalidMethods::10::*}
+	code:
+		class TestInvalidMethods:
 			public test10(()):
 				broadcast true
 
 test "ClassySK - Invalid Methods":
-	assert size of {-testInvalidMethods::*} is 10
+	assert {-testInvalidMethods::1::*} is set
+	assert {-testInvalidMethods::2::*} is set
+	assert {-testInvalidMethods::3::*} is set
+	assert {-testInvalidMethods::4::*} is set
+	assert {-testInvalidMethods::5::*} is set
+	assert {-testInvalidMethods::6::*} is set
+	assert {-testInvalidMethods::7::*} is set
+	assert {-testInvalidMethods::8::*} is set
+	assert {-testInvalidMethods::9::*} is set
+	assert {-testInvalidMethods::10::*} is set

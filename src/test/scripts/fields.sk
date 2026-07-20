@@ -125,19 +125,49 @@ class TestDefaults:
 	public objsField: objects = 1, 1.4, "test", true
 
 parse:
-	results: {-testInvalidDefaults::*}
+	results: {-testInvalidDefaults::1::*}
 	code:
 		class TestInvalidDefaults:
 			public intField: integer = true
+parse:
+	results: {-testInvalidDefaults::2::*}
+	code:
+		class TestInvalidDefaults:
 			public numField: number = "not a number"
+parse:
+	results: {-testInvalidDefaults::3::*}
+	code:
+		class TestInvalidDefaults:
 			public strField: string = 1
+parse:
+	results: {-testInvalidDefaults::4::*}
+	code:
+		class TestInvalidDefaults:
 			public boolField: boolean = 1
-
+parse:
+	results: {-testInvalidDefaults::5::*}
+	code:
+		class TestInvalidDefaults:
 			public intsField: integers = 1, 2, 3, 4 and true
+parse:
+	results: {-testInvalidDefaults::6::*}
+	code:
+		class TestInvalidDefaults:
 			public numsField: numbers = 1, 2.5, 3.1, 4 and true
+parse:
+	results: {-testInvalidDefaults::7::*}
+	code:
+		class TestInvalidDefaults:
 			public strsField: strings = "test", "hello" and true
+parse:
+	results: {-testInvalidDefaults::8::*}
+	code:
+		class TestInvalidDefaults:
 			public boolsField: booleans = true, false and 1
-
+parse:
+	results: {-testInvalidDefaults::9::*}
+	code:
+		class TestInvalidDefaults:
 			public singleNumField: number = 1, 2, 3 and 4
 
 test "ClassySK - Default Field Values":
@@ -155,7 +185,15 @@ test "ClassySK - Default Field Values":
 	assert {_instance}::boolsField is true, false
 	assert {_instance}::objsField is 1, 1.4, "test", true
 
-	assert size of {-testInvalidDefaults::*} is 9
+	assert {-testInvalidDefaults::1::*} is set
+	assert {-testInvalidDefaults::2::*} is set
+	assert {-testInvalidDefaults::3::*} is set
+	assert {-testInvalidDefaults::4::*} is set
+	assert {-testInvalidDefaults::5::*} is set
+	assert {-testInvalidDefaults::6::*} is set
+	assert {-testInvalidDefaults::7::*} is set
+	assert {-testInvalidDefaults::8::*} is set
+	assert {-testInvalidDefaults::9::*} is set
 
 class TestChangers:
 	public static intsField: integers = 2, 1
