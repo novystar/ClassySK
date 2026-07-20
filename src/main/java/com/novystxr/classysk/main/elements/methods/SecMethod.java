@@ -1,6 +1,6 @@
 package com.novystxr.classysk.main.elements.methods;
 
-import ch.njol.skript.Skript;
+import ch.njol.skript.config.Node;
 import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.doc.*;
 import ch.njol.skript.lang.*;
@@ -18,11 +18,9 @@ import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.event.MethodRunEvent;
 import com.novystxr.classysk.api.util.StringUtils;
 import com.novystxr.classysk.api.util.ExprUtils;
-import com.novystxr.classysk.main.elements.classes.StructClass;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.SyntaxInfo;
-import org.skriptlang.skript.registration.SyntaxRegistry;
 
 import java.util.*;
 
@@ -55,28 +53,20 @@ import java.util.*;
     """)
 @Since("1.0.0")
 public class SecMethod extends Section implements ReturnHandler<Object> {
-    public static void register(SyntaxRegistry registry) {
-        registry.register(
-            SyntaxRegistry.SECTION,
-            SyntaxInfo.builder(SecMethod.class)
-                .addPattern("(public|:private) [:static] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [(\\:\\:|returns) %-*classinfo%]")
-                .supplier(SecMethod::new)
-                .build()
-        );
-    }
 
-    private SectionNode sectionNode;
-    private MethodSignature signature;
+    public static SyntaxInfo<SecMethod> syntaxInfo = SyntaxInfo.builder(SecMethod.class)
+        .addPattern("(public|:private) [:static] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [(\\:\\:|returns) %-*classinfo%]")
+        .supplier(SecMethod::new)
+        .build();
+
+    private SectionNode sectionNode = null;
+    public MethodSignature signature;
 
     private SkriptMethod skriptMethod;
     public SkriptClass contextClass;
 
     @Override
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result, SectionNode sectionNode, List<TriggerItem> triggerItems) {
-        if (!(getParser().getCurrentStructure() instanceof StructClass)) {
-            Skript.error("Method declaration can only be used within a class structure.");
-            return false;
-        }
         boolean returnPlural = false;
         Class<?> returnType = null;
 
@@ -102,22 +92,23 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
         AccessType accessType = result.hasTag("private") ? AccessModifiable.AccessType.PRIVATE : AccessModifiable.AccessType.PUBLIC;
         boolean isStatic = result.hasTag("static");
 
-        this.sectionNode = sectionNode;
         this.signature = new MethodSignature(methodName, args, accessType, isStatic, returnType, returnPlural);
         return true;
     }
 
-    public void registerMethod() {
+    public boolean registerMethod(SkriptClass contextClass, Node node) {
+        this.contextClass = contextClass;
         skriptMethod = new SkriptMethod(signature);
 
-        boolean registered = contextClass.methodRegistry.registerMethod(skriptMethod);
-        if (!registered) {
-            Skript.error("Method with this signature already exists in class: "+ contextClass.name);
+        if (node instanceof SectionNode secNode) {
+            sectionNode = secNode;
         }
+        return contextClass.methodRegistry.registerMethod(skriptMethod);
     }
 
     @SuppressWarnings("unchecked")
     public void loadTrigger() {
+        if (sectionNode == null) return;
         Trigger trigger;
 
         if (signature.returnType() != null) {

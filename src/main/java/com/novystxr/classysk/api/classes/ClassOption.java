@@ -1,7 +1,6 @@
 package com.novystxr.classysk.api.classes;
 
 import org.jspecify.annotations.Nullable;
-import org.skriptlang.skript.lang.entry.EntryContainer;
 import org.skriptlang.skript.lang.entry.EntryValidator;
 import org.skriptlang.skript.lang.entry.EntryValidator.EntryValidatorBuilder;
 import org.skriptlang.skript.lang.entry.KeyValueEntryData;
@@ -14,8 +13,8 @@ public enum ClassOption {
     EXTERNAL_CREATION(true, "external creation"),
     PRIVATE_ACCESS_ON_CREATE(false, "private access on create");
 
-    private final boolean defaultValue;
-    private final String pattern;
+    public final boolean defaultValue;
+    public final String pattern;
 
     ClassOption(boolean defaultValue, String pattern) {
         this.defaultValue = defaultValue;
@@ -28,16 +27,6 @@ public enum ClassOption {
             result.put(option, option.defaultValue);
         }
         return result;
-    }
-
-    public static void setOptions(SkriptClass skriptClass, @Nullable EntryContainer container) {
-        if (container == null) return;
-        for (ClassOption option : values()) {
-            boolean value = container.get(option.pattern, Boolean.class, true);
-            if (value == option.defaultValue) continue;
-
-            skriptClass.setOption(option, value);
-        }
     }
 
     public static EntryValidator getValidator() {

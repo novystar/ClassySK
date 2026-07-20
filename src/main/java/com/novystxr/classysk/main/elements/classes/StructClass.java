@@ -8,11 +8,12 @@ import ch.njol.skript.doc.Examples;
 import ch.njol.skript.doc.Name;
 import ch.njol.skript.doc.Since;
 import ch.njol.skript.lang.*;
+import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.log.SkriptLogger;
-import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.classes.ClassOption;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassManager;
+import com.novystxr.classysk.api.util.ExprUtils;
 import com.novystxr.classysk.api.util.StringUtils;
 import com.novystxr.classysk.main.elements.fields.EffField;
 import com.novystxr.classysk.main.elements.methods.SecMethod;
@@ -22,11 +23,14 @@ import org.skriptlang.skript.lang.entry.EntryContainer;
 import org.skriptlang.skript.lang.entry.EntryValidator;
 import org.skriptlang.skript.lang.script.Script;
 import org.skriptlang.skript.lang.structure.Structure;
-import org.skriptlang.skript.registration.DefaultSyntaxInfos;
+import org.skriptlang.skript.registration.DefaultSyntaxInfos.Structure.NodeType;
 import org.skriptlang.skript.registration.SyntaxInfo;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
 import java.util.*;
+import java.util.regex.Pattern;
+
+import static com.novystxr.classysk.Classysk.CLASSNAME_PATTERN;
 
 @Name("Class")
 @Description({
@@ -57,94 +61,97 @@ import java.util.*;
     """)
 @Since("1.0.0")
 public class StructClass extends Structure {
+
+    private static final Pattern DEF_NODE = Pattern.compile("(?:public|private)(?:static)?.*");
+
     public static void register(SyntaxRegistry registry) {
+        EntryValidator validator = EntryValidator.builder()
+            .addSection("options", true)
+            .unexpectedNodeTester(node ->
+                node.getKey() == null || !DEF_NODE.matcher(node.getKey()).matches())
+            .build();
+
         registry.register(
             SyntaxRegistry.STRUCTURE,
             SyntaxInfo.Structure.builder(StructClass.class)
-                .addPattern("class <"+ Classysk.CLASSNAME_PATTERN +">")
+                .addPattern("class <"+ CLASSNAME_PATTERN +">")
+                .entryValidator(validator)
+                .nodeType(NodeType.BOTH)
                 .supplier(StructClass::new)
-                .nodeType(DefaultSyntaxInfos.Structure.NodeType.BOTH)
                 .build()
         );
     }
 
+    private static final EntryValidator optionValidator = ClassOption.getValidator();
+    private final List<SecMethod> methodSections = new ArrayList<>();
+
     private EntryContainer entryContainer;
     private String name;
 
-    private final List<SecMethod> methodSections = new ArrayList<>();
-
     @Override
-    public boolean init(Literal<?>[] args, int matchedPattern, SkriptParser.ParseResult parseResult, @UnknownNullability EntryContainer entryContainer) {
+    public boolean init(Literal<?>[] args, int pattern, ParseResult result, @UnknownNullability EntryContainer entryContainer) {
         this.entryContainer = entryContainer;
-        name = StringUtils.getLowerCase(parseResult.regexes.getFirst());
-
+        name = StringUtils.getLowerCase(result.regexes.getFirst());
         if (classAlreadyExists()) {
             Skript.error("A class structure named '%s' already exists in a script", name);
             return false;
         }
-
         return true;
     }
 
     @Override
     public boolean preLoad() {
-        Script script = getParser().getCurrentScript();
         SkriptClass newClass = ClassManager.getClass(name);
 
-        // if no valid class exists, put a new one
         if (newClass != null && newClass.validateStructure()) {
-            newClass.accessible = true;
+            newClass.initForRegistration();
         } else {
-            newClass = new SkriptClass(name, script);
+            newClass = new SkriptClass(name, getParser().getCurrentScript());
             ClassManager.createClass(name, newClass);
         }
+        SectionNode optionNode = entryContainer.getOptional("options", SectionNode.class, true);
+        if (optionNode != null) {
+            EntryContainer optionsContainer = optionValidator.validate(optionNode);
+            if (optionsContainer == null) return false;
 
-        newClass.fieldSignatures.clear();
-        newClass.methodRegistry.init();
+            for (ClassOption option : ClassOption.values()) {
+                boolean value = optionsContainer.get(option.pattern, Boolean.class, true);
+                if (value == option.defaultValue) continue;
 
-        List<Node> nodes = this.entryContainer.getUnhandledNodes();
-
-        // register fields
-        for (Node node : nodes) {
+                newClass.setOption(option, value);
+            }
+        }
+        for (Node node : entryContainer.getUnhandledNodes()) {
             SkriptLogger.setNode(node);
-            if (!(node instanceof SectionNode) && node.getKey() != null) {
-                Effect effect = Effect.parse(node.getKey(), "Invalid field pattern");
 
-                if (effect instanceof EffField fieldEffect) {
-                    fieldEffect.registerField(newClass);
+            String key = node.getKey();
+            if (key == null) continue;
+
+            var source = ExprUtils.syntaxIterator(EffField.syntaxInfo, SecMethod.syntaxInfo);
+            SyntaxElement parseElement = SkriptParser.parse(key, source, "Unexpected entry " + key + "'. Check whether it's spelled correctly or remove it");
+
+            if (parseElement instanceof EffField effField) {
+                String fieldName = effField.fieldName;
+                if (newClass.fieldSignatures.putIfAbsent(fieldName, effField.signature) != null) {
+                    Skript.error("Field named '"+fieldName+"' already exists in this class");
+                    return false;
                 }
-            }
-        }
-        newClass.revalidateFields();
-        EntryValidator optionValidator = ClassOption.getValidator();
-
-        newClass.resetOptions();
-        boolean hasOptions = false;
-
-        // register methods & options
-        for (Node node : nodes) {
-            if (node.getKey() == null) continue;
-
-            if (node instanceof SectionNode sectionNode) {
-                if (node.getKey().equals("options")) {
-                    if (hasOptions) {
-                        Skript.error("Options section can only occur once");
-                    } else {
-                        ClassOption.setOptions(newClass, optionValidator.validate(sectionNode));
-                        hasOptions = true;
-                    }
-                    continue;
-                }
-                Section section = Section.parse(node.getKey(), "Invalid method pattern", sectionNode, null);
-
-                if (section instanceof SecMethod secMethod) {
-                    secMethod.contextClass = newClass;
-                    secMethod.registerMethod();
+            } else if (parseElement instanceof SecMethod secMethod) {
+                if (secMethod.registerMethod(newClass, node)) {
                     methodSections.add(secMethod);
+                } else {
+                    Skript.error("Method with that signature already exists in this class");
+                    return false;
                 }
+            } else {
+                return false;
             }
         }
+
+        newClass.revalidateFields();
+
         ClassManager.checkAwaitingParent(newClass);
+        newClass.accessible = true;
         return true;
     }
 
@@ -165,19 +172,14 @@ public class StructClass extends Structure {
     }
 
     private boolean classAlreadyExists() {
-        boolean exists = false;
-
-        for (Structure structure : getParser().getCurrentScript().getStructures()) {
-            if (structure instanceof StructClass structClass) {
-                if (structClass == this) continue;
-                if (!structClass.name.equals(name)) continue;
-                exists = true;
-            }
+        Script currentScript = getParser().getCurrentScript();
+        for (Structure structure : currentScript.getStructures()) {
+            if (structure instanceof StructClass structClass)
+                if (structClass != this && structClass.name.equals(name))
+                    return true;
         }
-        if (ClassManager.classExists(name)) {
-            if (ClassManager.getClass(name).getValidScript() == getParser().getCurrentScript()) exists = true;
-        }
-        return exists;
+        SkriptClass skriptClass = ClassManager.getClass(name);
+        return skriptClass != null && skriptClass.getValidScript() == currentScript;
     }
 
     public String getName() {

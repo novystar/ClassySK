@@ -6,20 +6,16 @@ import ch.njol.skript.doc.Name;
 import ch.njol.skript.doc.Since;
 import ch.njol.skript.lang.*;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
-import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.util.ClassInfoReference;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.AccessModifiable.AccessType;
-import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.util.StringUtils;
 import com.novystxr.classysk.api.util.ExprUtils;
-import com.novystxr.classysk.main.elements.classes.StructClass;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.SyntaxInfo;
-import org.skriptlang.skript.registration.SyntaxRegistry;
 
 import static com.novystxr.classysk.api.AccessModifiable.AccessType.PRIVATE;
 import static com.novystxr.classysk.api.AccessModifiable.AccessType.PUBLIC;
@@ -31,31 +27,19 @@ import static com.novystxr.classysk.api.AccessModifiable.AccessType.PUBLIC;
 })
 @Since("1.0.0")
 public class EffField extends Effect {
-    public static void register(SyntaxRegistry registry) {
-        registry.register(
-            SyntaxRegistry.EFFECT,
-            SyntaxInfo.builder(EffField.class)
-                .addPattern("(public|:private) [:static] <"+ Classysk.NAME_PATTERN +">\\: %*classinfo% [= %-objects%]")
-                .supplier(EffField::new)
-                .build()
-        );
-    }
 
-    String fieldName;
-    private FieldSignature signature;
+    public static SyntaxInfo<EffField> syntaxInfo = SyntaxInfo.builder(EffField.class)
+        .addPattern("(public|:private) [:static] <"+ Classysk.NAME_PATTERN +">\\: %*classinfo% [= %-objects%]")
+        .supplier(EffField::new)
+        .build();
+
+
+    public String fieldName;
+    public FieldSignature signature;
 
     @SuppressWarnings("unchecked")
     @Override
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result) {
-
-        ParserInstance parserInstance = getParser();
-        if (!parserInstance.isActive()) return false;
-
-        if (!(parserInstance.getCurrentStructure() instanceof StructClass)) {
-            Skript.error("Field definition can only be used within a class structure.");
-            return false;
-        }
-
         fieldName = StringUtils.getLowerCase(result.regexes.getFirst());
 
         AccessType accessType = result.hasTag("private") ? PRIVATE : PUBLIC;
@@ -81,13 +65,6 @@ public class EffField extends Effect {
         }
         signature = new FieldSignature(fieldName, type, defaultExpr, accessType, isStatic, isPlural);
         return true;
-    }
-
-    public void registerField(SkriptClass skriptClass) {
-        var result = skriptClass.fieldSignatures.putIfAbsent(fieldName, signature);
-        if (result != null) {
-            Skript.error("Field named '"+fieldName+"' already exists in this class");
-        }
     }
 
     @Override

@@ -39,16 +39,21 @@ public class SkriptClass extends ClassInstance {
         this.script = script;
     }
 
+    /**
+     * Helper method that resets the class back to a pre-registration state
+     */
+    public void initForRegistration() {
+        options = ClassOption.getDefaults();
+        methodRegistry.init();
+        fieldSignatures.clear();
+    }
+
     public void setOption(ClassOption option, boolean value) {
         options.put(option, value);
     }
 
     public boolean option(ClassOption option) {
         return options.get(option);
-    }
-
-    public void resetOptions() {
-        options = ClassOption.getDefaults();
     }
 
     public SkriptClassWrapper getWrapper() {
@@ -69,7 +74,7 @@ public class SkriptClass extends ClassInstance {
             return script;
         }
         File file = script.getConfig().getFile();
-        if (file == null) return null;
+        if (file == null || !file.isFile()) return null;
 
         Script newScript = ScriptLoader.getScript(file);
         if (newScript == null) return null;

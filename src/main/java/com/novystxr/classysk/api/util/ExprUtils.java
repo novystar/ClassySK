@@ -5,6 +5,7 @@ import ch.njol.skript.classes.Changer.ChangeMode;
 import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.Literal;
+import ch.njol.skript.lang.SyntaxElement;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.util.ClassInfoReference;
 import org.skriptlang.skript.lang.arithmetic.Arithmetics;
@@ -12,6 +13,7 @@ import org.skriptlang.skript.lang.arithmetic.Operator;
 import org.skriptlang.skript.lang.comparator.Comparators;
 import org.skriptlang.skript.lang.comparator.Relation;
 import org.skriptlang.skript.lang.converter.Converters;
+import org.skriptlang.skript.registration.SyntaxInfo;
 
 import java.lang.reflect.Array;
 import java.util.*;
@@ -29,6 +31,14 @@ public class ExprUtils {
         var classInfoLit = (Literal<ClassInfo<?>>) expr;
         var ref = ((Literal<ClassInfoReference>) ClassInfoReference.wrap(classInfoLit));
         return ref.getSingle();
+    }
+
+    /**
+     * @see ch.njol.skript.lang.SkriptParser#parse(String, Iterator, String)
+     */
+    @SuppressWarnings("unchecked")
+    public static <T extends SyntaxElement> Iterator<SyntaxInfo<T>> syntaxIterator(SyntaxInfo<?>... infos) {
+        return (Iterator<SyntaxInfo<T>>) (Iterator<?>) List.of(infos).iterator();
     }
 
     /**
