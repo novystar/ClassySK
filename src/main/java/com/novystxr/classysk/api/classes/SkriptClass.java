@@ -106,7 +106,7 @@ public class SkriptClass extends ClassInstance {
             return script;
         }
         File file = script.getConfig().getFile();
-        if (file == null) return null;
+        if (file == null || !file.isFile()) return null;
 
         Script newScript = ScriptLoader.getScript(file);
         if (newScript == null) return null;
