@@ -74,8 +74,11 @@ public class StructClass extends Structure {
                 @Override
                 protected @Nullable SkriptClass getValue(String value) {
                     if (CLASS_NAME.matcher(value).matches()) {
-                        Skript.error("Class named '%s' does not exist", value);
-                        return ClassManager.getClass(value);
+                        SkriptClass result = ClassManager.getClass(StringUtils.getLowerCase(value));
+                        if (result == null) {
+                            Skript.error("Class named '%s' does not exist", value);
+                        }
+                        return result;
                     }
                     Skript.error("Invalid class name pattern");
                     return null;
@@ -102,6 +105,8 @@ public class StructClass extends Structure {
     private EntryContainer entryContainer;
     private String name;
 
+    private SkriptClass newClass;
+
     @Override
     public boolean init(Literal<?>[] args, int pattern, ParseResult result, @UnknownNullability EntryContainer entryContainer) {
         this.entryContainer = entryContainer;
@@ -115,7 +120,7 @@ public class StructClass extends Structure {
 
     @Override
     public boolean preLoad() {
-        SkriptClass newClass = ClassManager.getClass(name);
+        newClass = ClassManager.getClass(name);
 
         if (newClass != null && newClass.validateStructure()) {
             newClass.initForRegistration();
@@ -123,7 +128,6 @@ public class StructClass extends Structure {
             newClass = new SkriptClass(name, getParser().getCurrentScript());
             ClassManager.createClass(name, newClass);
         }
-        newClass.extendsClass = entryContainer.getOptional("extends", SkriptClass.class, true);
         SectionNode optionNode = entryContainer.getOptional("options", SectionNode.class, true);
         if (optionNode != null) {
             EntryContainer optionsContainer = optionValidator.validate(optionNode);
@@ -172,6 +176,8 @@ public class StructClass extends Structure {
 
     @Override
     public boolean load() {
+        newClass.extendsClass = entryContainer.getOptional("extends", SkriptClass.class, true);
+
         // load method triggers after initial registration so it will always know about other methods within a class
         for (SecMethod secMethod : methodSections) {
             secMethod.loadTrigger();
