@@ -35,10 +35,10 @@ public class ParserUtils {
             .filter(info -> {
                 Class<?> type = info.type();
                 for (Class<?> filterClass : filterAs) {
-                    if (!filterClass.isAssignableFrom(type))
-                        return false;
+                    if (filterClass.isAssignableFrom(type))
+                        return true;
                 }
-                return true;
+                return filterAs.length == 0;
             })
             .iterator();
     }
