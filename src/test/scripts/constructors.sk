@@ -26,36 +26,6 @@ class TestConstruct:
 
 		return false
 
-class TestConstructPrivate:
-	options:
-		private access on create: true
-
-	public int: integer
-	public intDefault: integer = 1
-	private intPrivate: integer
-
-	public str: string
-	private strPrivate: string
-
-	public checkPrivate() :: boolean:
-		if self::intPrivate is 3:
-			self::strPrivate is "testPrivate"
-			return true
-
-		return false
-
-class TestExternalCreation:
-	options:
-		external creation: false
-
-	public bool: boolean
-
-	public static create() :: class instance:
-		set {_instance} to new instance of TestExternalCreation:
-			bool: true
-
-		return {_instance}
-
 
 test "ClassySK - Constructors":
 	set {_test} to new instance of TestConstruct
@@ -89,32 +59,7 @@ test "ClassySK - Constructors":
 	assert {_instance}::str is "test"
 	assert {_instance}::checkPrivate() is true
 
-	set {_instance} to new instance of TestConstructPrivate:
-		int: 1
-		intDefault: 2
-		intPrivate: 3
-
-		str: "test"
-		strPrivate: "testPrivate"
-
-	assert {_instance} is an instance of TestConstructPrivate
-
-	assert {_instance}::int is 1
-	assert {_instance}::intDefault is 2
-
-	assert {_instance}::str is "test"
-
-	assert {_instance}::checkPrivate() is true
-
 	parse:
 		set {_instance} to new instance of TestConstruct:
 			staticField: true
 	assert last parse logs is set with "Attempt to set static field in constructor"
-
-	parse:
-		set {_instance} to new instance of TestExternalCreation
-	assert last parse logs is set with "Attempt to create class that can't be created externally outside of class"
-
-	set {_instance} to TestExternalCreation::create()
-	assert {_instance} is an instance of TestExternalCreation
-	assert {_instance}::bool is true

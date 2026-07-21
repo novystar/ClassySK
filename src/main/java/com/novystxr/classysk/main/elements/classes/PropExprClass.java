@@ -5,7 +5,6 @@ import ch.njol.skript.expressions.base.SimplePropertyExpression;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.SkriptClassWrapper;
 import org.jspecify.annotations.Nullable;
-import org.skriptlang.skript.registration.SyntaxInfo;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
 @Name("Class of instance")
@@ -21,7 +20,6 @@ public class PropExprClass extends SimplePropertyExpression<ClassInstance, Skrip
             infoBuilder(PropExprClass.class, SkriptClassWrapper.class,
                 "[skript|wrapper] class", "classinstance", true)
                 .supplier(PropExprClass::new)
-                .priority(SyntaxInfo.COMBINED)
                 .build()
         );
     }

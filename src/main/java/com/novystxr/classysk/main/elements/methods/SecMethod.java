@@ -1,6 +1,5 @@
 package com.novystxr.classysk.main.elements.methods;
 
-import ch.njol.skript.config.Node;
 import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.doc.*;
 import ch.njol.skript.lang.*;
@@ -21,6 +20,7 @@ import com.novystxr.classysk.api.util.ExprUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.SyntaxInfo;
+import org.skriptlang.skript.registration.SyntaxRegistry;
 
 import java.util.*;
 
@@ -54,12 +54,16 @@ import java.util.*;
 @Since("1.0.0")
 public class SecMethod extends Section implements ReturnHandler<Object> {
 
-    public static SyntaxInfo<SecMethod> syntaxInfo = SyntaxInfo.builder(SecMethod.class)
-        .addPattern("(public|:private) [:static] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [(\\:\\:|returns) %-*classinfo%]")
+    public static void register(SyntaxRegistry registry) {
+        registry.register(SyntaxRegistry.SECTION, INFO);
+    }
+
+    public static SyntaxInfo<SecMethod> INFO = SyntaxInfo.builder(SecMethod.class)
+        .addPattern("(public|:private) [:static] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [(\\:\\:|returns|->) %-*classinfo%]")
         .supplier(SecMethod::new)
         .build();
 
-    private SectionNode sectionNode = null;
+    private SectionNode sectionNode;
     public MethodSignature signature;
 
     private SkriptMethod skriptMethod;
@@ -93,16 +97,14 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
         boolean isStatic = result.hasTag("static");
 
         this.signature = new MethodSignature(methodName, args, accessType, isStatic, returnType, returnPlural);
+        this.sectionNode = sectionNode;
         return true;
     }
 
-    public boolean registerMethod(SkriptClass contextClass, Node node) {
+    public boolean registerMethod(SkriptClass contextClass) {
         this.contextClass = contextClass;
         skriptMethod = new SkriptMethod(signature);
 
-        if (node instanceof SectionNode secNode) {
-            sectionNode = secNode;
-        }
         return contextClass.methodRegistry.registerMethod(skriptMethod);
     }
 

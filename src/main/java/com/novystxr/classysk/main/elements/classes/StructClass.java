@@ -2,27 +2,21 @@ package com.novystxr.classysk.main.elements.classes;
 
 import ch.njol.skript.Skript;
 import ch.njol.skript.config.Node;
-import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.doc.Description;
 import ch.njol.skript.doc.Examples;
 import ch.njol.skript.doc.Name;
 import ch.njol.skript.doc.Since;
 import ch.njol.skript.lang.*;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
-import ch.njol.skript.log.SkriptLogger;
-import com.novystxr.classysk.api.classes.ClassOption;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassManager;
-import com.novystxr.classysk.api.util.ExprUtils;
+import com.novystxr.classysk.api.util.ParserUtils;
 import com.novystxr.classysk.api.util.StringUtils;
 import com.novystxr.classysk.main.elements.fields.EffField;
 import com.novystxr.classysk.main.elements.methods.SecMethod;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.UnknownNullability;
-import org.jspecify.annotations.Nullable;
 import org.skriptlang.skript.lang.entry.EntryContainer;
-import org.skriptlang.skript.lang.entry.EntryValidator;
-import org.skriptlang.skript.lang.entry.KeyValueEntryData;
 import org.skriptlang.skript.lang.script.Script;
 import org.skriptlang.skript.lang.structure.Structure;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos.Structure.NodeType;
@@ -30,19 +24,11 @@ import org.skriptlang.skript.registration.SyntaxInfo;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
 import java.util.*;
-import java.util.regex.Pattern;
 
 import static com.novystxr.classysk.Classysk.CLASSNAME_PATTERN;
 
 @Name("Class")
-@Description({
-    "Creates a class, see the [**Official Wiki**](https://github.com/novystar/ClassySK/wiki/Tutorials%3A-Classes-%26-Fields) for more detail",
-    "",
-    "`Options` - Optional section which is used to set certain rules about how your class should be used.",
-    "- `external creation (true)` - Instances can be created from outside of the class",
-    "- `strict signature enforcement (false)` - Invalid fields will be aggressively removed from all existing instances when it's structure is updated",
-    "- `private access on create (false)` - Private fields can be set within constructors from outside the class"
-})
+@Description("Creates a class with the specified fields and methods, see the [**Official Wiki**](https://github.com/novystar/ClassySK/wiki/Tutorials%3A-Classes-%26-Fields) for more detail")
 @Examples("""
     class PlayerStats:
     \tpublic kills: integer
@@ -64,48 +50,21 @@ import static com.novystxr.classysk.Classysk.CLASSNAME_PATTERN;
 @Since("1.0.0")
 public class StructClass extends Structure {
 
-    private static final Pattern CLASS_NAME = Pattern.compile(CLASSNAME_PATTERN);
-    private static final Pattern DEF_NODE = Pattern.compile("(?:public|private)(?:static)?.*");
-
     public static void register(SyntaxRegistry registry) {
-        EntryValidator validator = EntryValidator.builder()
-            .addSection("options", true)
-            .addEntryData(new KeyValueEntryData<SkriptClass>("extends", null, true) {
-                @Override
-                protected @Nullable SkriptClass getValue(String value) {
-                    if (CLASS_NAME.matcher(value).matches()) {
-                        SkriptClass result = ClassManager.getClass(StringUtils.getLowerCase(value));
-                        if (result == null) {
-                            Skript.error("Class named '%s' does not exist", value);
-                        }
-                        return result;
-                    }
-                    Skript.error("Invalid class name pattern");
-                    return null;
-                }
-            })
-            .unexpectedNodeTester(node ->
-                node.getKey() == null || !DEF_NODE.matcher(node.getKey()).matches())
-            .build();
-
         registry.register(
             SyntaxRegistry.STRUCTURE,
             SyntaxInfo.Structure.builder(StructClass.class)
                 .addPattern("class <"+ CLASSNAME_PATTERN +">")
-                .entryValidator(validator)
                 .nodeType(NodeType.BOTH)
                 .supplier(StructClass::new)
                 .build()
         );
     }
 
-    private static final EntryValidator optionValidator = ClassOption.getValidator();
     private final List<SecMethod> methodSections = new ArrayList<>();
 
     private EntryContainer entryContainer;
     private String name;
-
-    private SkriptClass newClass;
 
     @Override
     public boolean init(Literal<?>[] args, int pattern, ParseResult result, @UnknownNullability EntryContainer entryContainer) {
@@ -120,43 +79,26 @@ public class StructClass extends Structure {
 
     @Override
     public boolean preLoad() {
-        newClass = ClassManager.getClass(name);
+        SkriptClass newClass = ClassManager.getClass(name);
 
         if (newClass != null && newClass.validateStructure()) {
-            newClass.initForRegistration();
+            newClass.methodRegistry.init();
+            newClass.fieldSignatures.clear();
         } else {
             newClass = new SkriptClass(name, getParser().getCurrentScript());
             ClassManager.createClass(name, newClass);
         }
-        SectionNode optionNode = entryContainer.getOptional("options", SectionNode.class, true);
-        if (optionNode != null) {
-            EntryContainer optionsContainer = optionValidator.validate(optionNode);
-            if (optionsContainer == null) return false;
-
-            for (ClassOption option : ClassOption.values()) {
-                boolean value = optionsContainer.get(option.pattern, Boolean.class, true);
-                if (value == option.defaultValue) continue;
-
-                newClass.setOption(option, value);
-            }
-        }
         for (Node node : entryContainer.getUnhandledNodes()) {
-            SkriptLogger.setNode(node);
+            var element = ParserUtils.parseNodeAsInfos(node, "Could not recognize entry: "+node.getKey(), EffField.INFO, SecMethod.INFO);
 
-            String key = node.getKey();
-            if (key == null) continue;
-
-            var source = ExprUtils.syntaxIterator(EffField.syntaxInfo, SecMethod.syntaxInfo);
-            SyntaxElement parseElement = SkriptParser.parse(key, source, "Unexpected entry " + key + "'. Check whether it's spelled correctly or remove it");
-
-            if (parseElement instanceof EffField effField) {
+            if (element instanceof EffField effField) {
                 String fieldName = effField.fieldName;
                 if (newClass.fieldSignatures.putIfAbsent(fieldName, effField.signature) != null) {
                     Skript.error("Field named '"+fieldName+"' already exists in this class");
                     return false;
                 }
-            } else if (parseElement instanceof SecMethod secMethod) {
-                if (secMethod.registerMethod(newClass, node)) {
+            } else if (element instanceof SecMethod secMethod) {
+                if (secMethod.registerMethod(newClass)) {
                     methodSections.add(secMethod);
                 } else {
                     Skript.error("Method with that signature already exists in this class");
@@ -166,18 +108,15 @@ public class StructClass extends Structure {
                 return false;
             }
         }
-
         newClass.revalidateFields();
-
         ClassManager.checkAwaitingParent(newClass);
+
         newClass.accessible = true;
         return true;
     }
 
     @Override
     public boolean load() {
-        newClass.extendsClass = entryContainer.getOptional("extends", SkriptClass.class, true);
-
         // load method triggers after initial registration so it will always know about other methods within a class
         for (SecMethod secMethod : methodSections) {
             secMethod.loadTrigger();

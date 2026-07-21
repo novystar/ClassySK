@@ -30,11 +30,6 @@ public class ClassManager {
                     String fieldName = entry.getKey();
                     SerializableField sField = entry.getValue();
 
-                    if (instance.getParent().option(ClassOption.STRICT_SIGNATURE_ENFORCEMENT)) {
-                        instance.setFieldValue(fieldName, sField.value);
-                        continue;
-                    }
-
                     FieldSignature targetSignature = instance.getFieldSignature(fieldName);
                     SkriptField createdField;
 

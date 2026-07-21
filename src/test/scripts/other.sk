@@ -1,0 +1,11 @@
+test "ClassySK - Should not be registered":
+	parse:
+		public myMethod():
+			broadcast 1
+
+	assert last parse logs is set
+
+	parse:
+		public myField: integer = 1
+
+	assert last parse logs is set

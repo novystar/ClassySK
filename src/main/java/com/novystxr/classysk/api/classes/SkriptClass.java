@@ -42,30 +42,6 @@ public class SkriptClass extends ClassInstance {
         this.script = script;
     }
 
-    /**
-     *
-     * Helper method that resets the class back to a pre-registration state
-     *
-     */
-    public void initForRegistration() {
-        options = ClassOption.getDefaults();
-        methodRegistry.init();
-        fieldSignatures.clear();
-    }
-
-    public void setOption(ClassOption option, boolean value) {
-        options.put(option, value);
-    }
-
-    /**
-     *
-     * @param option What option key to check for
-     * @return The boolean value of the specified option
-     */
-    public boolean option(ClassOption option) {
-        return options.get(option);
-    }
-
     public SkriptClassWrapper getWrapper() {
         if (wrapper == null) {
             wrapper = new SkriptClassWrapper(this);
@@ -197,23 +173,17 @@ public class SkriptClass extends ClassInstance {
             ClassInstance instance = reference.get();
             if (instance == null) return true;
 
-            boolean strictSignatureEnforcement =
-                    instance.getParent().option(ClassOption.STRICT_SIGNATURE_ENFORCEMENT);
-
             for (SkriptField field : instance.fieldMap.values()) {
                 String fieldName = field.signature.name();
                 FieldSignature signature = getFieldSignature(fieldName);
 
                 // if signature no longer exists or static context changed, ignore and use existing signature
                 if (signature == null || signature.isStatic() != field.signature.isStatic()) {
-                    if (strictSignatureEnforcement) instance.removeField(fieldName);
                     continue;
                 }
                 // attempt to convert to new signature
                 if (signature.canConvert(field.value)) {
                     field.signature = signature;
-                } else if (strictSignatureEnforcement) {
-                    instance.removeField(fieldName);
                 }
             }
             return false;
