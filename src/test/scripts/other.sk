@@ -1,0 +1,2 @@
+test "ClassySK - Internal":
+	assert {-failedTest} is not set

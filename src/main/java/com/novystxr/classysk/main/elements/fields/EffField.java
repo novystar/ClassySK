@@ -1,9 +1,6 @@
 package com.novystxr.classysk.main.elements.fields;
 
 import ch.njol.skript.Skript;
-import ch.njol.skript.doc.Description;
-import ch.njol.skript.doc.Name;
-import ch.njol.skript.doc.Since;
 import ch.njol.skript.lang.*;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.util.ClassInfoReference;
@@ -16,19 +13,18 @@ import com.novystxr.classysk.api.util.ExprUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.SyntaxInfo;
+import org.skriptlang.skript.registration.SyntaxRegistry;
 
 import static com.novystxr.classysk.api.AccessModifiable.AccessType.PRIVATE;
 import static com.novystxr.classysk.api.AccessModifiable.AccessType.PUBLIC;
 
-@Name("Field")
-@Description({
-    "Fields hold data of a specified type relating to a class. They can have default values",
-    "See the [**Official Wiki**](https://github.com/novystar/ClassySK/wiki/Tutorials%3A-Classes-%26-Fields) for more information."
-})
-@Since("1.0.0")
 public class EffField extends Effect {
 
-    public static SyntaxInfo<?> INFO = SyntaxInfo.builder(EffField.class)
+    public static void register(SyntaxRegistry registry) {
+        registry.register(SyntaxRegistry.EFFECT, INFO);
+    }
+
+    public static SyntaxInfo<EffField> INFO = SyntaxInfo.builder(EffField.class)
         .addPattern("(public|:private) [:static] <"+ Classysk.NAME_PATTERN +">\\: %*classinfo% [= %-objects%]")
         .supplier(EffField::new)
         .build();

@@ -20,6 +20,7 @@ import com.novystxr.classysk.api.util.ExprUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.SyntaxInfo;
+import org.skriptlang.skript.registration.SyntaxRegistry;
 
 import java.util.*;
 
@@ -53,7 +54,11 @@ import java.util.*;
 @Since("1.0.0")
 public class SecMethod extends Section implements ReturnHandler<Object> {
 
-    public static SyntaxInfo<?> INFO = SyntaxInfo.builder(SecMethod.class)
+    public static void register(SyntaxRegistry registry) {
+        registry.register(SyntaxRegistry.SECTION, INFO);
+    }
+
+    public static SyntaxInfo<SecMethod> INFO = SyntaxInfo.builder(SecMethod.class)
         .addPattern("(public|:private) [:static] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [(\\:\\:|returns|->) %-*classinfo%]")
         .supplier(SecMethod::new)
         .build();
