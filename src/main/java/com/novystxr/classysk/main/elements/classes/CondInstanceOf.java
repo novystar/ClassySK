@@ -9,7 +9,6 @@ import ch.njol.skript.lang.Condition;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.util.Kleenean;
-import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.ClassInstance;
@@ -18,6 +17,8 @@ import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.SyntaxInfo;
 import org.skriptlang.skript.registration.SyntaxRegistry;
+
+import static com.novystxr.classysk.Classysk.CLASSNAME_PATTERN;
 
 @Name("Instance Of")
 @Description("Used to check if a class instance belongs to a specified class")
@@ -29,7 +30,10 @@ public class CondInstanceOf extends Condition {
         registry.register(
             SyntaxRegistry.CONDITION,
             SyntaxInfo.builder(CondInstanceOf.class)
-                .addPattern("%classinstance% is[negated:(n[']t| not)] a[n] instance of <"+ Classysk.CLASSNAME_PATTERN +">")
+                .addPattern("%classinstance% is [a[n]] instance of <"+ CLASSNAME_PATTERN +">")
+                .addPattern("%classinstance% (isn't|is not) [a[n]] instance of <"+ CLASSNAME_PATTERN +">")
+                .addPattern("%classinstance% belongs to <"+ CLASSNAME_PATTERN+">")
+                .addPattern("%classinstance% (doesn't|does not) belong to <"+ CLASSNAME_PATTERN+">")
                 .supplier(CondInstanceOf::new)
                 .build()
         );
@@ -40,11 +44,11 @@ public class CondInstanceOf extends Condition {
 
     @Override
     @SuppressWarnings("unchecked")
-    public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
-        instanceExpr = (Expression<ClassInstance>) expressions[0];
-        setNegated(parseResult.hasTag("negated"));
+    public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result) {
+        instanceExpr = (Expression<ClassInstance>) exprs[0];
+        setNegated(pattern == 1 || pattern == 3);
 
-        String name = StringUtils.getLowerCase(parseResult.regexes.getFirst());
+        String name = StringUtils.getLowerCase(result.regexes.getFirst());
         targetClass = ClassManager.getClass(name);
 
         if (targetClass == null) {
@@ -59,12 +63,8 @@ public class CondInstanceOf extends Condition {
         ClassInstance instance = instanceExpr.getSingle(event);
         if (instance == null) return false;
 
-        return negate(instance.getParent() == targetClass);
-    }
-
-    private boolean negate(boolean condition) {
-        if (isNegated()) return !condition;
-        return condition;
+        boolean isInstanceOf = instance.getParent() == targetClass;
+        return isNegated() != isInstanceOf;
     }
 
     @Override

@@ -54,7 +54,7 @@ import java.util.*;
 public class SecMethod extends Section implements ReturnHandler<Object> {
 
     public static SyntaxInfo<?> INFO = SyntaxInfo.builder(SecMethod.class)
-        .addPattern("(public|:private) [:static] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [(\\:\\:|returns) %-*classinfo%]")
+        .addPattern("(public|:private) [:static] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [(\\:\\:|returns|->) %-*classinfo%]")
         .supplier(SecMethod::new)
         .build();
 
