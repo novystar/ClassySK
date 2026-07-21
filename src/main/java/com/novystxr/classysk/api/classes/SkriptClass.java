@@ -21,7 +21,6 @@ import org.skriptlang.skript.lang.structure.Structure;
  * The single non-instance version of a class
  */
 public class SkriptClass extends ClassInstance {
-    public Map<ClassOption, Boolean> options = ClassOption.getDefaults();
 
     public final MethodRegistry methodRegistry = new MethodRegistry();
     public final Map<String, FieldSignature> fieldSignatures = new HashMap<>();
