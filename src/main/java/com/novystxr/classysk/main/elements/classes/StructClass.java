@@ -121,7 +121,7 @@ public class StructClass extends Structure {
             }
         }
         for (Node node : entryContainer.getUnhandledNodes()) {
-            var element = ParserUtils.parseNodeAsInfos(node, "Could not recognise class entry", EffField.INFO, SecMethod.INFO);
+            var element = ParserUtils.parseNodeAsInfos(node, "Could not recognize syntax entry: "+node.getKey(), EffField.INFO, SecMethod.INFO);
 
             if (element instanceof EffField effField) {
                 String fieldName = effField.fieldName;
