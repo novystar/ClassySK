@@ -20,7 +20,6 @@ import org.skriptlang.skript.lang.structure.Structure;
  * The single non-instance version of a class
  */
 public class SkriptClass extends ClassInstance {
-    public Map<ClassOption, Boolean> options = ClassOption.getDefaults();
 
     public final MethodRegistry methodRegistry = new MethodRegistry();
     public final Map<String, FieldSignature> fieldSignatures = new HashMap<>();
@@ -37,23 +36,6 @@ public class SkriptClass extends ClassInstance {
     public SkriptClass(String name, Script script) {
         super(name);
         this.script = script;
-    }
-
-    /**
-     * Helper method that resets the class back to a pre-registration state
-     */
-    public void initForRegistration() {
-        options = ClassOption.getDefaults();
-        methodRegistry.init();
-        fieldSignatures.clear();
-    }
-
-    public void setOption(ClassOption option, boolean value) {
-        options.put(option, value);
-    }
-
-    public boolean option(ClassOption option) {
-        return options.get(option);
     }
 
     public SkriptClassWrapper getWrapper() {
@@ -165,23 +147,17 @@ public class SkriptClass extends ClassInstance {
             ClassInstance instance = reference.get();
             if (instance == null) return true;
 
-            boolean strictSignatureEnforcement =
-                    instance.getParent().option(ClassOption.STRICT_SIGNATURE_ENFORCEMENT);
-
             for (SkriptField field : instance.fieldMap.values()) {
                 String fieldName = field.signature.name();
                 FieldSignature signature = fieldSignatures.get(fieldName);
 
                 // if signature no longer exists or static context changed, ignore and use existing signature
                 if (signature == null || signature.isStatic() != field.signature.isStatic()) {
-                    if (strictSignatureEnforcement) instance.removeField(fieldName);
                     continue;
                 }
                 // attempt to convert to new signature
                 if (signature.canConvert(field.value)) {
                     field.signature = signature;
-                } else if (strictSignatureEnforcement) {
-                    instance.removeField(fieldName);
                 }
             }
             return false;

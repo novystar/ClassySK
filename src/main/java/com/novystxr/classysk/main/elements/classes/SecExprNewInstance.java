@@ -11,7 +11,6 @@ import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.util.LiteralUtils;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
-import com.novystxr.classysk.api.classes.ClassOption;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.ClassInstance;
@@ -67,13 +66,7 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
         skriptClass = ClassManager.getClass(name);
         boolean inParent = SkriptMethod.getContextClass(getParser()) == skriptClass;
 
-        if (!inParent && !skriptClass.option(ClassOption.EXTERNAL_CREATION)) {
-            Skript.error("External creation is not permitted for this class");
-            return false;
-        }
         if (sectionNode == null) return true;
-
-        boolean allowPrivate = inParent || skriptClass.option(ClassOption.PRIVATE_ACCESS_ON_CREATE);
 
         for (Node node : sectionNode) {
             String key = node.getKey();
@@ -97,8 +90,8 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
                     Skript.error("Static field cannot be set on an instance");
                     return false;
                 }
-                if (signature.accessType().isPrivate() && !allowPrivate) {
-                    Skript.error("This class does not permit private access in constructors");
+                if (signature.accessType().isPrivate() && !inParent) {
+                    Skript.error("Private fields can't be accessed here");
                     return false;
                 }
                 Expression<?> valueExpr = LiteralUtils.defendExpression(new SkriptParser(unparsedValue, SkriptParser.ALL_FLAGS, ParseContext.DEFAULT).parseExpression(signature.type()));
