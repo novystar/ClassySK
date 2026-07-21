@@ -33,10 +33,10 @@ public class StringUtils {
 
     public static String getLowerCase(String value) {
         if (value == null) return null;
-        if (SkriptConfig.caseInsensitiveVariables.value()) {
-            return value.trim().toLowerCase(Locale.ENGLISH);
+        if (SkriptConfig.caseSensitive.value()) {
+            return value.trim();
         }
-        return value.trim();
+        return value.trim().toLowerCase(Locale.ENGLISH);
     }
 
     public static String getLowerCase(MatchResult matchResult) {
