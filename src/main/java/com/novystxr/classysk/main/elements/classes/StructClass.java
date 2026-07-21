@@ -9,11 +9,10 @@ import ch.njol.skript.doc.Name;
 import ch.njol.skript.doc.Since;
 import ch.njol.skript.lang.*;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
-import ch.njol.skript.log.SkriptLogger;
 import com.novystxr.classysk.api.classes.ClassOption;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassManager;
-import com.novystxr.classysk.api.util.ExprUtils;
+import com.novystxr.classysk.api.util.ParserUtils;
 import com.novystxr.classysk.api.util.StringUtils;
 import com.novystxr.classysk.main.elements.fields.EffField;
 import com.novystxr.classysk.main.elements.methods.SecMethod;
@@ -122,22 +121,16 @@ public class StructClass extends Structure {
             }
         }
         for (Node node : entryContainer.getUnhandledNodes()) {
-            SkriptLogger.setNode(node);
+            var element = ParserUtils.parseNodeAsInfos(node, "Could not recognise class entry", EffField.INFO, SecMethod.INFO);
 
-            String key = node.getKey();
-            if (key == null) continue;
-
-            var source = ExprUtils.syntaxIterator(EffField.syntaxInfo, SecMethod.syntaxInfo);
-            SyntaxElement parseElement = SkriptParser.parse(key, source, "Unexpected entry " + key + "'. Check whether it's spelled correctly or remove it");
-
-            if (parseElement instanceof EffField effField) {
+            if (element instanceof EffField effField) {
                 String fieldName = effField.fieldName;
                 if (newClass.fieldSignatures.putIfAbsent(fieldName, effField.signature) != null) {
                     Skript.error("Field named '"+fieldName+"' already exists in this class");
                     return false;
                 }
-            } else if (parseElement instanceof SecMethod secMethod) {
-                if (secMethod.registerMethod(newClass, node)) {
+            } else if (element instanceof SecMethod secMethod) {
+                if (secMethod.registerMethod(newClass)) {
                     methodSections.add(secMethod);
                 } else {
                     Skript.error("Method with that signature already exists in this class");

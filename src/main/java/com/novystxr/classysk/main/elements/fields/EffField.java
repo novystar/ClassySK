@@ -28,7 +28,7 @@ import static com.novystxr.classysk.api.AccessModifiable.AccessType.PUBLIC;
 @Since("1.0.0")
 public class EffField extends Effect {
 
-    public static SyntaxInfo<EffField> syntaxInfo = SyntaxInfo.builder(EffField.class)
+    public static SyntaxInfo<?> INFO = SyntaxInfo.builder(EffField.class)
         .addPattern("(public|:private) [:static] <"+ Classysk.NAME_PATTERN +">\\: %*classinfo% [= %-objects%]")
         .supplier(EffField::new)
         .build();
