@@ -1,7 +1,5 @@
 package com.novystxr.classysk.main;
 
-import ch.njol.skript.Skript;
-import ch.njol.skript.variables.Variables;
 import com.novystxr.classysk.api.util.Logger;
 import com.novystxr.classysk.main.elements.*;
 import com.novystxr.classysk.main.elements.classes.*;
@@ -21,10 +19,6 @@ public class MainModule implements AddonModule {
             SecMethod::register,
             EffField::register
         );
-
-        if (Skript.testing()) {
-            Variables.setVariable("-failedTest", true, null, false);
-        }
         Logger.severe("Addon registered syntax that should not be registered in release builds");
     }
 
@@ -44,7 +38,7 @@ public class MainModule implements AddonModule {
             ExprClass::register
             );
 
-        onlyForDocs(addon);
+        //onlyForDocs(addon);
     }
 
     @Override
