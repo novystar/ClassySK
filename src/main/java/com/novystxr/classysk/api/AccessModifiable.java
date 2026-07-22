@@ -8,13 +8,7 @@ public interface AccessModifiable {
 
     enum AccessType {
         PUBLIC,
-        PRIVATE;
-
-        public boolean isPrivate() {
-            return this == AccessType.PRIVATE;
-        }
-        public boolean isPublic() {
-            return this == AccessType.PUBLIC;
-        }
+        PRIVATE,
+        PROTECTED
     }
 }
