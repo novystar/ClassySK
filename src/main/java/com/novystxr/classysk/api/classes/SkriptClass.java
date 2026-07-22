@@ -62,7 +62,7 @@ public class SkriptClass extends ClassInstance {
     }
 
     public boolean inherits(SkriptClass otherClass) {
-        return inheritanceStream().anyMatch(target -> target.extendsClass == otherClass);
+        return inheritanceStream().anyMatch(target -> target == otherClass);
     }
 
     public @Nullable Script getValidScript() {
