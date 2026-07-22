@@ -11,6 +11,7 @@ import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.util.LiteralUtils;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
+import com.novystxr.classysk.api.AccessModifiable.AccessType;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.ClassInstance;
@@ -90,7 +91,7 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
                     Skript.error("Static field cannot be set on an instance");
                     return false;
                 }
-                if (signature.accessType().isPrivate() && !inParent) {
+                if (signature.accessType() == AccessType.PRIVATE && !inParent) {
                     Skript.error("Private fields can't be accessed here");
                     return false;
                 }

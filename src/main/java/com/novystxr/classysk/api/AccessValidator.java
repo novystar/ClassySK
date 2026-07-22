@@ -126,13 +126,13 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
             error("Passed instance is null or non-accessible");
             return null;
         }
-        if (this.instance == newInstance) return newInstance;
-
-        if (hintClass != null && hintClass != newInstance.getParent()) {
-            error("Given instance does not match '"+ hintClass.getEffectiveName() +"'");
+        if (this.instance == newInstance) {
+            return newInstance;
+        }
+        if (hintClass != null && !newInstance.getParent().inherits(hintClass)) {
+            error("Given instance does not inherit '"+ hintClass.getEffectiveName() +"'");
             return null;
         }
-
         LogEntry error;
         try (var handler = new SimpleErrorHandler()) {
             if (validateInstance(newInstance)) {
