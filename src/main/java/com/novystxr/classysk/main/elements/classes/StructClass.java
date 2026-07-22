@@ -54,7 +54,7 @@ public class StructClass extends Structure {
         registry.register(
             SyntaxRegistry.STRUCTURE,
             SyntaxInfo.Structure.builder(StructClass.class)
-                .addPattern("class <"+ CLASSNAME_PATTERN +">")
+                .addPattern("class <"+ CLASSNAME_PATTERN +"> [:extends <"+CLASSNAME_PATTERN+">]")
                 .nodeType(NodeType.BOTH)
                 .supplier(StructClass::new)
                 .build()
@@ -62,24 +62,29 @@ public class StructClass extends Structure {
     }
 
     private final List<SecMethod> methodSections = new ArrayList<>();
-
     private EntryContainer entryContainer;
+    private SkriptClass newClass;
+
     private String name;
+    private String extendsName;
 
     @Override
     public boolean init(Literal<?>[] args, int pattern, ParseResult result, @UnknownNullability EntryContainer entryContainer) {
         this.entryContainer = entryContainer;
-        name = StringUtils.getLowerCase(result.regexes.getFirst());
+        name = StringUtils.getLowerCase(result.regexes.get(0));
         if (classAlreadyExists()) {
             Skript.error("A class structure named '%s' already exists in a script", name);
             return false;
+        }
+        if (result.hasTag("extends")) {
+            extendsName = StringUtils.getLowerCase(result.regexes.get(1));
         }
         return true;
     }
 
     @Override
     public boolean preLoad() {
-        SkriptClass newClass = ClassManager.getClass(name);
+        newClass = ClassManager.getClass(name);
 
         if (newClass != null && newClass.validateStructure()) {
             newClass.methodRegistry.init();
@@ -110,13 +115,26 @@ public class StructClass extends Structure {
         }
         newClass.revalidateFields();
         ClassManager.checkAwaitingParent(newClass);
-
         newClass.accessible = true;
         return true;
     }
 
     @Override
     public boolean load() {
+        SkriptClass extendsClass = null;
+        if (extendsName != null) {
+            extendsClass = ClassManager.getClass(extendsName);
+            if (extendsClass == null) {
+                Skript.error("Class named '%s' does not exist", StringUtils.titleCase(extendsName));
+                return false;
+            }
+            else if (extendsClass == newClass) {
+                Skript.error("A class cannot extend itself");
+                return false;
+            }
+        }
+        newClass.extendsClass = extendsClass;
+
         // load method triggers after initial registration so it will always know about other methods within a class
         for (SecMethod secMethod : methodSections) {
             secMethod.loadTrigger();
