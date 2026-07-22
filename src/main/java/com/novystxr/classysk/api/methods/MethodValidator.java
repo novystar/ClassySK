@@ -3,6 +3,7 @@ package com.novystxr.classysk.api.methods;
 import ch.njol.skript.Skript;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.registrations.Classes;
+import com.novystxr.classysk.api.AccessModifiable.AccessType;
 import com.novystxr.classysk.api.AccessValidator;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.SkriptClass;
@@ -35,8 +36,7 @@ public class MethodValidator extends AccessValidator<SkriptMethod> {
 
     @Override
     protected @Nullable SkriptMethod getProductFromClass(SkriptClass skriptClass) {
-        List<SkriptMethod> candidates = MethodRegistry.getCandidatesFromChain(
-            skriptClass.getInheritanceChain(), reference);
+        List<SkriptMethod> candidates = MethodRegistry.getCandidatesFromChain(skriptClass, reference);
 
         if (candidates.isEmpty()) {
             Skript.error("Could not identify method signature from reference: "+reference.name());
@@ -71,7 +71,7 @@ public class MethodValidator extends AccessValidator<SkriptMethod> {
 
     @Override
     protected boolean validate(SkriptMethod method, boolean isStatic, boolean isSameContext) {
-        if (method.accessType().isPrivate() && !isSameContext) {
+        if (method.accessType() == AccessType.PRIVATE && !isSameContext) {
             Skript.error("This method can't be accessed here");
             return false;
         }

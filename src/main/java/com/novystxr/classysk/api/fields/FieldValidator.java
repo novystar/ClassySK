@@ -1,6 +1,7 @@
 package com.novystxr.classysk.api.fields;
 
 import ch.njol.skript.Skript;
+import com.novystxr.classysk.api.AccessModifiable.AccessType;
 import com.novystxr.classysk.api.AccessValidator;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.SkriptClass;
@@ -20,7 +21,7 @@ public class FieldValidator extends AccessValidator<FieldSignature> {
     @Override
     protected boolean validate(FieldSignature signature, boolean isStatic, boolean isSameContext) {
 
-        if (signature.accessType().isPrivate() && !isSameContext) {
+        if (signature.accessType() == AccessType.PRIVATE && !isSameContext) {
             Skript.error("Private fields can't be accessed here");
             return false;
         }

@@ -3,6 +3,7 @@ package com.novystxr.classysk.api.classes;
 import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.*;
+import java.util.stream.Stream;
 
 import ch.njol.skript.ScriptLoader;
 import ch.njol.skript.lang.Expression;
@@ -48,31 +49,20 @@ public class SkriptClass extends ClassInstance {
         return wrapper;
     }
 
-    @Override
-    public FieldSignature getFieldSignature(String key) {
-        for (SkriptClass target : getInheritanceChain()) {
-            FieldSignature signature = target.fieldSignatures.get(key);
-            if (signature != null)
-                return signature;
-        }
-        return null;
+    public Stream<SkriptClass> inheritanceStream() {
+        return Stream.iterate(this, Objects::nonNull, target -> target.extendsClass);
     }
 
-    /**
-     * If this is A and: A extends B, B extends C and C extends D, this method will return A, B, C, D
-     * If it doesn't inherit anything it will return a list containing only the class.
-     *
-     * @return The full inheritance chain from top -> bottom
-     */
-    public List<SkriptClass> getInheritanceChain() {
-        List<SkriptClass> result = new ArrayList<>();
-        result.add(this);
+    @Override
+    public FieldSignature getFieldSignature(String key) {
+        return inheritanceStream()
+            .map(target -> target.fieldSignatures.get(key))
+            .filter(Objects::nonNull)
+            .findFirst().orElse(null);
+    }
 
-        SkriptClass target = this;
-        while ((target = target.extendsClass) != null) {
-            result.add(target);
-        }
-        return result;
+    public boolean inherits(SkriptClass otherClass) {
+        return inheritanceStream().anyMatch(target -> target.extendsClass == otherClass);
     }
 
     public @Nullable Script getValidScript() {

@@ -31,12 +31,11 @@ public class MethodRegistry {
 
     private Map<MethodIdentifier, SkriptMethod> registry = new HashMap<>();
 
-    public static List<SkriptMethod> getCandidatesFromChain(List<SkriptClass> chain, MethodReference reference) {
+    public static List<SkriptMethod> getCandidatesFromChain(SkriptClass startingClass, MethodReference reference) {
         Map<MethodIdentifier, SkriptMethod> result = new HashMap<>();
-        for (SkriptClass target : chain.reversed())  {
+        for (SkriptClass target : startingClass.inheritanceStream().toList().reversed())  {
             result.putAll(target.methodRegistry.getCandidates(reference));
         }
-
         return result.values().stream().toList();
     }
 
