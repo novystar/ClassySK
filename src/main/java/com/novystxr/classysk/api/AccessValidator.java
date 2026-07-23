@@ -130,7 +130,7 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
             return newInstance;
         }
         if (hintClass != null && !newInstance.getParent().inherits(hintClass)) {
-            error("Given instance does not inherit '"+ hintClass.getEffectiveName() +"'");
+            error("Given instance does not match '"+ hintClass.getEffectiveName() +"'");
             return null;
         }
         LogEntry error;

@@ -71,14 +71,11 @@ public class EffMethodCall extends Effect {
                 return false;
             }
         }
-        if (isStaticReference)
+        if (isStaticReference) {
             return validator.validateInstance(skriptClass);
-        else {
-            if (instanceExpr.getSource() instanceof ExprSelf)
-                skriptClass = contextClass;
-
-            return !validator.validateUnknown(skriptClass).isFalse();
         }
+        boolean isSelf = instanceExpr.getSource() instanceof ExprSelf;
+        return !validator.validateUnknown(isSelf ? contextClass : skriptClass).isFalse();
     }
 
     @Override
