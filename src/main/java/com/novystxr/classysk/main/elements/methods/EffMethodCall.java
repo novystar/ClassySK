@@ -11,6 +11,7 @@ import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.methods.MethodParser;
 import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.MethodValidator;
+import com.novystxr.classysk.api.methods.MethodValidator.ValidReference;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.main.elements.classes.ExprSelf;
 import org.bukkit.event.Event;
@@ -86,8 +87,8 @@ public class EffMethodCall extends Effect {
         ClassInstance instance = getValidInstance(event);
         if (instance == null) return;
 
-        SkriptMethod method = validator.product();
-        method.run(event, instance, validator.getValidatedArgs());
+        ValidReference reference = validator.product();
+        reference.method().run(event, instance, reference.args());
     }
 
     private @Nullable ClassInstance getValidInstance(Event event) {

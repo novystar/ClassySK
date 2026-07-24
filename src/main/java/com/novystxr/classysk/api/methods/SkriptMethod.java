@@ -5,7 +5,7 @@ import ch.njol.skript.lang.SectionSkriptEvent;
 import ch.njol.skript.lang.Trigger;
 import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.variables.Variables;
-import com.novystxr.classysk.api.AccessModifiable;
+import com.novystxr.classysk.api.AccessModifiable.AccessType;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.event.MethodRunEvent;
@@ -16,33 +16,13 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.Map.Entry;
 
-public class SkriptMethod implements AccessModifiable {
-    @Override
-    public boolean isStatic() {
-        return signature.isStatic;
-    }
-
-    @Override
-    public AccessType accessType() {
-        return signature.accessType;
-    }
-
-    @Override
-    public Class<?> type() {
-        return signature.returnType;
-    }
-
-    @Override
-    public boolean isPlural() {
-        return signature.returnPlural;
-    }
+public class SkriptMethod {
 
     public record MethodArgument(
-            Class<?> type,
+        Class<?> type,
 
-            @Nullable Expression<?> defaultValue,
-            boolean isPlural
-
+        @Nullable Expression<?> defaultValue,
+        boolean isPlural
     ) {}
 
     public record MethodSignature(

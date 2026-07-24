@@ -12,6 +12,7 @@ import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.methods.MethodParser;
 import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.MethodValidator;
+import com.novystxr.classysk.api.methods.MethodValidator.ValidReference;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.main.elements.classes.ExprSelf;
 import org.bukkit.event.Event;
@@ -78,7 +79,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
             if (instanceExpr.getSource() instanceof ExprSelf)
                 skriptClass = contextClass;
 
-            return !validator.validateUnknown(skriptClass).isFalse();
+            return validator.validateUnknown(skriptClass).isFalse();
         }
     }
 
@@ -87,8 +88,8 @@ public class ExprMethodCall extends SimpleExpression<Object> {
         ClassInstance instance = getValidInstance(event);
         if (instance == null) return null;
 
-        SkriptMethod method = validator.product();
-        return method.run(event, instance, validator.getValidatedArgs());
+        ValidReference reference = validator.product();
+        return reference.method().run(event, instance, reference.args());
     }
 
     @Override
