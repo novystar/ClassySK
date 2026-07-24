@@ -79,7 +79,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
             if (instanceExpr.getSource() instanceof ExprSelf)
                 skriptClass = contextClass;
 
-            return validator.validateUnknown(skriptClass).isFalse();
+            return !validator.validateUnknown(skriptClass).isFalse();
         }
     }
 
