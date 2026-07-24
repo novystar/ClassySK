@@ -81,10 +81,10 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
                 return false;
             }
         }
-        if (isStaticReference)
+        if (isStaticReference) {
             if (!validator.validateInstance(skriptClass))
                 return false;
-        else {
+        } else {
             if (instanceExpr.getSource() instanceof ExprSelf)
                 skriptClass = contextClass;
 
