@@ -28,7 +28,7 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
 
     private final ErrorSource errorSource;
 
-    public final T product() {
+    public final @NotNull T product() {
         return product;
     }
 
