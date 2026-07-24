@@ -31,7 +31,7 @@ public class SkriptClass extends ClassInstance {
 
     // whether the class is accessible in scripts
     // this is set to false when the corresponding structure is unloaded
-    public boolean accessible = true;
+    public boolean accessible = false;
 
     public SkriptClass(String name, Script script) {
         super(name);
