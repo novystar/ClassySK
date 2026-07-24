@@ -55,26 +55,19 @@ public class MethodRegistry {
 
     public boolean registerMethod(SkriptMethod method) {
         String name = method.signature.name();
+
         SequencedMap<String, MethodArgument> args = method.signature.arguments();
-        Class<?>[] argTypes;
+        Class<?>[] argTypes = new Class<?>[args.size()];
 
         int minArgCount = 0;
-        if (args != null) {
-            argTypes = new Class<?>[args.size()];
-            int i = 0;
-
-            for (MethodArgument arg : args.sequencedValues()) {
-                argTypes[i] = arg.type();
-                if (arg.defaultValue() == null) minArgCount++;
-                i++;
-            }
-        } else {
-            argTypes = new Class<?>[]{};
+        int i = 0;
+        for (MethodArgument arg : args.sequencedValues()) {
+            argTypes[i] = arg.type();
+            if (arg.defaultValue() == null) minArgCount++;
+            i++;
         }
         MethodIdentifier identifier = new MethodIdentifier(name, minArgCount, argTypes);
-
-        SkriptMethod existing = registry.putIfAbsent(identifier, method);
-        return (existing == null);
+        return registry.putIfAbsent(identifier, method) == null;
     }
 
 }

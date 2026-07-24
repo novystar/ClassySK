@@ -47,7 +47,7 @@ public class SkriptMethod implements AccessModifiable {
 
     public record MethodSignature(
         String name,
-        @Nullable SequencedMap<String, MethodArgument> arguments,
+        SequencedMap<String, MethodArgument> arguments,
         AccessType accessType,
         boolean isStatic,
 
@@ -67,14 +67,13 @@ public class SkriptMethod implements AccessModifiable {
         this.trigger = trigger;
     }
 
-    public Object @Nullable [] run(Event event, ClassInstance instance, @Nullable Map<String, Expression<?>> argExprs) {
+    public Object @Nullable [] run(Event event, ClassInstance instance, @Nullable Map<String, Expression<?>> args) {
         if (trigger == null) {
             return null;
         }
         MethodRunEvent runEvent = new MethodRunEvent(instance);
-        if (argExprs != null && signature.arguments != null) {
-
-            for (Entry<String, Expression<?>> arg : argExprs.entrySet()) {
+        if (args != null) {
+            for (Entry<String, Expression<?>> arg : args.entrySet()) {
                 Object[] values = arg.getValue().getArray(event);
                 String key = arg.getKey();
 

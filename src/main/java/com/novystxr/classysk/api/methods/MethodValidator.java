@@ -86,74 +86,75 @@ public class MethodValidator extends AccessValidator<SkriptMethod> {
 
     private boolean validateReference(SkriptMethod target, boolean printErrors) {
         MethodSignature signature = target.signature;
-
         SequencedMap<String, MethodArgument> arguments = signature.arguments();
-        Map<String, Expression<?>> result = null;
 
-        if (arguments != null) {
-            result = new HashMap<>();
-            List<String> argNames = new ArrayList<>(arguments.sequencedKeySet());
-            int i = -1;
+        if (arguments.isEmpty()) {
+            this.validatedArgs = null;
+            return true;
+        }
 
-            boolean hasUnnamedArgs = false;
-            boolean hasNamedArgs = false;
+        Map<String, Expression<?>> result = new HashMap<>();
+        List<String> argNames = new ArrayList<>(arguments.sequencedKeySet());
 
-            for (ReferenceArgument arg : reference.args()) {
+        boolean hasUnnamedArgs = false;
+        boolean hasNamedArgs = false;
+
+        int i = -1;
+        for (ReferenceArgument arg : reference.args()) {
+            i++;
+            String name = arg.name();
+            if (name == null) {
+                name = argNames.get(i);
+                hasUnnamedArgs = true;
+            } else {
+                if (!arguments.containsKey(name)) {
+                    if (printErrors) Skript.error("Unknown method argument: "+name);
+                    return false;
+                }
+                hasNamedArgs = true;
+            }
+            MethodArgument targetArg = arguments.get(name);
+            Class<?> toClass = targetArg.type();
+
+            //noinspection unchecked
+            Expression<?> convertedExpr = arg.expr().getConvertedExpression(toClass);
+            if (convertedExpr == null) {
+                if (printErrors) Skript.error("Argument '%s' is not of required type: %s", name, Classes.getExactClassName(toClass));
+                return false;
+            }
+            if (!convertedExpr.isSingle() && !targetArg.isPlural()) {
+                if (printErrors) Skript.error("Argument '%s' is single but given expression is plural", name);
+                return false;
+            }
+
+            if (result.putIfAbsent(name, convertedExpr) != null) {
+                if (printErrors) Skript.error("Reference contains duplicate arguments");
+                return false;
+            }
+        }
+        List<String> referenceArgNames = new ArrayList<>(result.keySet());
+
+        if (hasNamedArgs && hasUnnamedArgs) {
+            i = -1; // check mixed arguments order
+            for (String name : argNames) {
                 i++;
-                String name = arg.name();
-                if (name == null) {
-                    name = argNames.get(i);
-                    hasUnnamedArgs = true;
-                } else {
-                    if (!signature.arguments().containsKey(name)) {
-                        if (printErrors) Skript.error("Unknown method argument: "+name);
-                        return false;
-                    }
-                    hasNamedArgs = true;
-                }
-                MethodArgument targetArg = arguments.get(name);
-                Class<?> toClass = targetArg.type();
-
-                //noinspection unchecked
-                Expression<?> convertedExpr = arg.expr().getConvertedExpression(toClass);
-                if (convertedExpr == null) {
-                    if (printErrors) Skript.error("Argument '%s' is not of required type: %s", name, Classes.getExactClassName(toClass));
-                    return false;
-                }
-                if (!convertedExpr.isSingle() && !targetArg.isPlural()) {
-                    if (printErrors) Skript.error("Argument '%s' is single but given expression is plural", name);
-                    return false;
-                }
-
-                if (result.putIfAbsent(name, convertedExpr) != null) {
-                    if (printErrors) Skript.error("Reference contains duplicate arguments");
+                if (!referenceArgNames.get(i).equals(name)) {
+                    Skript.error("Mixed method arguments must be in order");
                     return false;
                 }
             }
-            List<String> referenceArgNames = new ArrayList<>(result.keySet());
+        }
+        // attempt to resolve remaining defaults
+        for (var entry : arguments.entrySet()) {
+            String name = entry.getKey();
+            if (referenceArgNames.contains(name)) continue;
 
-            if (hasNamedArgs && hasUnnamedArgs) {
-                i = -1; // check mixed arguments order
-                for (String name : argNames) {
-                    i++;
-                    if (!referenceArgNames.get(i).equals(name)) {
-                        Skript.error("Mixed method arguments must be in order");
-                        return false;
-                    }
-                }
+            Expression<?> defaultValue = entry.getValue().defaultValue();
+            if (defaultValue == null) {
+                Skript.error("Could not resolve some argument(s) for this method call");
+                return false;
             }
-            // attempt to resolve remaining defaults
-            for (var entry : signature.arguments().entrySet()) {
-                String name = entry.getKey();
-                if (referenceArgNames.contains(name)) continue;
-
-                Expression<?> defaultValue = entry.getValue().defaultValue();
-                if (defaultValue == null) {
-                    Skript.error("Could not resolve some argument(s) for this method call");
-                    return false;
-                }
-                result.put(name, defaultValue);
-            }
+            result.put(name, defaultValue);
         }
         this.validatedArgs = result;
         return true;
