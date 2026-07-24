@@ -59,12 +59,13 @@ public class MethodRegistry {
         SequencedMap<String, MethodArgument> args = method.signature.arguments();
         Class<?>[] argTypes = new Class<?>[args.size()];
 
-        int minArgCount = 0;
         int i = 0;
+        int minArgCount = 0;
         for (MethodArgument arg : args.sequencedValues()) {
-            argTypes[i] = arg.type();
-            if (arg.defaultValue() == null) minArgCount++;
-            i++;
+            argTypes[i++] = arg.type();
+            if (arg.defaultValue() == null)  {
+                minArgCount++;
+            }
         }
         MethodIdentifier identifier = new MethodIdentifier(name, minArgCount, argTypes);
         return registry.putIfAbsent(identifier, method) == null;
