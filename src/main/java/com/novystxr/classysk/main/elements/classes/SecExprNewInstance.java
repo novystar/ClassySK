@@ -29,6 +29,8 @@ import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.novystxr.classysk.api.AccessModifiable.AccessType.PRIVATE;
+
 @Name("New Instance")
 @Keywords({"constructor", "create class", "creation"})
 @Description("Create a new instance of a class, you can optionally supply fields as a section")
@@ -90,7 +92,7 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
                     Skript.error("Static field cannot be set on an instance");
                     return false;
                 }
-                if (signature.accessType().isPrivate() && !inParent) {
+                if (signature.accessType() == PRIVATE && !inParent) {
                     Skript.error("Private fields can't be accessed here");
                     return false;
                 }
