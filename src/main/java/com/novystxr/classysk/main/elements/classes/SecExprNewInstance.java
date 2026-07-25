@@ -3,12 +3,10 @@ package com.novystxr.classysk.main.elements.classes;
 import ch.njol.skript.Skript;
 import ch.njol.skript.config.Node;
 import ch.njol.skript.config.SectionNode;
-import ch.njol.skript.config.SimpleNode;
 import ch.njol.skript.doc.*;
 import ch.njol.skript.expressions.base.SectionExpression;
 import ch.njol.skript.lang.*;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
-import ch.njol.skript.util.LiteralUtils;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.classes.SkriptClass;
@@ -16,6 +14,7 @@ import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.methods.SkriptMethod;
+import com.novystxr.classysk.api.util.ParserUtils;
 import com.novystxr.classysk.api.util.StringUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
@@ -68,42 +67,38 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
         skriptClass = ClassManager.getClass(name);
         boolean inParent = SkriptMethod.getContextClass(getParser()) == skriptClass;
 
-        if (sectionNode == null) return true;
-
+        if (sectionNode == null) {
+            return true;
+        }
         for (Node node : sectionNode) {
             String key = node.getKey();
             if (key == null) throw new IllegalStateException("Got node with null key");
 
-            if (node instanceof SimpleNode) {
-                Matcher matcher = VALID_NODE_PATTERN.matcher(key);
-                if (!matcher.matches()) {
-                    Skript.error("Invalid field name: " + key);
-                    return false;
-                }
-                String fieldName = StringUtils.getLowerCase(matcher.group(1));
-                String unparsedValue = matcher.group(2);
-
-                FieldSignature signature = skriptClass.getFieldSignature(fieldName);
-                if (signature == null) {
-                    Skript.error("Could not find field from class: " + skriptClass.getEffectiveName());
-                    return false;
-                }
-                if (signature.isStatic()) {
-                    Skript.error("Static field cannot be set on an instance");
-                    return false;
-                }
-                if (signature.accessType() == PRIVATE && !inParent) {
-                    Skript.error("Private fields can't be accessed here");
-                    return false;
-                }
-                Expression<?> valueExpr = LiteralUtils.defendExpression(new SkriptParser(unparsedValue, SkriptParser.ALL_FLAGS, ParseContext.DEFAULT).parseExpression(signature.type()));
-                if (valueExpr == null || !LiteralUtils.canInitSafely(valueExpr)) return false;
-
-                fields.put(fieldName, valueExpr);
-            } else {
-                Skript.error("Sections are not allowed here");
+            Matcher matcher = VALID_NODE_PATTERN.matcher(key);
+            if (!matcher.matches()) {
+                Skript.error("Invalid field name: " + key);
                 return false;
             }
+            String fieldName = StringUtils.getLowerCase(matcher.group(1));
+            String unparsedValue = matcher.group(2);
+
+            FieldSignature signature = skriptClass.getFieldSignature(fieldName);
+            if (signature == null) {
+                Skript.error("Could not find field from class: " + skriptClass.getEffectiveName());
+                return false;
+            }
+            if (signature.isStatic()) {
+                Skript.error("Static field cannot be set on an instance");
+                return false;
+            }
+            if (signature.accessType() == PRIVATE && !inParent) {
+                Skript.error("Private fields can't be accessed here");
+                return false;
+            }
+            Expression<?> valueExpr = ParserUtils.parseExprNode(unparsedValue, node, signature.type());
+            if (valueExpr == null) return false;
+
+            fields.put(fieldName, valueExpr);
         }
         return true;
     }
