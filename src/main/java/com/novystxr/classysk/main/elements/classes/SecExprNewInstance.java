@@ -11,7 +11,6 @@ import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.util.LiteralUtils;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
-import com.novystxr.classysk.api.AccessModifiable.AccessType;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.ClassInstance;
@@ -29,6 +28,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static com.novystxr.classysk.api.AccessModifiable.AccessType.PRIVATE;
 
 @Name("New Instance")
 @Keywords({"constructor", "create class", "creation"})
@@ -91,7 +92,7 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
                     Skript.error("Static field cannot be set on an instance");
                     return false;
                 }
-                if (signature.accessType() == AccessType.PRIVATE && !inParent) {
+                if (signature.accessType() == PRIVATE && !inParent) {
                     Skript.error("Private fields can't be accessed here");
                     return false;
                 }

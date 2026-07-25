@@ -80,17 +80,14 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
             returnType = reference.getClassInfo().getC();
         }
         String methodName = StringUtils.getLowerCase(result.regexes.get(0));
-        SequencedMap<String, MethodArgument> args = null;
+        SequencedMap<String, MethodArgument> args = new LinkedHashMap<>();
 
         // parse arguments
         if (result.hasTag("args")) {
             String argsString = result.regexes.get(1).group();
-
-            if (!argsString.isEmpty()) {
-                args = MethodParser.parseArguments(argsString);
-                if (args == null) {
-                    return false;
-                }
+            args = MethodParser.parseArguments(argsString);
+            if (args == null) {
+                return false;
             }
         }
         AccessType accessType = result.hasTag("private") ? AccessModifiable.AccessType.PRIVATE : AccessModifiable.AccessType.PUBLIC;

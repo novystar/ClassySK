@@ -114,7 +114,6 @@ public class MethodParser {
             Expression<?> defaultValue = null;
 
             if (unparsedDefault != null) {
-
                 SkriptParser parser = new SkriptParser(unparsedDefault, SkriptParser.ALL_FLAGS, ParseContext.DEFAULT);
 
                 defaultValue = LiteralUtils.defendExpression(parser.parseExpression(type));

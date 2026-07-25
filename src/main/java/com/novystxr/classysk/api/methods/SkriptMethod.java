@@ -5,7 +5,7 @@ import ch.njol.skript.lang.SectionSkriptEvent;
 import ch.njol.skript.lang.Trigger;
 import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.variables.Variables;
-import com.novystxr.classysk.api.AccessModifiable;
+import com.novystxr.classysk.api.AccessModifiable.AccessType;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.event.MethodRunEvent;
@@ -16,38 +16,18 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.Map.Entry;
 
-public class SkriptMethod implements AccessModifiable {
-    @Override
-    public boolean isStatic() {
-        return signature.isStatic;
-    }
-
-    @Override
-    public AccessType accessType() {
-        return signature.accessType;
-    }
-
-    @Override
-    public Class<?> type() {
-        return signature.returnType;
-    }
-
-    @Override
-    public boolean isPlural() {
-        return signature.returnPlural;
-    }
+public class SkriptMethod {
 
     public record MethodArgument(
-            Class<?> type,
+        Class<?> type,
 
-            @Nullable Expression<?> defaultValue,
-            boolean isPlural
-
+        @Nullable Expression<?> defaultValue,
+        boolean isPlural
     ) {}
 
     public record MethodSignature(
         String name,
-        @Nullable SequencedMap<String, MethodArgument> arguments,
+        SequencedMap<String, MethodArgument> arguments,
         AccessType accessType,
         boolean isStatic,
 
@@ -67,27 +47,19 @@ public class SkriptMethod implements AccessModifiable {
         this.trigger = trigger;
     }
 
-    public Object @Nullable [] run(Event event, ClassInstance instance, @Nullable Map<String, Expression<?>> argExprs) {
-        if (trigger == null) return null;
-        Map<String, Object[]> args;
-
-        if (argExprs != null) {
-            args = new HashMap<>();
-            for (Entry<String, Expression<?>> entry : argExprs.entrySet()) {
-                args.put(entry.getKey(), entry.getValue().getArray(event));
-            }
-        } else {
-            args = null;
+    public Object @Nullable [] run(Event event, ClassInstance instance, @Nullable Map<String, Expression<?>> args) {
+        if (trigger == null) {
+            return null;
         }
         MethodRunEvent runEvent = new MethodRunEvent(instance);
-        if (args != null && signature.arguments != null) {
-
-            for (Entry<String, Object[]> arg : args.entrySet()) {
-                Object[] values = arg.getValue();
+        if (args != null) {
+            for (Entry<String, Expression<?>> arg : args.entrySet()) {
+                Object[] values = arg.getValue().getArray(event);
                 String key = arg.getKey();
 
-                if (values.length == 0) continue;
-
+                if (values.length == 0) {
+                    continue;
+                }
                 if (signature.arguments.get(key).isPlural) {
                     int i = 0;
                     for (Object value : values) {
@@ -99,10 +71,7 @@ public class SkriptMethod implements AccessModifiable {
                 }
             }
         }
-        if (trigger.execute(runEvent)) {
-            return runEvent.returnObject;
-        }
-        return null;
+        return trigger.execute(runEvent) ? runEvent.returnObject : null;
     }
 
     public static boolean isMethodBody(ParserInstance parser) {

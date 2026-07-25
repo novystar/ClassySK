@@ -24,11 +24,11 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
     private final SkriptClass contextClass;
 
     private T product = null;
-    private List<T> guesses = null;
+    private final List<T> guesses = new ArrayList<>();
 
     private final ErrorSource errorSource;
 
-    public final T product() {
+    public final @NotNull T product() {
         return product;
     }
 
@@ -49,12 +49,12 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
     protected abstract @Nullable T getProductFromInstance(ClassInstance instance);
 
     /**
-     * Similar to {@link AccessValidator#getReturnType()} but instead of finding the highest common super type it returns all possible types
+     * A helper method to get all possible return types based off of previous guesses from {@link AccessValidator#validateUnknown(SkriptClass)}
      * @return The {@link AccessValidator#product} return type, OR all return types of {@link AccessValidator#guesses}
      */
-    public final Class<?>[] possibleReturnTypes() {
+    public final Class<?>[] possibleTypes() {
         if (product != null) return new Class<?>[]{product.type()};
-        if (guesses == null || guesses.isEmpty()) return new Class<?>[]{Object.class};
+        if (guesses.isEmpty()) return new Class<?>[]{Object.class};
 
         Class<?>[] possibleTypes = new Class[guesses.size()];
 
@@ -71,15 +71,11 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
     /**
      * Tries to find the best possible return type for that pattern to report
      *
-     * @return The {@link AccessValidator#product} return type if it could be determined at parse time,
-     * OR the highest denominator of all possible return types of classes containing the same signature
+     * @param possibleTypes Must contain atleast one class, see {@link AccessValidator#possibleTypes()}
+     *
+     * @return The highest denominator of possible return types
      */
-    public final Class<?> getReturnType() {
-        if (product != null) return product.type();
-        if (guesses == null || guesses.isEmpty()) return Object.class;
-
-        Class<?>[] possibleTypes = possibleReturnTypes();
-
+    public static Class<?> bestReturnType(Class<?>[] possibleTypes) {
         if (possibleTypes.length == 1) {
             return possibleTypes[0];
         }
@@ -99,7 +95,7 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
      */
     public final Kleenean shouldBeSingle() {
         if (product != null) return Kleenean.get(!product.isPlural());
-        if (guesses == null || guesses.isEmpty()) return Kleenean.UNKNOWN;
+        if (guesses.isEmpty()) return Kleenean.UNKNOWN;
 
         boolean hasSingle = false;
         boolean hasPlural = false;
@@ -155,9 +151,7 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
      * UNKNOWN if could not find the right class
      */
     public final Kleenean validateUnknown(@Nullable SkriptClass hintClass) {
-        guesses = new ArrayList<>();
         LogEntry error;
-
         SkriptClass resultClass = null;
 
         try (var handler = new SimpleErrorHandler().start()) {

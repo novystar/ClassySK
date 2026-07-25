@@ -9,6 +9,7 @@ import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import ch.njol.util.coll.CollectionUtils;
 import com.novystxr.classysk.Classysk;
+import com.novystxr.classysk.api.AccessValidator;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
@@ -51,6 +52,10 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
     private SkriptClass skriptClass;
     private Expression<ClassInstance> instanceExpr;
 
+    private Kleenean shouldBeSingle;
+    private Class<?>[] possibleTypes;
+    private Class<?> bestReturnType;
+
     @SuppressWarnings("unchecked")
     @Override
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result) {
@@ -77,17 +82,38 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
             }
         }
         if (isStaticReference) {
-            return validator.validateInstance(skriptClass);
+            if (!validator.validateInstance(skriptClass))
+                return false;
+        } else {
+            if (instanceExpr.getSource() instanceof ExprSelf)
+                skriptClass = contextClass;
+
+            boolean isSelf = instanceExpr.getSource() instanceof ExprSelf;
+            if (validator.validateUnknown(isSelf ? contextClass : skriptClass).isFalse())
+                return false;
         }
-        boolean isSelf = instanceExpr.getSource() instanceof ExprSelf;
-        return !validator.validateUnknown(isSelf ? contextClass : skriptClass).isFalse();
+        shouldBeSingle = validator.shouldBeSingle();
+        possibleTypes = validator.possibleTypes();
+        bestReturnType = AccessValidator.bestReturnType(possibleTypes);
+        return true;
     }
 
     @Override
     protected Object @Nullable [] get(Event event) {
         ClassInstance instance = getValidInstance(event);
-        if (instance == null) return null;
+        if (instance == null) {
+            return null;
+        }
+        FieldSignature signature = validator.product();
 
+        if (shouldBeSingle.isTrue() && signature.isPlural()) {
+            error("Field returns multiple values while reporting as single. Try reloading the script or using a safe call: %instance%<>::field");
+            return null;
+        }
+        if (!bestReturnType.isAssignableFrom(signature.type())) {
+            error("Field doesn't match its reported type. Try reloading the script or using a safe call: %instance%<>::field");
+            return null;
+        }
         return instance.getFieldValue(fieldName);
     }
 
@@ -162,23 +188,22 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
 
     @Override
     public boolean isSingle() {
-        return validator.shouldBeSingle().isTrue();
+        return shouldBeSingle.isTrue();
     }
 
     @Override
     public boolean canBeSingle() {
-        Kleenean shouldBeSingle = validator.shouldBeSingle();
         return shouldBeSingle.isUnknown() || shouldBeSingle.isTrue();
     }
 
     @Override
     public Class<?> getReturnType() {
-        return validator.getReturnType();
+        return AccessValidator.bestReturnType(possibleTypes);
     }
 
     @Override
     public Class<?>[] possibleReturnTypes() {
-        return validator.possibleReturnTypes();
+        return possibleTypes;
     }
 
     @Override

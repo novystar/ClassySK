@@ -6,12 +6,14 @@ import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
+import com.novystxr.classysk.api.AccessValidator;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.methods.MethodParser;
 import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.MethodValidator;
+import com.novystxr.classysk.api.methods.MethodValidator.ValidReference;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.main.elements.classes.ExprSelf;
 import org.bukkit.event.Event;
@@ -43,6 +45,10 @@ public class ExprMethodCall extends SimpleExpression<Object> {
     private SkriptClass skriptClass = null;
     private Expression<ClassInstance> instanceExpr;
 
+    private Kleenean shouldBeSingle;
+    private Class<?>[] possibleTypes;
+    private Class<?> bestReturnType;
+
     @SuppressWarnings("unchecked")
     @Override
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result) {
@@ -73,40 +79,59 @@ public class ExprMethodCall extends SimpleExpression<Object> {
             }
         }
         if (isStaticReference) {
-            return validator.validateInstance(skriptClass);
+            if (!validator.validateInstance(skriptClass))
+                return false;
+        } else {
+            if (instanceExpr.getSource() instanceof ExprSelf)
+                skriptClass = contextClass;
+
+            boolean isSelf = instanceExpr.getSource() instanceof ExprSelf;
+            if (validator.validateUnknown(isSelf ? contextClass : skriptClass).isFalse())
+                return false;
         }
-        boolean isSelf = instanceExpr.getSource() instanceof ExprSelf;
-        return !validator.validateUnknown(isSelf ? contextClass : skriptClass).isFalse();
+        shouldBeSingle = validator.shouldBeSingle();
+        possibleTypes = validator.possibleTypes();
+        bestReturnType = AccessValidator.bestReturnType(possibleTypes);
+        return true;
     }
 
     @Override
     protected Object @Nullable [] get(Event event) {
         ClassInstance instance = getValidInstance(event);
-        if (instance == null) return null;
+        if (instance == null) {
+            return null;
+        }
+        ValidReference reference = validator.product();
 
-        SkriptMethod method = validator.product();
-        return method.run(event, instance, validator.getValidatedArgs());
+        if (shouldBeSingle.isTrue() && reference.isPlural()) {
+            error("Method returns multiple values while reporting as single. Try reloading the script or using a safe call: %instance%<>::method()");
+            return null;
+        }
+        if (!reference.type().isAssignableFrom(bestReturnType)) {
+            error("Method doesn't match its reported type. Try reloading the script or using a safe call: %instance%<>::method()");
+            return null;
+        }
+        return reference.method().run(event, instance, reference.args());
     }
 
     @Override
     public boolean isSingle() {
-        return validator.shouldBeSingle().isTrue();
+        return shouldBeSingle.isTrue();
     }
 
     @Override
     public boolean canBeSingle() {
-        Kleenean shouldBeSingle = validator.shouldBeSingle();
         return shouldBeSingle.isUnknown() || shouldBeSingle.isTrue();
     }
 
     @Override
     public Class<?> getReturnType() {
-        return validator.getReturnType();
+        return bestReturnType;
     }
 
     @Override
     public Class<?>[] possibleReturnTypes() {
-        return validator.possibleReturnTypes();
+        return possibleTypes;
     }
 
     private @Nullable ClassInstance getValidInstance(Event event) {
