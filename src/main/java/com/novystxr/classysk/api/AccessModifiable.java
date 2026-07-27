@@ -6,6 +6,10 @@ public interface AccessModifiable {
     Class<?> type();
     boolean isPlural();
 
+    default boolean isStatic() {
+        return modifier() == Modifier.STATIC;
+    }
+
     enum AccessType {
         PUBLIC,
         PRIVATE,
