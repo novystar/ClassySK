@@ -1,8 +1,12 @@
 package com.novystxr.classysk.api.methods;
 
+import ch.njol.skript.Skript;
+import com.novystxr.classysk.api.AccessModifiable.Modifier;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
+import com.novystxr.classysk.api.methods.SkriptMethod.MethodSignature;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
@@ -44,6 +48,34 @@ public class MethodRegistry {
             }
             return new MethodIdentifier(name, minArgCount, argTypes);
         }
+    }
+
+    public boolean validateOverrides(@NotNull SkriptClass extendsClass) {
+        for (var entry : registry.entrySet()) {
+            MethodSignature signature = entry.getValue().signature;
+            MethodIdentifier identifier = entry.getKey();
+
+            MethodSignature overridden = extendsClass.inheritanceStream()
+                .map(target -> target.methodRegistry.registry.get(identifier))
+                .filter(Objects::nonNull)
+                .map(method -> method.signature)
+                .findFirst().orElse(null);
+
+            if (signature.modifier() != Modifier.OVERRIDE && overridden != null) {
+                Skript.error("Method '%s' would override a method from it's extending class. Mark it with 'override' or rename it.", signature.name());
+                return false;
+            } else if (overridden == null) {
+                Skript.error("Method '%s' does not override any method from it's extending class.", signature.name());
+                return false;
+            } else if (signature.accessType().weight > overridden.accessType().weight) {
+                Skript.error("Method '%s' cannot have a lower access-type than the target method.", signature.name());
+                return false;
+            } else if (signature.type() != overridden.type()) {
+                Skript.error("Method '%s' does not match the return-type of the target method", signature.name());
+                return false;
+            }
+        }
+        return true;
     }
 
     private Map<MethodIdentifier, SkriptMethod> registry = new HashMap<>();

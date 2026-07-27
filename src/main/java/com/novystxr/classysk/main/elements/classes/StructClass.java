@@ -127,9 +127,10 @@ public class StructClass extends Structure {
             if (extendsClass == null) {
                 Skript.error("Class named '%s' does not exist", StringUtils.titleCase(extendsName));
                 return false;
-            }
-            else if (extendsClass == newClass) {
+            } else if (extendsClass == newClass) {
                 Skript.error("A class cannot extend itself");
+                return false;
+            } else if (!newClass.methodRegistry.validateOverrides(extendsClass)) {
                 return false;
             }
         }

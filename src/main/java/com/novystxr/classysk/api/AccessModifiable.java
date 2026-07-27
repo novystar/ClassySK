@@ -11,9 +11,15 @@ public interface AccessModifiable {
     }
 
     enum AccessType {
-        PUBLIC,
-        PRIVATE,
-        PROTECTED
+        PUBLIC(1),
+        PROTECTED(2),
+        PRIVATE(3);
+
+        public final int weight;
+
+        AccessType(int weight) {
+            this.weight = weight;
+        }
     }
 
     enum Modifier {
