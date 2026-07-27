@@ -34,13 +34,13 @@ public class ClassManager {
                     SkriptField createdField;
 
                     if (targetSignature == null) {
-                        FieldSignature newSignature = FieldSignature.fromSerializableField(instance, fieldName, sField);
+                        FieldSignature newSignature = FieldSignature.fromSerializableField(fieldName, sField);
                         createdField = instance.createField(newSignature);
 
                     } else if (targetSignature.canConvert(sField.value)) {
                         createdField = instance.createField(targetSignature);
                     } else {
-                        FieldSignature newSignature = sField.mergeSignature(instance, targetSignature);
+                        FieldSignature newSignature = sField.mergeSignature(targetSignature);
                         createdField = instance.createField(newSignature);
                     }
 

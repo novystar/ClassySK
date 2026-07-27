@@ -19,6 +19,7 @@ import org.skriptlang.skript.log.runtime.ErrorSource;
 import java.util.*;
 
 import static com.novystxr.classysk.api.AccessModifiable.AccessType.PRIVATE;
+import static com.novystxr.classysk.api.AccessModifiable.Modifier.STATIC;
 
 public class MethodValidator extends AccessValidator<ValidReference> {
 
@@ -62,7 +63,7 @@ public class MethodValidator extends AccessValidator<ValidReference> {
             Skript.error("This method can't be accessed here");
             return false;
         }
-        if (reference.isStatic() != isStatic) {
+        if (reference.modifier() == STATIC != isStatic) {
             Skript.error("Method accessed from improper context");
             return false;
         }
@@ -163,12 +164,12 @@ public class MethodValidator extends AccessValidator<ValidReference> {
 
     public record ValidReference(@NotNull SkriptMethod method, @NotNull Map<String, Expression<?>> args) implements AccessModifiable {
         @Override
-        public boolean isStatic() {
-            return method.signature.isStatic();
+        public Modifier modifier() {
+            return method.signature.modifier();
         }
         @Override
         public boolean isPlural() {
-            return method.signature.returnPlural();
+            return method.signature.isPlural();
         }
         @Override
         public AccessType accessType() {
@@ -176,7 +177,7 @@ public class MethodValidator extends AccessValidator<ValidReference> {
         }
         @Override
         public Class<?> type() {
-            return method.signature.returnType();
+            return method.signature.type();
         }
     }
 }

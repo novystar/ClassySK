@@ -2,7 +2,6 @@ package com.novystxr.classysk.api.fields;
 
 import ch.njol.skript.lang.Expression;
 import com.novystxr.classysk.api.AccessModifiable;
-import com.novystxr.classysk.api.classes.ClassInstance;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.converter.Converters;
 
@@ -13,8 +12,8 @@ public class SkriptField {
         @Nullable Expression<?> defaultExpr,
 
         AccessType accessType,
-        boolean isStatic,
-        boolean isPlural
+        boolean isPlural,
+        @Nullable Modifier modifier
 
     ) implements AccessModifiable {
 
@@ -22,10 +21,9 @@ public class SkriptField {
          * Creates a field signature with sensible defaults that should be able to hold the target data -
          * should only be used as a last resort to preserve data if the field no longer exists on deserialization.
          */
-        public static FieldSignature fromSerializableField(ClassInstance instance, String fieldName, SerializableField sField) {
-            boolean isStatic = !instance.isInstance();
+        public static FieldSignature fromSerializableField(String fieldName, SerializableField sField) {
 
-            return new FieldSignature(fieldName, sField.signatureType, null, AccessType.PUBLIC, isStatic, sField.isPlural);
+            return new FieldSignature(fieldName, sField.signatureType, null, AccessType.PUBLIC, sField.isPlural, null);
         }
         public boolean canConvert(@Nullable Object[] values) {
             if (values == null) return true;

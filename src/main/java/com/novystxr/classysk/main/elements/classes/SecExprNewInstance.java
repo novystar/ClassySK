@@ -29,6 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.novystxr.classysk.api.AccessModifiable.AccessType.PRIVATE;
+import static com.novystxr.classysk.api.AccessModifiable.Modifier.STATIC;
 
 @Name("New Instance")
 @Keywords({"constructor", "create class", "creation"})
@@ -87,7 +88,7 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
                 Skript.error("Could not find field from class: " + skriptClass.getEffectiveName());
                 return false;
             }
-            if (signature.isStatic()) {
+            if (signature.modifier() == STATIC) {
                 Skript.error("Static field cannot be set on an instance");
                 return false;
             }

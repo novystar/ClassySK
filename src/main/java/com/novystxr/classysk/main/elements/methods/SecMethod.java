@@ -9,6 +9,7 @@ import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.*;
 import com.novystxr.classysk.api.AccessModifiable.AccessType;
+import com.novystxr.classysk.api.AccessModifiable.Modifier;
 import com.novystxr.classysk.api.methods.MethodParser;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
@@ -59,7 +60,7 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
     }
 
     public static SyntaxInfo<SecMethod> INFO = SyntaxInfo.builder(SecMethod.class)
-        .addPattern("(public|:private) [:static] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [(\\:\\:|returns|->) %-*classinfo%]")
+        .addPattern("(:public|:private|:protected) [:static|:override] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [(\\:\\:|returns|->) %-*classinfo%]")
         .supplier(SecMethod::new)
         .build();
 
@@ -90,10 +91,24 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
                 return false;
             }
         }
-        AccessType accessType = result.hasTag("private") ? AccessModifiable.AccessType.PRIVATE : AccessModifiable.AccessType.PUBLIC;
-        boolean isStatic = result.hasTag("static");
 
-        this.signature = new MethodSignature(methodName, args, accessType, isStatic, returnType, returnPlural);
+        AccessType accessType;
+        if (result.hasTag("public"))
+            accessType = AccessType.PUBLIC;
+        else if (result.hasTag("private"))
+            accessType = AccessType.PRIVATE;
+        else if (result.hasTag("protected"))
+            accessType = AccessType.PROTECTED;
+        else
+            throw new IllegalStateException("AccessType cannot be null");
+
+        Modifier modifier = null;
+        if (result.hasTag("static"))
+            modifier = Modifier.STATIC;
+        else if (result.hasTag("override"))
+            modifier = Modifier.OVERRIDE;
+
+        this.signature = new MethodSignature(methodName, args, accessType, returnType, returnPlural, modifier);
         this.sectionNode = sectionNode;
         return true;
     }
@@ -110,7 +125,7 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
         if (sectionNode == null) return;
         Trigger trigger;
 
-        if (signature.returnType() != null) {
+        if (signature.type() != null) {
             trigger = loadReturnableSectionCode(sectionNode, "method body", new Class[]{MethodRunEvent.class});
         } else {
             trigger = loadCode(sectionNode, "method body", MethodRunEvent.class);
@@ -132,12 +147,12 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
 
     @Override
     public boolean isSingleReturnValue() {
-        return !signature.returnPlural();
+        return !signature.isPlural();
     }
 
     @Override
     public @Nullable Class<?> returnValueType() {
-        return signature.returnType();
+        return signature.type();
         }
 
     @Override

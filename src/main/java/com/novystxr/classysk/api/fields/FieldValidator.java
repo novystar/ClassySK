@@ -9,6 +9,7 @@ import org.jspecify.annotations.Nullable;
 import org.skriptlang.skript.log.runtime.ErrorSource;
 
 import static com.novystxr.classysk.api.AccessModifiable.AccessType.PRIVATE;
+import static com.novystxr.classysk.api.AccessModifiable.Modifier.STATIC;
 
 public class FieldValidator extends AccessValidator<FieldSignature> {
 
@@ -26,7 +27,7 @@ public class FieldValidator extends AccessValidator<FieldSignature> {
             Skript.error("Private fields can't be accessed here");
             return false;
         }
-        if (signature.isStatic() != isStatic) {
+        if (signature.modifier() == STATIC != isStatic) {
             Skript.error("Field accessed from improper context");
             return false;
         }

@@ -5,7 +5,7 @@ import ch.njol.skript.lang.SectionSkriptEvent;
 import ch.njol.skript.lang.Trigger;
 import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.variables.Variables;
-import com.novystxr.classysk.api.AccessModifiable.AccessType;
+import com.novystxr.classysk.api.AccessModifiable;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.event.MethodRunEvent;
@@ -29,12 +29,12 @@ public class SkriptMethod {
         String name,
         SequencedMap<String, MethodArgument> arguments,
         AccessType accessType,
-        boolean isStatic,
 
-        @Nullable Class<?> returnType,
-        boolean returnPlural
+        @Nullable Class<?> type,
+        boolean isPlural,
+        @Nullable Modifier modifier
 
-    ) {}
+    ) implements AccessModifiable {}
 
     public SkriptMethod(MethodSignature signature) {
         this.signature = signature;

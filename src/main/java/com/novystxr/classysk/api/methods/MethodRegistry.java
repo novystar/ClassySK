@@ -27,6 +27,23 @@ public class MethodRegistry {
         public int hashCode() {
             return Objects.hash(name, minArgCount, Arrays.hashCode(argTypes));
         }
+
+        public static MethodIdentifier of(SkriptMethod method) {
+            String name = method.signature.name();
+
+            SequencedMap<String, MethodArgument> args = method.signature.arguments();
+            Class<?>[] argTypes = new Class<?>[args.size()];
+
+            int i = 0;
+            int minArgCount = 0;
+            for (MethodArgument arg : args.sequencedValues()) {
+                argTypes[i++] = arg.type();
+                if (arg.defaultValue() == null)  {
+                    minArgCount++;
+                }
+            }
+            return new MethodIdentifier(name, minArgCount, argTypes);
+        }
     }
 
     private Map<MethodIdentifier, SkriptMethod> registry = new HashMap<>();
@@ -63,21 +80,7 @@ public class MethodRegistry {
     }
 
     public boolean registerMethod(SkriptMethod method) {
-        String name = method.signature.name();
-
-        SequencedMap<String, MethodArgument> args = method.signature.arguments();
-        Class<?>[] argTypes = new Class<?>[args.size()];
-
-        int i = 0;
-        int minArgCount = 0;
-        for (MethodArgument arg : args.sequencedValues()) {
-            argTypes[i++] = arg.type();
-            if (arg.defaultValue() == null)  {
-                minArgCount++;
-            }
-        }
-        MethodIdentifier identifier = new MethodIdentifier(name, minArgCount, argTypes);
-        return registry.putIfAbsent(identifier, method) == null;
+        return registry.putIfAbsent(MethodIdentifier.of(method), method) == null;
     }
 
 }

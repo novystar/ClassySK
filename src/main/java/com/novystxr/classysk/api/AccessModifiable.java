@@ -1,14 +1,19 @@
 package com.novystxr.classysk.api;
 
 public interface AccessModifiable {
-    boolean isStatic();
-    boolean isPlural();
+    Modifier modifier();
     AccessType accessType();
     Class<?> type();
+    boolean isPlural();
 
     enum AccessType {
         PUBLIC,
         PRIVATE,
         PROTECTED
+    }
+
+    enum Modifier {
+        STATIC,
+        OVERRIDE
     }
 }
