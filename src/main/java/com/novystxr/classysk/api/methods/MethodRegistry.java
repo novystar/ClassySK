@@ -6,7 +6,7 @@ import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodSignature;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
@@ -50,20 +50,29 @@ public class MethodRegistry {
         }
     }
 
-    public boolean validateOverrides(@NotNull SkriptClass extendsClass) {
+    public boolean validateOverrides(@Nullable SkriptClass extendsClass) {
         for (var entry : registry.entrySet()) {
             MethodSignature signature = entry.getValue().signature;
             MethodIdentifier identifier = entry.getKey();
 
+            if (extendsClass == null) {
+                if (signature.modifier() == Modifier.OVERRIDE) {
+                    Skript.error("This class does not extend any other");
+                    return false;
+                }
+                continue;
+            }
             MethodSignature overridden = extendsClass.inheritanceStream()
                 .map(target -> target.methodRegistry.registry.get(identifier))
                 .filter(Objects::nonNull)
                 .map(method -> method.signature)
                 .findFirst().orElse(null);
 
-            if (signature.modifier() != Modifier.OVERRIDE && overridden != null) {
-                Skript.error("Method '%s' would override a method from it's extending class. Mark it with 'override' or rename it.", signature.name());
-                return false;
+            if (signature.modifier() != Modifier.OVERRIDE) {
+                if (overridden != null) {
+                    Skript.error("Method '%s' would override a method from it's extending class. Mark it with 'override' or rename it.", signature.name());
+                    return false;
+                }
             } else if (overridden == null) {
                 Skript.error("Method '%s' does not override any method from it's extending class.", signature.name());
                 return false;
