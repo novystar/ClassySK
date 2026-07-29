@@ -71,19 +71,11 @@ public class StructClass extends Structure {
     @Override
     public boolean init(Literal<?>[] args, int pattern, ParseResult result, @UnknownNullability EntryContainer entryContainer) {
         this.entryContainer = entryContainer;
-        name = StringUtils.getLowerCase(result.regexes.get(0));
+        name = StringUtils.getLowerCase(result.regexes.getFirst());
         if (classAlreadyExists()) {
             Skript.error("A class structure named '%s' already exists in a script", name);
             return false;
         }
-        if (result.hasTag("extends")) {
-            extendsName = StringUtils.getLowerCase(result.regexes.get(1));
-        }
-        return true;
-    }
-
-    @Override
-    public boolean preLoad() {
         newClass = ClassManager.getClass(name);
 
         if (newClass != null && newClass.validateStructure()) {
@@ -93,6 +85,15 @@ public class StructClass extends Structure {
             newClass = new SkriptClass(name, getParser().getCurrentScript());
             ClassManager.createClass(name, newClass);
         }
+
+        if (result.hasTag("extends")) {
+            extendsName = StringUtils.getLowerCase(result.regexes.get(1));
+        }
+        return true;
+    }
+
+    @Override
+    public boolean preLoad() {
         for (Node node : entryContainer.getUnhandledNodes()) {
             var element = ParserUtils.parseNodeAsInfos(node, "Could not recognize entry: "+node.getKey(), EffField.INFO, SecMethod.INFO);
 
@@ -115,12 +116,7 @@ public class StructClass extends Structure {
         }
         newClass.revalidateFields();
         ClassManager.checkAwaitingParent(newClass);
-        newClass.accessible = true;
-        return true;
-    }
 
-    @Override
-    public boolean load() {
         SkriptClass extendsClass = null;
         if (extendsName != null) {
             extendsClass = ClassManager.getClass(extendsName);
@@ -130,11 +126,23 @@ public class StructClass extends Structure {
             } else if (extendsClass == newClass) {
                 Skript.error("A class cannot extend itself");
                 return false;
-            } else if (!newClass.methodRegistry.validateOverrides(extendsClass)) {
-                return false;
             }
         }
         newClass.extendsClass = extendsClass;
+        newClass.accessible = true;
+        return true;
+    }
+
+    @Override
+    public boolean load() {
+        boolean cyclical = newClass.inheritanceStream().skip(1)
+            .anyMatch(target -> target.extendsClass == newClass);
+        if (cyclical) {
+            Skript.error("Cyclical inheritance is not allowed. (feeding back into itself)");
+            return false;
+        } else if (!newClass.methodRegistry.validateOverrides(newClass.extendsClass)) {
+            return false;
+        }
 
         // load method triggers after initial registration so it will always know about other methods within a class
         for (SecMethod secMethod : methodSections) {
@@ -146,8 +154,7 @@ public class StructClass extends Structure {
 
     @Override
     public void unload() {
-        SkriptClass skriptClass = ClassManager.getClass(name);
-        skriptClass.accessible = false;
+        newClass.accessible = false;
     }
 
     private boolean classAlreadyExists() {
