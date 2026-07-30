@@ -156,14 +156,14 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
 
         try (var handler = new SimpleErrorHandler().start()) {
             if (hintClass != null) {
-                T product = getProductFromClass(hintClass);
+                T product = validateProductFromClass(hintClass);
                 if (product != null) {
                     guesses.add(product);
                     resultClass = hintClass;
                 }
             } else {
                 for (SkriptClass skriptClass : ClassManager.getClasses()) {
-                    T product = getProductFromClass(skriptClass);
+                    T product = validateProductFromClass(skriptClass);
                     if (product != null) {
                         guesses.add(product);
                         resultClass = skriptClass;
@@ -190,6 +190,15 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
         }
         if (error != null) Skript.error(error.getMessage());
         return Kleenean.FALSE;
+    }
+
+    public final @Nullable T validateProductFromClass(SkriptClass skriptClass) {
+        if (!skriptClass.accessible) {
+            Skript.error("This class is not accessible");
+            return null;
+        }
+        return getProductFromClass(skriptClass);
+
     }
 
     /**

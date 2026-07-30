@@ -14,6 +14,10 @@ public class ClassManager {
 
     private static final Map<String, SkriptClass> classMap = new HashMap<>();
 
+    public static long classAmount() {
+        return classMap.size();
+    }
+
     public static void setAwaitingParent(ClassInstance instance) {
         awaitingParent.add(new WeakReference<>(instance));
     }

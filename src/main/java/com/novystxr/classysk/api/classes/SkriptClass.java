@@ -65,6 +65,16 @@ public class SkriptClass extends ClassInstance {
         return inheritanceStream().anyMatch(target -> target == otherClass);
     }
 
+    public boolean cyclic() {
+        List<SkriptClass> matches = new ArrayList<>();
+        return inheritanceStream().anyMatch(target -> {
+            if (matches.contains(target))
+                return true;
+            matches.add(target);
+            return false;
+        });
+    }
+
     public @Nullable Script getValidScript() {
         if (script == null) return null;
         if (script.valid()) {
