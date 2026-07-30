@@ -65,7 +65,7 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
             return false;
         }
         skriptClass = ClassManager.getClass(name);
-        boolean inParent = SkriptMethod.getContextClass(getParser()) == skriptClass;
+        SkriptClass contextClass = SkriptMethod.getContextClass(getParser());
 
         if (sectionNode == null) {
             return true;
@@ -91,7 +91,7 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
                 Skript.error("Static field cannot be set on an instance");
                 return false;
             }
-            if (signature.accessType() == PRIVATE && !inParent) {
+            if (signature.accessType() == PRIVATE && contextClass != skriptClass) {
                 Skript.error("Private fields can't be accessed here");
                 return false;
             }
