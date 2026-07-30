@@ -43,7 +43,7 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
     /**
      * Validate your signature and set any extra data
      */
-    protected abstract boolean validate(T product, ClassInstance targetClass);
+    protected abstract boolean validate(T product, boolean isStaticContext, SkriptClass targetClass);
 
     protected abstract @Nullable T getProductFromClass(SkriptClass skriptClass);
     protected abstract @Nullable T getProductFromInstance(ClassInstance instance);
@@ -183,7 +183,7 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
         this.product = guesses.getFirst();
 
         try (var handler = new SimpleErrorHandler().start()) {
-            if (validate(product, resultClass)) {
+            if (validate(product, false, resultClass)) {
                 return Kleenean.TRUE;
             }
             error = handler.getLastError();
@@ -200,10 +200,12 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
      *
      */
     public final boolean validateInstance(@NotNull ClassInstance newInstance) {
+        boolean isStaticContext = !newInstance.isInstance();
+
         this.product = getProductFromInstance(newInstance);
         if (product != null) {
 
-            if (validate(product, newInstance)) {
+            if (validate(product, isStaticContext, newInstance.getParent())) {
                 this.instance = newInstance;
                 return true;
             }

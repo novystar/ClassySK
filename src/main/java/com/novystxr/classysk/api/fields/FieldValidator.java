@@ -21,17 +21,17 @@ public class FieldValidator extends AccessValidator<FieldSignature> {
     }
 
     @Override
-    protected boolean validate(FieldSignature signature, ClassInstance targetClass) {
+    protected boolean validate(FieldSignature signature, boolean isStaticContext, SkriptClass targetClass) {
 
-        if (signature.accessType() == PRIVATE && targetClass.getParent() != contextClass) {
+        if (signature.accessType() == PRIVATE && targetClass != contextClass) {
             Skript.error("Private fields can only be accessed from the same class");
             return false;
         }
-        if (signature.accessType() == PROTECTED && !contextClass.inherits(targetClass.getParent())) {
+        if (signature.accessType() == PROTECTED && !contextClass.inherits(targetClass)) {
             Skript.error("Protected fields can only be accessed from inheritors of the original class");
             return false;
         }
-        if (signature.isStatic() == targetClass.isInstance()) {
+        if (signature.isStatic() != isStaticContext) {
             Skript.error("Field accessed from improper context");
             return false;
         }

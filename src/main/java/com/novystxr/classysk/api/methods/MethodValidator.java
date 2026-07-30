@@ -58,20 +58,20 @@ public class MethodValidator extends AccessValidator<ValidReference> {
     }
 
     @Override
-    protected boolean validate(ValidReference reference, ClassInstance targetClass) {
+    protected boolean validate(ValidReference reference, boolean isStaticContext, SkriptClass targetClass) {
         if (expectsReturn && reference.type() == null) {
             Skript.error("This method can't return anything");
             return false;
         }
-        if (reference.accessType() == PRIVATE && targetClass.getParent() != contextClass) {
+        if (reference.accessType() == PRIVATE && targetClass != contextClass) {
             Skript.error("Private methods can only be accessed from the same class");
             return false;
         }
-        if (reference.accessType() == PROTECTED && !contextClass.inherits(targetClass.getParent())) {
+        if (reference.accessType() == PROTECTED && !contextClass.inherits(targetClass)) {
             Skript.error("Protected methods can only be accessed from inheritors of the original class");
             return false;
         }
-        if (reference.isStatic() == targetClass.isInstance()) {
+        if (reference.isStatic() != isStaticContext) {
             Skript.error("Method accessed from improper context");
             return false;
         }
