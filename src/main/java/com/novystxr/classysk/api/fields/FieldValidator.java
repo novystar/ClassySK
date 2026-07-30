@@ -9,6 +9,7 @@ import org.jspecify.annotations.Nullable;
 import org.skriptlang.skript.log.runtime.ErrorSource;
 
 import static com.novystxr.classysk.api.AccessModifiable.AccessType.PRIVATE;
+import static com.novystxr.classysk.api.AccessModifiable.AccessType.PROTECTED;
 
 public class FieldValidator extends AccessValidator<FieldSignature> {
 
@@ -20,13 +21,17 @@ public class FieldValidator extends AccessValidator<FieldSignature> {
     }
 
     @Override
-    protected boolean validate(FieldSignature signature, boolean isStatic, boolean isSameContext) {
+    protected boolean validate(FieldSignature signature, ClassInstance targetClass) {
 
-        if (signature.accessType() == PRIVATE && !isSameContext) {
-            Skript.error("Private fields can't be accessed here");
+        if (signature.accessType() == PRIVATE && targetClass.getParent() != contextClass) {
+            Skript.error("Private fields can only be accessed from the same class");
             return false;
         }
-        if (signature.isStatic() != isStatic) {
+        if (signature.accessType() == PROTECTED && !contextClass.inherits(targetClass.getParent())) {
+            Skript.error("Protected fields can only be accessed from inheritors of the original class");
+            return false;
+        }
+        if (signature.isStatic() == targetClass.isInstance()) {
             Skript.error("Field accessed from improper context");
             return false;
         }

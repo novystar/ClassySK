@@ -19,6 +19,7 @@ import org.skriptlang.skript.log.runtime.ErrorSource;
 import java.util.*;
 
 import static com.novystxr.classysk.api.AccessModifiable.AccessType.PRIVATE;
+import static com.novystxr.classysk.api.AccessModifiable.AccessType.PROTECTED;
 
 public class MethodValidator extends AccessValidator<ValidReference> {
 
@@ -57,17 +58,21 @@ public class MethodValidator extends AccessValidator<ValidReference> {
     }
 
     @Override
-    protected boolean validate(ValidReference reference, boolean isStatic, boolean isSameContext) {
-        if (reference.accessType() == PRIVATE && !isSameContext) {
-            Skript.error("This method can't be accessed here");
-            return false;
-        }
-        if (reference.isStatic() != isStatic) {
-            Skript.error("Method accessed from improper context");
-            return false;
-        }
+    protected boolean validate(ValidReference reference, ClassInstance targetClass) {
         if (expectsReturn && reference.type() == null) {
             Skript.error("This method can't return anything");
+            return false;
+        }
+        if (reference.accessType() == PRIVATE && targetClass.getParent() != contextClass) {
+            Skript.error("Private methods can only be accessed from the same class");
+            return false;
+        }
+        if (reference.accessType() == PROTECTED && !contextClass.inherits(targetClass.getParent())) {
+            Skript.error("Protected methods can only be accessed from inheritors of the original class");
+            return false;
+        }
+        if (reference.isStatic() == targetClass.isInstance()) {
+            Skript.error("Method accessed from improper context");
             return false;
         }
         return true;
