@@ -10,6 +10,7 @@ Nothing here is set in stone but these are my future ambitions regarding the pro
 -  Inheritance: extending other classes
 -  Abstract Methods: unimplemented methods that should be implemented by inheritors
 -  Constant fields: fields that cant be changed after creation
--  Transient fields and classes: Fields that don't get saved
+-  Transient fields: Fields that don't get saved
+-  Method and Field Reflection (possibly)
 #
 ![bunny](https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExYmQ5c3ZoNHlmbDlmNzB3Nm1wZXNrMmdpOXN0c3dkZWx4ZjB6anVuciZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/9u1wc27SoIqzCIaugO/giphy.gif)
