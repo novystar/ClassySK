@@ -12,6 +12,6 @@ Nothing here is set in stone but these are my future ambitions regarding the pro
 -  Constant fields: fields that cant be changed after creation
 -  Transient fields: Fields that don't get saved
 -  Method and Field Reflection
--  Custom types (maybe): I have an idea to possibly achieve this using bytebuddy and converters but it is unlikely to happen until skript allows clean type deregistration.
+-  Custom types (maybe): I have an idea to possibly achieve this using bytebuddy and converters but it is unlikely to happen until skript supports clean type deregistration.
 #
 ![bunny](https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExYmQ5c3ZoNHlmbDlmNzB3Nm1wZXNrMmdpOXN0c3dkZWx4ZjB6anVuciZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/9u1wc27SoIqzCIaugO/giphy.gif)
