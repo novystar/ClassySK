@@ -125,6 +125,7 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
         SkriptClass parent = newInstance.getParent();
         if (parent == null) {
             error("Passed instance is not accessible");
+            return null;
         }
 
         if (this.instance == newInstance) return newInstance;
