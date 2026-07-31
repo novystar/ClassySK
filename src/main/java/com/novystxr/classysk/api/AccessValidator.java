@@ -118,20 +118,25 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
     public final @Nullable ClassInstance getValidInstance(Event event, Expression<ClassInstance> instanceExpr, @Nullable SkriptClass hintClass) {
         ClassInstance newInstance = instanceExpr.getSingle(event);
 
-        if (newInstance == null || !newInstance.isAccessible()) {
-            error("Passed instance is null or non-accessible");
+        if (newInstance == null) {
+            error("Passed instance is null");
             return null;
         }
+        SkriptClass parent = newInstance.getParent();
+        if (parent == null) {
+            error("Passed instance is not accessible");
+        }
+
         if (this.instance == newInstance) return newInstance;
 
-        if (hintClass != null && hintClass != newInstance.getParent()) {
+        if (hintClass != null && hintClass != parent) {
             error("Given instance does not match '"+ hintClass.getEffectiveName() +"'");
             return null;
         }
 
         LogEntry error;
         try (var handler = new SimpleErrorHandler()) {
-            if (validateInstance(newInstance)) {
+            if (validateInstance(newInstance, parent)) {
                 return newInstance;
             }
             error = handler.getLastError();
@@ -194,20 +199,32 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
     }
 
     /**
-     * Validates an instance against the reference, also works for {@link SkriptClass} validating it as a static reference
+     * Validates a class against the reference
+     * @param skriptClass The class to validate
+     * @return true if the class was valid, false if it was not
+     */
+    public final boolean validateStatic(@NotNull SkriptClass skriptClass) {
+        this.product = getProductFromClass(skriptClass);
+        if (product != null) {
+            boolean isSameContext = contextClass == skriptClass;
+            return validate(product, true, isSameContext);
+        }
+        return false;
+    }
+
+    /**
+     * Validates an instance against the reference
      *
      * @param newInstance The instance to validate
      * @return true if the instance was valid, false if it was not
      *
      */
-    public final boolean validateInstance(@NotNull ClassInstance newInstance) {
-        boolean isStatic = !newInstance.isInstance();
-
+    public final boolean validateInstance(@NotNull ClassInstance newInstance, SkriptClass parent) {
         this.product = getProductFromInstance(newInstance);
         if (product != null) {
-            boolean isSameContext = contextClass == newInstance.getParent();
+            boolean isSameContext = contextClass == parent;
 
-            if (validate(product, isStatic, isSameContext)) {
+            if (validate(product, false, isSameContext)) {
                 this.instance = newInstance;
                 return true;
             }

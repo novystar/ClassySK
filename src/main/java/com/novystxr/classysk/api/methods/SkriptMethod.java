@@ -47,7 +47,7 @@ public class SkriptMethod {
         this.trigger = trigger;
     }
 
-    public Object @Nullable [] run(Event event, ClassInstance instance, @Nullable Map<String, Expression<?>> args) {
+    public Object @Nullable [] run(Event event, @Nullable ClassInstance instance, @Nullable Map<String, Expression<?>> args) {
         if (trigger == null) {
             return null;
         }

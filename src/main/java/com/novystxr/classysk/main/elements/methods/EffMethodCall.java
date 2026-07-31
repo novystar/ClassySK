@@ -73,7 +73,7 @@ public class EffMethodCall extends Effect {
             }
         }
         if (isStaticReference)
-            return validator.validateInstance(skriptClass);
+            return validator.validateStatic(skriptClass);
         else {
             if (instanceExpr.getSource() instanceof ExprSelf)
                 skriptClass = contextClass;
@@ -84,16 +84,12 @@ public class EffMethodCall extends Effect {
 
     @Override
     protected void execute(Event event) {
-        ClassInstance instance = getValidInstance(event);
+        ClassInstance instance = isStaticReference
+            ? null : validator.getValidInstance(event, instanceExpr, skriptClass);
         if (instance == null) return;
 
         ValidReference reference = validator.product();
         reference.method().run(event, instance, reference.args());
-    }
-
-    private @Nullable ClassInstance getValidInstance(Event event) {
-        if (isStaticReference) return skriptClass;
-        return validator.getValidInstance(event, instanceExpr, skriptClass);
     }
 
     @Override

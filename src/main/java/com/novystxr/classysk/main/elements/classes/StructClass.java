@@ -17,7 +17,6 @@ import com.novystxr.classysk.main.elements.methods.SecMethod;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.UnknownNullability;
 import org.skriptlang.skript.lang.entry.EntryContainer;
-import org.skriptlang.skript.lang.script.Script;
 import org.skriptlang.skript.lang.structure.Structure;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos.Structure.NodeType;
 import org.skriptlang.skript.registration.SyntaxInfo;
@@ -70,24 +69,17 @@ public class StructClass extends Structure {
     public boolean init(Literal<?>[] args, int pattern, ParseResult result, @UnknownNullability EntryContainer entryContainer) {
         this.entryContainer = entryContainer;
         name = StringUtils.getLowerCase(result.regexes.getFirst());
-        if (classAlreadyExists()) {
-            Skript.error("A class structure named '%s' already exists in a script", name);
-            return false;
-        }
         return true;
     }
 
     @Override
     public boolean preLoad() {
-        SkriptClass newClass = ClassManager.getClass(name);
-
-        if (newClass != null && newClass.validateStructure()) {
-            newClass.methodRegistry.init();
-            newClass.fieldSignatures.clear();
-        } else {
-            newClass = new SkriptClass(name, getParser().getCurrentScript());
-            ClassManager.createClass(name, newClass);
+        if (ClassManager.classExists(name)) {
+            Skript.error("A class named '%s' already exists", name);
+            return false;
         }
+        SkriptClass newClass = ClassManager.createClass(name);
+
         for (Node node : entryContainer.getUnhandledNodes()) {
             var element = ParserUtils.parseNodeAsInfos(node, "Could not recognize entry: "+node.getKey(), EffField.INFO, SecMethod.INFO);
 
@@ -108,10 +100,9 @@ public class StructClass extends Structure {
                 return false;
             }
         }
-        newClass.revalidateFields();
         ClassManager.checkAwaitingParent(newClass);
+        ClassManager.revalidateFields(newClass);
 
-        newClass.accessible = true;
         return true;
     }
 
@@ -127,19 +118,7 @@ public class StructClass extends Structure {
 
     @Override
     public void unload() {
-        SkriptClass skriptClass = ClassManager.getClass(name);
-        skriptClass.accessible = false;
-    }
-
-    private boolean classAlreadyExists() {
-        Script currentScript = getParser().getCurrentScript();
-        for (Structure structure : currentScript.getStructures()) {
-            if (structure instanceof StructClass structClass)
-                if (structClass != this && structClass.name.equals(name))
-                    return true;
-        }
-        SkriptClass skriptClass = ClassManager.getClass(name);
-        return skriptClass != null && skriptClass.getValidScript() == currentScript;
+        ClassManager.removeClass(name);
     }
 
     public String getName() {

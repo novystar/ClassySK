@@ -4,7 +4,6 @@ import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.yggdrasil.Fields;
 import ch.njol.yggdrasil.YggdrasilSerializable.YggdrasilExtendedSerializable;
-import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import org.jetbrains.annotations.NotNull;
 import java.io.StreamCorruptedException;
@@ -57,15 +56,13 @@ public class SerializableField implements YggdrasilExtendedSerializable {
         return true;
     }
 
-    public FieldSignature mergeSignature(ClassInstance instance, FieldSignature signature) {
-        boolean isStatic = !instance.isInstance();
-
+    public FieldSignature mergeSignature(FieldSignature signature) {
         return new FieldSignature(
             signature.name(),
             signatureType,
             null,
             signature.accessType(),
-            isStatic,
+            false,
             isPlural
         );
     }

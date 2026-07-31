@@ -2,6 +2,7 @@ package com.novystxr.classysk.api.fields;
 
 import ch.njol.skript.Skript;
 import com.novystxr.classysk.api.AccessValidator;
+import com.novystxr.classysk.api.FieldHolder;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
@@ -35,12 +36,16 @@ public class FieldValidator extends AccessValidator<FieldSignature> {
 
     @Override
     protected @Nullable FieldSignature getProductFromClass(SkriptClass skriptClass) {
-        return getProductFromInstance(skriptClass);
+        return getProductFromHolder(skriptClass);
     }
 
     @Override
     protected @Nullable FieldSignature getProductFromInstance(ClassInstance instance) {
-        FieldSignature signature = instance.getFieldSignature(fieldName);
+        return getProductFromHolder(instance);
+    }
+
+    private @Nullable FieldSignature getProductFromHolder(FieldHolder holder) {
+        FieldSignature signature = holder.getFieldSignature(fieldName);
         if (signature == null) {
             Skript.error("Could not resolve field signature");
         }

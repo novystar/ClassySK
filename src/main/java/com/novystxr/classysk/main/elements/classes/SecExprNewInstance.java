@@ -60,7 +60,7 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
     @Override
     public boolean init(Expression<?>[] expressions, int pattern, Kleenean delayed, ParseResult result, @Nullable SectionNode sectionNode, @Nullable List<TriggerItem> triggerItems) {
         String name = StringUtils.getLowerCase(result.regexes.getFirst());
-        if (!ClassManager.isAccessible(name)) {
+        if (!ClassManager.classExists(name)) {
             Skript.error("Class named " + name + " does not exist");
             return false;
         }

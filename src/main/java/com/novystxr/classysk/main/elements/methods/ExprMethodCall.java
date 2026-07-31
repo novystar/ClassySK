@@ -79,7 +79,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
             }
         }
         if (isStaticReference) {
-            if (!validator.validateInstance(skriptClass))
+            if (!validator.validateStatic(skriptClass))
                 return false;
         } else {
             if (instanceExpr.getSource() instanceof ExprSelf)
@@ -96,12 +96,11 @@ public class ExprMethodCall extends SimpleExpression<Object> {
 
     @Override
     protected Object @Nullable [] get(Event event) {
-        ClassInstance instance = getValidInstance(event);
-        if (instance == null) {
-            return null;
-        }
-        ValidReference reference = validator.product();
+        ClassInstance instance = isStaticReference
+            ? null : validator.getValidInstance(event, instanceExpr, skriptClass);
+        if (instance == null) return null;
 
+        ValidReference reference = validator.product();
         if (shouldBeSingle.isTrue() && reference.isPlural()) {
             error("Method returns multiple values while reporting as single. Try reloading the script or using a safe call: %instance%<>::method()");
             return null;
@@ -131,11 +130,6 @@ public class ExprMethodCall extends SimpleExpression<Object> {
     @Override
     public Class<?>[] possibleReturnTypes() {
         return possibleTypes;
-    }
-
-    private @Nullable ClassInstance getValidInstance(Event event) {
-        if (isStaticReference) return skriptClass;
-        return validator.getValidInstance(event, instanceExpr, skriptClass);
     }
 
     @Override
