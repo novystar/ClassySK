@@ -11,10 +11,9 @@ public class ClassManager {
     // freshly deserialized instances that are waiting for the corresponding class structure to be registered
 
     private static final Map<String, SkriptClass> classMap = new HashMap<>();
-
     static final Map<String, Map<String, SkriptField>> staticFields = new HashMap<>();
-    static final Map<String, Set<ClassInstance>> instances = new HashMap<>();
 
+    static final Map<String, Set<ClassInstance>> instances = new HashMap<>();
     static final Map<String, Set<ClassInstance>> awaitingParent = new HashMap<>();
 
     public static void setAwaitingParent(ClassInstance instance) {
