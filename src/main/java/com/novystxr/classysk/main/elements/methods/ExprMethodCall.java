@@ -40,7 +40,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
     }
 
     private MethodValidator validator;
-    private boolean isStaticReference;
+    private boolean isStatic;
 
     private SkriptClass skriptClass = null;
     private Expression<ClassInstance> instanceExpr;
@@ -52,7 +52,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
     @SuppressWarnings("unchecked")
     @Override
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result) {
-        isStaticReference = pattern == 1;
+        isStatic = pattern == 1;
 
         MatchResult regex = result.regexes.getFirst();
         SkriptClass contextClass = SkriptMethod.getContextClass(getParser());
@@ -66,7 +66,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
 
         validator = new MethodValidator(getErrorSource(), contextClass, reference, true);
 
-        if (!isStaticReference) {
+        if (!isStatic) {
             instanceExpr = (Expression<ClassInstance>) exprs[0];
         }
         if (className != null) {
@@ -78,7 +78,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
                 return false;
             }
         }
-        if (isStaticReference) {
+        if (isStatic) {
             if (!validator.validateStatic(skriptClass))
                 return false;
         } else {
@@ -96,9 +96,8 @@ public class ExprMethodCall extends SimpleExpression<Object> {
 
     @Override
     protected Object @Nullable [] get(Event event) {
-        ClassInstance instance = isStaticReference
-            ? null : validator.getValidInstance(event, instanceExpr, skriptClass);
-        if (instance == null) return null;
+        ClassInstance instance = isStatic ? null : validator.getValidInstance(event, instanceExpr, skriptClass);
+        if (!isStatic && instance == null) return null;
 
         ValidReference reference = validator.product();
         if (shouldBeSingle.isTrue() && reference.isPlural()) {

@@ -38,7 +38,7 @@ public class EffMethodCall extends Effect {
     }
 
     private MethodValidator validator;
-    private boolean isStaticReference;
+    private boolean isStatic;
 
     private SkriptClass skriptClass = null;
     private Expression<ClassInstance> instanceExpr;
@@ -46,7 +46,7 @@ public class EffMethodCall extends Effect {
     @SuppressWarnings("unchecked")
     @Override
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result) {
-        isStaticReference = pattern == 1;
+        isStatic = pattern == 1;
 
         MatchResult regex = result.regexes.getFirst();
         SkriptClass contextClass = SkriptMethod.getContextClass(getParser());
@@ -60,7 +60,7 @@ public class EffMethodCall extends Effect {
 
         validator = new MethodValidator(getErrorSource(), contextClass, reference, false);
 
-        if (!isStaticReference) {
+        if (!isStatic) {
             instanceExpr = (Expression<ClassInstance>) exprs[0];
         }
         if (className != null) {
@@ -72,7 +72,7 @@ public class EffMethodCall extends Effect {
                 return false;
             }
         }
-        if (isStaticReference)
+        if (isStatic)
             return validator.validateStatic(skriptClass);
         else {
             if (instanceExpr.getSource() instanceof ExprSelf)
@@ -84,9 +84,8 @@ public class EffMethodCall extends Effect {
 
     @Override
     protected void execute(Event event) {
-        ClassInstance instance = isStaticReference
-            ? null : validator.getValidInstance(event, instanceExpr, skriptClass);
-        if (instance == null) return;
+        ClassInstance instance = isStatic ? null : validator.getValidInstance(event, instanceExpr, skriptClass);
+        if (!isStatic && instance == null) return;
 
         ValidReference reference = validator.product();
         reference.method().run(event, instance, reference.args());
