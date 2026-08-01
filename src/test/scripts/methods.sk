@@ -610,7 +610,7 @@ test "ClassySK - Keyed method input":
 	set {_input::two} to 2
 	set {_input::three} to 3
 
-	{_inst}::testKeyedInts({_input::*})
+	{_inst}::testKeyedInts(keyed {_input::*})
 
 	assert {-testKeyedInts::one} is 1
 	assert {-testKeyedInts::two} is 2
