@@ -123,8 +123,8 @@ public class StructClass extends Structure {
 
     @Override
     public boolean load() {
-        ClassManager.revalidateFields(newClass);
         ClassManager.checkAwaitingParent(newClass);
+        ClassManager.revalidateFields(newClass);
 
         // load method triggers after initial registration so it will always know about other methods within a class
         for (SecMethod secMethod : methodSections) {
