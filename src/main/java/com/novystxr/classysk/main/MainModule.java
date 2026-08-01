@@ -38,7 +38,7 @@ public class MainModule implements AddonModule {
             ExprClass::register
             );
 
-        onlyForDocs(addon);
+        //onlyForDocs(addon);
     }
 
     @Override
