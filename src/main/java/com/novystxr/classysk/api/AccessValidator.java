@@ -119,12 +119,12 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
         ClassInstance newInstance = instanceExpr.getSingle(event);
 
         if (newInstance == null) {
-            error("Passed instance is null");
+            error("Target instance was not set");
             return null;
         }
         SkriptClass parent = newInstance.getParent();
         if (parent == null) {
-            error("Passed instance is not accessible");
+            error("Target instance is not accessible");
             return null;
         }
 
