@@ -599,7 +599,9 @@ test "ClassySK - Invalid Methods":
 
 Class TestKeyed:
 	public testKeyedInts(ints: integers):
-		set {-testKeyedInts::*} to keyed {_ints::*}
+		set {-testKeyedInts::one} to {_ints::one}
+		set {-testKeyedInts::two} to {_ints::two}
+		set {-testKeyedInts::three} to {_ints::three}
 
 test "ClassySK - Keyed method input":
 	set {_inst} to new instance of TestKeyed
