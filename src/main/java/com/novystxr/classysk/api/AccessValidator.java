@@ -118,20 +118,25 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
     public final @Nullable ClassInstance getValidInstance(Event event, Expression<ClassInstance> instanceExpr, @Nullable SkriptClass hintClass) {
         ClassInstance newInstance = instanceExpr.getSingle(event);
 
-        if (newInstance == null || !newInstance.isAccessible()) {
-            error("Passed instance is null or non-accessible");
+        if (newInstance == null) {
+            error("Passed instance is null");
             return null;
         }
-        if (this.instance == newInstance) {
-            return newInstance;
+        SkriptClass parent = newInstance.getParent();
+        if (parent == null) {
+            error("Passed instance is not accessible");
+            return null;
         }
-        if (hintClass != null && !newInstance.getParent().inherits(hintClass)) {
+
+        if (this.instance == newInstance) return newInstance;
+
+        if (hintClass != null && !parent.inherits(hintClass)) {
             error("Given instance does not match '"+ hintClass.getEffectiveName() +"'");
             return null;
         }
         LogEntry error;
         try (var handler = new SimpleErrorHandler()) {
-            if (validateInstance(newInstance)) {
+            if (validateInstance(newInstance, parent)) {
                 return newInstance;
             }
             error = handler.getLastError();
@@ -156,14 +161,14 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
 
         try (var handler = new SimpleErrorHandler().start()) {
             if (hintClass != null) {
-                T product = validateProductFromClass(hintClass);
+                T product = getProductFromClass(hintClass);
                 if (product != null) {
                     guesses.add(product);
                     resultClass = hintClass;
                 }
             } else {
                 for (SkriptClass skriptClass : ClassManager.getClasses()) {
-                    T product = validateProductFromClass(skriptClass);
+                    T product = getProductFromClass(skriptClass);
                     if (product != null) {
                         guesses.add(product);
                         resultClass = skriptClass;
@@ -192,29 +197,31 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
         return Kleenean.FALSE;
     }
 
-    public final @Nullable T validateProductFromClass(SkriptClass skriptClass) {
-        if (!skriptClass.accessible) {
-            Skript.error("This class is not accessible");
-            return null;
+    /**
+     * Validates a class against the reference
+     * @param skriptClass The class to validate
+     * @return true if the class was valid, false if it was not
+     */
+    public final boolean validateStatic(@NotNull SkriptClass skriptClass) {
+        this.product = getProductFromClass(skriptClass);
+        if (product != null) {
+            return validate(product, true, skriptClass);
         }
-        return getProductFromClass(skriptClass);
-
+        return false;
     }
 
     /**
-     * Validates an instance against the reference, also works for {@link SkriptClass} validating it as a static reference
+     * Validates an instance against the reference
      *
      * @param newInstance The instance to validate
      * @return true if the instance was valid, false if it was not
      *
      */
-    public final boolean validateInstance(@NotNull ClassInstance newInstance) {
-        boolean isStaticContext = !newInstance.isInstance();
-
+    public final boolean validateInstance(@NotNull ClassInstance newInstance, SkriptClass parent) {
         this.product = getProductFromInstance(newInstance);
         if (product != null) {
 
-            if (validate(product, isStaticContext, newInstance.getParent())) {
+            if (validate(product, false, parent)) {
                 this.instance = newInstance;
                 return true;
             }
