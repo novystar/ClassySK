@@ -1,8 +1,6 @@
 package com.novystxr.classysk.api.methods;
 
-import ch.njol.skript.lang.Expression;
-import ch.njol.skript.lang.SectionSkriptEvent;
-import ch.njol.skript.lang.Trigger;
+import ch.njol.skript.lang.*;
 import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.variables.Variables;
 import com.novystxr.classysk.api.AccessModifiable;
@@ -11,10 +9,10 @@ import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.event.MethodRunEvent;
 import com.novystxr.classysk.main.elements.methods.SecMethod;
 import org.bukkit.event.Event;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.Map.Entry;
 
 public class SkriptMethod {
 
@@ -47,28 +45,24 @@ public class SkriptMethod {
         this.trigger = trigger;
     }
 
-    public Object @Nullable [] run(Event event, @Nullable ClassInstance instance, @Nullable Map<String, Expression<?>> args) {
-        if (trigger == null) {
-            return null;
-        }
+    public Object @Nullable [] run(Event event, @Nullable ClassInstance instance, @NotNull Map<String, Expression<?>> args) {
+        if (trigger == null) return null;
         MethodRunEvent runEvent = new MethodRunEvent(instance);
-        if (args != null) {
-            for (Entry<String, Expression<?>> arg : args.entrySet()) {
-                Object[] values = arg.getValue().getArray(event);
-                String key = arg.getKey();
+        for (var entry : args.entrySet()) {
+            Expression<?> expr = entry.getValue();
+            String key = entry.getKey();
 
-                if (values.length == 0) {
-                    continue;
+            if (signature.arguments.get(key).isPlural()) {
+                Object[] values = expr.getArray(event);
+                String[] keys = KeyProviderExpression.areKeysRecommended(expr) ?
+                    ((KeyProviderExpression<?>) expr).getArrayKeys(event) : null;
+                KeyedValue<?>[] keyedValues = KeyedValue.zip(values, keys);
+
+                for (KeyedValue<?> keyedValue : keyedValues) {
+                    Variables.setVariable(key+"::"+keyedValue.key(), keyedValue.value(), runEvent, true);
                 }
-                if (signature.arguments.get(key).isPlural) {
-                    int i = 0;
-                    for (Object value : values) {
-                        i++;
-                        Variables.setVariable(key+"::"+i, value, runEvent, true);
-                    }
-                } else {
-                    Variables.setVariable(key, values[0], runEvent, true);
-                }
+            } else {
+                Variables.setVariable(key, expr.getSingle(event), runEvent, true);
             }
         }
         return trigger.execute(runEvent) ? runEvent.returnObject : null;

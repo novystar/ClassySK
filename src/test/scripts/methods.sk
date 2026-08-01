@@ -596,3 +596,22 @@ test "ClassySK - Invalid Methods":
 	assert {-testInvalidMethods::8::*} is set
 	assert {-testInvalidMethods::9::*} is set
 	assert {-testInvalidMethods::10::*} is set
+
+Class TestKeyed:
+	public testKeyedInts(ints: integers):
+		set {-testKeyedInts::one} to {_ints::one}
+		set {-testKeyedInts::two} to {_ints::two}
+		set {-testKeyedInts::three} to {_ints::three}
+
+test "ClassySK - Keyed method input":
+	set {_inst} to new instance of TestKeyed
+
+	set {_input::one} to 1
+	set {_input::two} to 2
+	set {_input::three} to 3
+
+	{_inst}::testKeyedInts(keyed {_input::*})
+
+	assert {-testKeyedInts::one} is 1
+	assert {-testKeyedInts::two} is 2
+	assert {-testKeyedInts::three} is 3

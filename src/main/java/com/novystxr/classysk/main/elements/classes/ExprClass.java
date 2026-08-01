@@ -16,9 +16,9 @@ import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
-@Name("Wrapper Class")
+@Name("Class Reference")
 @Keywords({"from name", "class"})
-@Description("Gets the wrapper class for a given name, useful for comparisons")
+@Description("Gets the class reference for a given name, useful for comparisons")
 @Example("if class of {_instance} is class named MyClass:")
 @Since("1.0.0")
 public class ExprClass extends SimpleExpression<ClassReference> {
@@ -67,6 +67,6 @@ public class ExprClass extends SimpleExpression<ClassReference> {
 
     @Override
     public String toString(@Nullable Event event, boolean debug) {
-        return "wrapper class "+className;
+        return "class reference "+className;
     }
 }

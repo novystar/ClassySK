@@ -9,7 +9,7 @@ import org.skriptlang.skript.registration.SyntaxRegistry;
 
 @Name("Class of instance")
 @Keywords({"get class", "from instance"})
-@Description("Gets the wrapper class for the given instance, useful for comparisons")
+@Description("Gets the class reference for the given instance, useful for comparisons")
 @Example("if class of {_instance} is class of {_otherInstance}")
 @Since("1.0.0")
 public class PropExprClass extends SimplePropertyExpression<ClassInstance, ClassReference> {
@@ -18,7 +18,7 @@ public class PropExprClass extends SimplePropertyExpression<ClassInstance, Class
         registry.register(
             SyntaxRegistry.EXPRESSION,
             infoBuilder(PropExprClass.class, ClassReference.class,
-                "[skript|wrapper] class", "classinstance", true)
+                "([skript] class|class reference)", "classinstance", true)
                 .supplier(PropExprClass::new)
                 .build()
         );
@@ -31,7 +31,7 @@ public class PropExprClass extends SimplePropertyExpression<ClassInstance, Class
 
     @Override
     protected String getPropertyName() {
-        return "wrapper class";
+        return "class reference";
     }
 
     @Override
