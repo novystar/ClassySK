@@ -8,8 +8,6 @@ import java.util.*;
 
 public class ClassManager {
 
-    // freshly deserialized instances that are waiting for the corresponding class structure to be registered
-
     private static final Map<String, SkriptClass> classMap = new HashMap<>();
     static final Map<String, Map<String, SkriptField>> staticFields = new HashMap<>();
 
