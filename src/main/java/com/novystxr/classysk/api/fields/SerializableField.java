@@ -57,14 +57,13 @@ public class SerializableField implements YggdrasilExtendedSerializable {
     }
 
     public FieldSignature mergeSignature(FieldSignature signature) {
-
         return new FieldSignature(
             signature.name(),
             signatureType,
             null,
             signature.accessType(),
             isPlural,
-            null
+            signature.modifier()
         );
     }
 }

@@ -9,7 +9,7 @@ import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
-import com.novystxr.classysk.api.classes.SkriptClassWrapper;
+import com.novystxr.classysk.api.classes.ClassReference;
 import com.novystxr.classysk.api.util.StringUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
@@ -21,13 +21,14 @@ import org.skriptlang.skript.registration.SyntaxRegistry;
 @Description("Gets the wrapper class for a given name, useful for comparisons")
 @Example("if class of {_instance} is class named MyClass:")
 @Since("1.0.0")
-public class ExprClass extends SimpleExpression<SkriptClassWrapper> {
+public class ExprClass extends SimpleExpression<ClassReference> {
 
     public static void register(SyntaxRegistry registry) {
         registry.register(
             SyntaxRegistry.EXPRESSION,
-            DefaultSyntaxInfos.Expression.builder(ExprClass.class, SkriptClassWrapper.class)
-                .addPattern("[skript|wrapper] class [named] <"+ Classysk.CLASSNAME_PATTERN+">")
+            DefaultSyntaxInfos.Expression.builder(ExprClass.class, ClassReference.class)
+                .addPattern("class reference [of] <"+ Classysk.CLASSNAME_PATTERN+">")
+                .addPattern("[skript|reference of] class [named] <"+ Classysk.CLASSNAME_PATTERN+">")
                 .supplier(ExprClass::new)
                 .build()
         );
@@ -41,7 +42,7 @@ public class ExprClass extends SimpleExpression<SkriptClassWrapper> {
         className = StringUtils.getLowerCase(result.regexes.getFirst());
         skriptClass = ClassManager.getClass(className);
 
-        if (skriptClass == null || !skriptClass.accessible) {
+        if (skriptClass == null) {
             Skript.error("Class named '%s' does not exist", StringUtils.titleCase(className));
             return false;
         }
@@ -50,13 +51,13 @@ public class ExprClass extends SimpleExpression<SkriptClassWrapper> {
     }
 
     @Override
-    protected SkriptClassWrapper @Nullable [] get(Event event) {
-        return new SkriptClassWrapper[]{SkriptClassWrapper.of(skriptClass)};
+    protected ClassReference @Nullable [] get(Event event) {
+        return new ClassReference[]{ClassReference.of(skriptClass)};
     }
 
     @Override
-    public Class<? extends SkriptClassWrapper> getReturnType() {
-        return SkriptClassWrapper.class;
+    public Class<? extends ClassReference> getReturnType() {
+        return ClassReference.class;
     }
 
     @Override

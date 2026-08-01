@@ -1,9 +1,9 @@
 class ClassA:
-	public getClass() :: class wrapper:
+	public getClass() :: class reference:
 		return class of self
 
 class ClassB:
-	public getClass() :: class wrapper:
+	public getClass() :: class reference:
 		return class of self
 		
 

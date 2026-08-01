@@ -41,19 +41,18 @@ public class ExprSelf extends SimpleExpression<ClassInstance> {
 
     @Override
     public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, SkriptParser.ParseResult parseResult) {
-        if (SkriptMethod.isMethodBody(getParser())) {
-            return true;
+        if (!SkriptMethod.isMethodBody(getParser())) {
+            Skript.error("This expression can only be used within a method section.");
+            return false;
         }
-        Skript.error("This expression can only be used within a method section.");
-        return false;
+        return true;
     }
 
     @Override
     protected ClassInstance @Nullable [] get(Event event) {
         if (event instanceof MethodRunEvent runEvent) {
-            if (runEvent.instance.isInstance()) {
-                return new ClassInstance[]{runEvent.instance};
-            }
+            return runEvent.instance == null
+                ? null : new ClassInstance[]{runEvent.instance};
         }
         return null;
     }

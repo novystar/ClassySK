@@ -10,7 +10,7 @@ import ch.njol.yggdrasil.Fields.FieldContext;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.ClassInstance;
-import com.novystxr.classysk.api.classes.SkriptClassWrapper;
+import com.novystxr.classysk.api.classes.ClassReference;
 import com.novystxr.classysk.api.fields.SerializableField;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
@@ -25,12 +25,12 @@ import java.io.StreamCorruptedException;
 public class Types {
     public static void register(SkriptAddon addon) {
 
-        Classes.registerClass(new ClassInfo<>(SkriptClassWrapper.class, "classwrapper")
-            .user("class wrapper(s)?")
-            .name("Class Wrapper")
+        Classes.registerClass(new ClassInfo<>(ClassReference.class, "classreference")
+            .user("class reference(s)?")
+            .name("Class Reference")
             .property(Property.NAME, "The name of the class", addon,
-                ExpressionPropertyHandler.of(SkriptClassWrapper::name, String.class))
-            .description("Non-instance wrapper for a class, represents the class as a whole")
+                ExpressionPropertyHandler.of(ClassReference::name, String.class))
+            .description("Non-instance reference of a class, represents the class as a whole")
             .parser(new Parser<>() {
 
                 @Override
@@ -39,13 +39,13 @@ public class Types {
                 }
 
                 @Override
-                public String toString(SkriptClassWrapper o, int flags) {
-                    return "Class " + StringUtils.titleCase(o.skriptClass().name);
+                public String toString(ClassReference o, int flags) {
+                    return "Class " + StringUtils.titleCase(o.name());
                 }
 
                 @Override
-                public String toVariableNameString(SkriptClassWrapper o) {
-                    return "Class " + o.skriptClass().name;
+                public String toVariableNameString(ClassReference o) {
+                    return "Class " + o.name();
                 }
             })
         );
@@ -54,7 +54,7 @@ public class Types {
             .user("class instance(s)?")
             .name("Class Instance")
             .property(Property.NAME, "The name of the class this instance belongs to", addon,
-                ExpressionPropertyHandler.of(ClassInstance::name, String.class))
+                ExpressionPropertyHandler.of(instance -> instance.name, String.class))
             .description("Instance version of a class, holds non-static methods and fields, representing a created instance of a class.")
             .parser(new Parser<>() {
 

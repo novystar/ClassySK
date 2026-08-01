@@ -40,7 +40,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
     }
 
     private MethodValidator validator;
-    private boolean isStaticReference;
+    private boolean isStatic;
 
     private SkriptClass skriptClass = null;
     private Expression<ClassInstance> instanceExpr;
@@ -52,7 +52,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
     @SuppressWarnings("unchecked")
     @Override
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result) {
-        isStaticReference = pattern == 1;
+        isStatic = pattern == 1;
 
         MatchResult regex = result.regexes.getFirst();
         SkriptClass contextClass = SkriptMethod.getContextClass(getParser());
@@ -66,7 +66,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
 
         validator = new MethodValidator(getErrorSource(), contextClass, reference, true);
 
-        if (!isStaticReference) {
+        if (!isStatic) {
             instanceExpr = (Expression<ClassInstance>) exprs[0];
         }
         if (className != null) {
@@ -78,8 +78,8 @@ public class ExprMethodCall extends SimpleExpression<Object> {
                 return false;
             }
         }
-        if (isStaticReference) {
-            if (!validator.validateInstance(skriptClass))
+        if (isStatic) {
+            if (!validator.validateStatic(skriptClass))
                 return false;
         } else {
             if (instanceExpr.getSource() instanceof ExprSelf)
@@ -97,12 +97,10 @@ public class ExprMethodCall extends SimpleExpression<Object> {
 
     @Override
     protected Object @Nullable [] get(Event event) {
-        ClassInstance instance = getValidInstance(event);
-        if (instance == null) {
-            return null;
-        }
-        ValidReference reference = validator.product();
+        ClassInstance instance = isStatic ? null : validator.getValidInstance(event, instanceExpr, skriptClass);
+        if (!isStatic && instance == null) return null;
 
+        ValidReference reference = validator.product();
         if (shouldBeSingle.isTrue() && reference.isPlural()) {
             error("Method returns multiple values while reporting as single. Try reloading the script or using a safe call: %instance%<>::method()");
             return null;
@@ -132,11 +130,6 @@ public class ExprMethodCall extends SimpleExpression<Object> {
     @Override
     public Class<?>[] possibleReturnTypes() {
         return possibleTypes;
-    }
-
-    private @Nullable ClassInstance getValidInstance(Event event) {
-        if (isStaticReference) return skriptClass;
-        return validator.getValidInstance(event, instanceExpr, skriptClass);
     }
 
     @Override

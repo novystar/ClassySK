@@ -1,56 +1,47 @@
 package com.novystxr.classysk.api.classes;
 
-import java.io.File;
-import java.lang.ref.WeakReference;
 import java.util.*;
 import java.util.stream.Stream;
 
-import ch.njol.skript.ScriptLoader;
 import ch.njol.skript.lang.Expression;
-import ch.njol.skript.lang.parser.ParserInstance;
+import com.novystxr.classysk.api.FieldHolder;
 import com.novystxr.classysk.api.event.FieldEvalEvent;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.methods.MethodRegistry;
 import com.novystxr.classysk.api.util.StringUtils;
-import com.novystxr.classysk.main.elements.classes.StructClass;
 import org.jetbrains.annotations.Nullable;
-import org.skriptlang.skript.lang.script.Script;
-import org.skriptlang.skript.lang.structure.Structure;
 
 /**
  * The single non-instance version of a class
  */
-public class SkriptClass extends ClassInstance {
+public class SkriptClass implements FieldHolder {
+
+    public final String name;
+    public String extendsName;
 
     public final MethodRegistry methodRegistry = new MethodRegistry();
     public final Map<String, FieldSignature> fieldSignatures = new HashMap<>();
 
-    final List<WeakReference<ClassInstance>> instances = new ArrayList<>();
-
-    public SkriptClass extendsClass = null;
-
-    SkriptClassWrapper wrapper = null;
-    private Script script;
-
-    // whether the class is accessible in scripts
-    // this is set to false when the corresponding structure is unloaded
-    public boolean accessible = false;
-
-    public SkriptClass(String name, Script script) {
-        super(name);
-        this.script = script;
+    public SkriptClass(String name) {
+        this.name = name;
     }
 
-    public SkriptClassWrapper getWrapper() {
-        if (wrapper == null) {
-            wrapper = new SkriptClassWrapper(this);
-        }
-        return wrapper;
+    public @Nullable Set<ClassInstance> instances() {
+        return ClassManager.instances.get(name);
+    }
+
+    @Override
+    public Map<String, SkriptField> fieldMap() {
+        return ClassManager.staticFields.computeIfAbsent(name, key -> new HashMap<>());
+    }
+
+    public @Nullable SkriptClass extendsClass() {
+        return (extendsName == null) ? null : ClassManager.getClass(extendsName);
     }
 
     public Stream<SkriptClass> inheritanceStream() {
-        return Stream.iterate(this, Objects::nonNull, target -> target.extendsClass);
+        return Stream.iterate(this, Objects::nonNull, target -> ClassManager.getClass(target.extendsName));
     }
 
     @Override
@@ -65,128 +56,33 @@ public class SkriptClass extends ClassInstance {
         return inheritanceStream().anyMatch(target -> target == otherClass);
     }
 
-    public boolean cyclic() {
-        List<SkriptClass> matches = new ArrayList<>();
-        return inheritanceStream().anyMatch(target -> {
-            if (matches.contains(target))
-                return true;
-            matches.add(target);
-            return false;
-        });
-    }
-
-    public @Nullable Script getValidScript() {
-        if (script == null) return null;
-        if (script.valid()) {
-            return script;
-        }
-        File file = script.getConfig().getFile();
-        if (file == null || !file.isFile()) return null;
-
-        Script newScript = ScriptLoader.getScript(file);
-        if (newScript == null) return null;
-
-        this.script = newScript;
-        return this.script;
-    }
-
-    private void setDefaults(ClassInstance instance) {
+    void setDefaults(FieldHolder fieldHolder) {
         for (FieldSignature signature : fieldSignatures.values()) {
-            if (signature.isStatic() == instance.isInstance()) continue;
+            if (signature.isStatic() == fieldHolder instanceof ClassInstance) continue;
 
             String fieldName = signature.name();
-            if (instance.fieldExists(fieldName)) continue;
+            if (fieldHolder.fieldExists(fieldName)) continue;
 
             Expression<?> defaultExpr = signature.defaultExpr();
             if (defaultExpr == null) continue;
 
             Object[] value = defaultExpr.getArray(new FieldEvalEvent());
-            instance.setFieldValue(fieldName, value);
+            fieldHolder.setFieldValue(fieldName, value);
         }
     }
 
     public ClassInstance createInstance() {
         ClassInstance newInstance = new ClassInstance(name);
-        instances.add(new WeakReference<>(newInstance));
+
+        ClassManager.instances.computeIfAbsent(name, key ->
+                Collections.newSetFromMap(new WeakHashMap<>()))
+            .add(newInstance);
 
         setDefaults(newInstance);
         return newInstance;
     }
 
-    @Override
-    public boolean isInstance() {
-        return false;
-    }
-
-    @Override
-    public SkriptClass getParent() {
-        return this;
-    }
-
-    @Override
     public String getEffectiveName() {
         return StringUtils.titleCase(name);
     }
-
-    /**
-     * Determines if the underlying class structure still exists in it's designated script
-     */
-    public boolean validateStructure() {
-        Script script = this.script;
-        if (script == null) return false;
-
-        List<Structure> structures = script.getStructures();
-        for (Structure structure : structures) {
-            if (structure instanceof StructClass classStruct) {
-                Script structScript = ParserInstance.get().getCurrentScript();
-                if (classStruct.getName().equals(name) && structScript.nameAndPath().equals(script.nameAndPath())) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    public void revalidateFields() {
-
-        // static field validation
-        // attempt to convert, if failed, static context changes or no longer exists, remove field
-        fieldMap.values().removeIf(field -> {
-            FieldSignature signature = getFieldSignature(field.signature.name());
-
-            // if signature no longer exists or static context changed, ignore and use existing signature
-            if (signature == null || signature.isStatic() != field.signature.isStatic()) return true;
-
-            if (signature.canConvert(field.value)) {
-                field.signature = signature;
-            } else {
-                return true;
-            }
-            return false;
-        });
-
-        // init any non-existing static fields with default values
-        setDefaults(this);
-
-        instances.removeIf(reference -> {
-            ClassInstance instance = reference.get();
-            if (instance == null) return true;
-
-            for (SkriptField field : instance.fieldMap.values()) {
-                String fieldName = field.signature.name();
-                FieldSignature signature = getFieldSignature(fieldName);
-
-                // if signature no longer exists or static context changed, ignore and use existing signature
-                if (signature == null || signature.isStatic() != field.signature.isStatic()) {
-                    continue;
-                }
-                // attempt to convert to new signature
-                if (signature.canConvert(field.value)) {
-                    field.signature = signature;
-                }
-            }
-            return false;
-        });
-    }
-
 }
