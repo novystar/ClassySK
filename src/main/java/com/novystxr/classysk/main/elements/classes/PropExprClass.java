@@ -31,7 +31,7 @@ public class PropExprClass extends SimplePropertyExpression<ClassInstance, Class
 
     @Override
     protected String getPropertyName() {
-        return "wrapper class";
+        return "class reference";
     }
 
     @Override

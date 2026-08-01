@@ -67,6 +67,6 @@ public class ExprClass extends SimpleExpression<ClassReference> {
 
     @Override
     public String toString(@Nullable Event event, boolean debug) {
-        return "wrapper class "+className;
+        return "class reference "+className;
     }
 }
