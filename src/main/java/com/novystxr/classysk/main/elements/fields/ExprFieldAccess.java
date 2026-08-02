@@ -141,7 +141,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
                     ExprUtils.mutatePlural(initialValue, delta, mode, result ->
                         setValueAndSave(result, fieldHolder, event));
                 } else {
-                    Object singleValue = initialValue != null ? initialValue[0] : null;
+                    Object singleValue = initialValue.length == 1 ? initialValue[0] : null;
                     ExprUtils.mutateSingle(singleValue, delta, mode, value ->
                         setValueAndSave(new Object[]{value}, fieldHolder, event));
                 }

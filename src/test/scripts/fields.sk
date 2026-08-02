@@ -42,8 +42,13 @@ class TestTyped:
 	public static static_objField: object
 	public static static_numField: number
 
+	public singleIntField: integer
+
 test "ClassySK - Typed Fields":
 	set {_instance} to new instance of TestTyped
+
+	add 3 to {_instance}::singleIntField
+	assert {_instance}::singleIntField is 3
 
 	# int
 	set {_instance}::intField to 1

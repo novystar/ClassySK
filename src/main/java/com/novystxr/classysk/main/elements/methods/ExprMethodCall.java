@@ -21,8 +21,6 @@ import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
-import java.util.regex.MatchResult;
-
 import static com.novystxr.classysk.api.util.StringUtils.getLowerCase;
 import static com.novystxr.classysk.api.util.StringUtils.titleCase;
 
@@ -53,13 +51,12 @@ public class ExprMethodCall extends SimpleExpression<Object> {
     @Override
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result) {
         isStatic = pattern == 1;
-
-        MatchResult regex = result.regexes.getFirst();
         SkriptClass contextClass = SkriptMethod.getContextClass(getParser());
 
-        String className = getLowerCase(regex.group(1));
-        String name = getLowerCase(regex.group(2));
-        String args = getLowerCase(regex.group(3));
+        String className = getLowerCase(result.regexes.getFirst().group(1));
+        String name = getLowerCase(result.regexes.getFirst().group(2));
+        String args = result.regexes.size() == 1
+            ? "" : result.regexes.get(1).group().trim();
 
         MethodReference reference = MethodParser.parseReference(name, args);
         if (reference == null) return false;
