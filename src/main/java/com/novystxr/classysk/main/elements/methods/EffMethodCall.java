@@ -5,6 +5,7 @@ import ch.njol.skript.lang.Effect;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.util.Kleenean;
+import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
@@ -19,8 +20,6 @@ import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.SyntaxInfo;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
-import java.util.regex.MatchResult;
-
 import static com.novystxr.classysk.api.util.StringUtils.getLowerCase;
 import static com.novystxr.classysk.api.util.StringUtils.titleCase;
 
@@ -31,7 +30,7 @@ public class EffMethodCall extends Effect {
             SyntaxRegistry.EFFECT,
             SyntaxInfo.builder(EffMethodCall.class)
                 .addPatterns(MethodParser.METHOD_PATTERN, MethodParser.STATIC_METHOD_PATTERN)
-                .priority(SyntaxInfo.PATTERN_MATCHES_EVERYTHING)
+                .priority(Classysk.SHADOW_REALM)
                 .supplier(EffMethodCall::new)
                 .build()
         );
@@ -47,13 +46,12 @@ public class EffMethodCall extends Effect {
     @Override
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result) {
         isStatic = pattern == 1;
-
-        MatchResult regex = result.regexes.getFirst();
         SkriptClass contextClass = SkriptMethod.getContextClass(getParser());
 
-        String className = getLowerCase(regex.group(1));
-        String name = getLowerCase(regex.group(2));
-        String args = getLowerCase(regex.group(3));
+        String className = getLowerCase(result.regexes.getFirst().group(1));
+        String name = getLowerCase(result.regexes.getFirst().group(2));
+        String args = result.regexes.size() == 1
+            ? "" : result.regexes.get(1).group().trim();
 
         MethodReference reference = MethodParser.parseReference(name, args);
         if (reference == null) return false;
