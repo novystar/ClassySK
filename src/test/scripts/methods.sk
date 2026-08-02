@@ -647,7 +647,8 @@ test "ClassySK - Method Chaining":
 	assert {_result} is an instance of TestChain
 
 	delete {_result}
+
+	set {_inst}::chain_instance::chain_instance to new instance of TestChain
 	set {_result} to {_inst}::chain_instance::chain1()::chain3()::chain_instance::chain4()
 	assert {_result} is set
 	assert {_result} is an instance of TestChain
-
