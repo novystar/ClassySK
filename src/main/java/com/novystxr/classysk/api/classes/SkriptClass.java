@@ -41,7 +41,8 @@ public class SkriptClass implements FieldHolder {
     }
 
     public Stream<SkriptClass> inheritanceStream() {
-        return Stream.iterate(this, Objects::nonNull, target -> ClassManager.getClass(target.extendsName));
+        return Stream.iterate(this, Objects::nonNull,
+            target -> ClassManager.getClass(target.extendsName));
     }
 
     @Override
