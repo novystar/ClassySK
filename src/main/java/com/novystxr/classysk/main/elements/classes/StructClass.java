@@ -10,6 +10,7 @@ import ch.njol.skript.lang.*;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassManager;
+import com.novystxr.classysk.api.methods.MethodRegistry;
 import com.novystxr.classysk.api.util.ParserUtils;
 import com.novystxr.classysk.api.util.StringUtils;
 import com.novystxr.classysk.main.elements.fields.EffField;
@@ -104,8 +105,9 @@ public class StructClass extends Structure {
 
     @Override
     public boolean preLoad() {
+        SkriptClass extendsClass = newClass.extendsClass();
+        MethodRegistry registry = newClass.methodRegistry;
         if (newClass.extendsName != null) {
-            SkriptClass extendsClass = newClass.extendsClass();
             if (extendsClass == null) {
                 Skript.error("Class named '%s' does not exist", StringUtils.titleCase(newClass.extendsName));
                 unregisterClass();
@@ -122,7 +124,7 @@ public class StructClass extends Structure {
                 return false;
             }
         }
-        if (!newClass.methodRegistry.validateOverrides(newClass.extendsClass())) {
+        if (!registry.validateOverrides(extendsClass)) {
             unregisterClass();
             return false;
         }
