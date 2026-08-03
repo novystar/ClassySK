@@ -9,6 +9,7 @@ import com.novystxr.classysk.api.methods.SkriptMethod.MethodSignature;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 public class MethodRegistry {
 
@@ -89,9 +90,9 @@ public class MethodRegistry {
 
     private Map<MethodIdentifier, SkriptMethod> registry = new HashMap<>();
 
-    public static List<SkriptMethod> getCandidatesFromChain(SkriptClass startingClass, MethodReference reference) {
+    public static List<SkriptMethod> getCandidatesFromChain(Stream<SkriptClass> chain, MethodReference reference) {
         Map<MethodIdentifier, SkriptMethod> result = new HashMap<>();
-        for (SkriptClass target : startingClass.inheritanceStream().toList().reversed())  {
+        for (SkriptClass target : chain.toList().reversed())  {
             result.putAll(target.methodRegistry.getCandidates(reference));
         }
         return result.values().stream().toList();

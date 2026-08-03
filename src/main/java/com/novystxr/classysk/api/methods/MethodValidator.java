@@ -17,6 +17,7 @@ import org.jspecify.annotations.Nullable;
 import org.skriptlang.skript.log.runtime.ErrorSource;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 import static com.novystxr.classysk.api.AccessModifiable.AccessType.PRIVATE;
 import static com.novystxr.classysk.api.AccessModifiable.AccessType.PROTECTED;
@@ -25,17 +26,24 @@ public class MethodValidator extends AccessValidator<ValidReference> {
 
     private final MethodReference reference;
     private final boolean expectsReturn;
+    private final boolean isSuper;
 
-    public MethodValidator(ErrorSource errorSource, SkriptClass contextClass, @NotNull MethodReference reference, boolean expectsReturn) {
+    public MethodValidator(ErrorSource errorSource, SkriptClass contextClass, @NotNull MethodReference reference, boolean expectsReturn, boolean isSuper) {
         super(errorSource, contextClass);
         this.reference = reference;
         this.expectsReturn = expectsReturn;
+        this.isSuper = isSuper;
     }
 
     @Override
     protected @Nullable ValidReference getProductFromClass(SkriptClass skriptClass) {
-
-        List<SkriptMethod> candidates = MethodRegistry.getCandidatesFromChain(skriptClass, reference);
+        Stream<SkriptClass> inheritanceChain;
+        if (isSuper) {
+            inheritanceChain = contextClass.inheritanceStream().skip(1);
+        } else {
+            inheritanceChain = skriptClass.inheritanceStream();
+        }
+        List<SkriptMethod> candidates = MethodRegistry.getCandidatesFromChain(inheritanceChain, reference);
         if (candidates.isEmpty()) {
             Skript.error("Could not identify method signature from reference: "+reference.name());
             return null;
