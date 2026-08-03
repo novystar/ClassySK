@@ -90,11 +90,10 @@ public class ClassManager {
         awaitingParent.remove(parent.name);
     }
 
-    public static SkriptClass createClass(String name) {
-        SkriptClass newClass = new SkriptClass(name);
-        classMap.put(name, newClass);
-        return newClass;
+    public static void registerClass(SkriptClass skriptClass) {
+        classMap.put(skriptClass.name, skriptClass);
     }
+
 
     public static void removeClass(String name) {
         classMap.remove(name);

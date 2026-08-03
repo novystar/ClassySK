@@ -78,7 +78,7 @@ public class StructClass extends Structure {
             Skript.error("A class named '%s' already exists", name);
             return false;
         }
-        SkriptClass newClass = ClassManager.createClass(name);
+        SkriptClass newClass = new SkriptClass(name);
 
         for (Node node : entryContainer.getUnhandledNodes()) {
             var element = ParserUtils.parseNodeAsInfos(node, "Could not recognize entry: "+node.getKey(), EffField.INFO, SecMethod.INFO);
@@ -100,6 +100,8 @@ public class StructClass extends Structure {
                 return false;
             }
         }
+        ClassManager.registerClass(newClass);
+
         ClassManager.checkAwaitingParent(newClass);
         ClassManager.revalidateFields(newClass);
 
