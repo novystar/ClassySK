@@ -86,6 +86,7 @@ public class ClassManager {
                 }
                 createdField.value = sField.value;
             }
+            instance.awaitingFields.clear();
         }
         awaitingParent.remove(parent.name);
     }
