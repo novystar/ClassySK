@@ -73,7 +73,7 @@ public class StructClass extends Structure {
             Skript.error("A class structure named '%s' already exists in a script", name);
             return false;
         }
-        newClass = ClassManager.createClass(name);
+        newClass = new SkriptClass(name);
 
         newClass.extendsName = result.hasTag("extends")
             ? StringUtils.getLowerCase(result.regexes.get(1)) : null;
@@ -98,6 +98,7 @@ public class StructClass extends Structure {
                 return false;
             }
         }
+        ClassManager.registerClass(newClass);
         return true;
     }
 
@@ -107,18 +108,25 @@ public class StructClass extends Structure {
             SkriptClass extendsClass = newClass.extendsClass();
             if (extendsClass == null) {
                 Skript.error("Class named '%s' does not exist", StringUtils.titleCase(newClass.extendsName));
+                unregisterClass();
                 return false;
             }
             if (extendsClass == newClass) {
                 Skript.error("A class cannot extend itself");
+                unregisterClass();
                 return false;
             }
             if (cyclic()) {
                 Skript.error("Cyclic inheritance is not allowed. (feeding back into itself)");
+                unregisterClass();
                 return false;
             }
         }
-        return newClass.methodRegistry.validateOverrides(newClass.extendsClass());
+        if (!newClass.methodRegistry.validateOverrides(newClass.extendsClass())) {
+            unregisterClass();
+            return false;
+        }
+        return true;
     }
 
     @Override
@@ -136,6 +144,10 @@ public class StructClass extends Structure {
 
     @Override
     public void unload() {
+        unregisterClass();
+    }
+
+    private void unregisterClass() {
         ClassManager.removeClass(name);
     }
 
