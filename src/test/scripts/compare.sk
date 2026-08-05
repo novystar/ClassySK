@@ -5,7 +5,9 @@ class ClassA:
 class ClassB:
 	public getClass() :: class reference:
 		return class of self
-		
+
+class ClassC extends ClassA:
+
 
 test "ClassySK - Compare":
 	set {_a1} to new instance of ClassA
@@ -31,3 +33,8 @@ test "ClassySK - Compare":
 
 	assert class of {_b} is {_b}::getClass()
 
+	set {_C} to new instance of ClassC
+
+	assert {_C} is an instance of ClassA
+	assert {_C} is not an exact instance of ClassA
+	assert (whether {_C} is an exact instance of ClassA) is not true
