@@ -18,7 +18,7 @@ class F extends E:
 	public override getName() :: string:
 		return "F"
 
-public G extends F:
+class G extends F:
 
 
 class TestSuper extends B:
@@ -38,8 +38,8 @@ test "ClassySK - Overrides & Inheritance":
 	assert {_B}::getName() is "B"
 	assert {_C}::getName() is "C"
 
+	assert {_D}::getName() is "C"
 	assert {_E}::getName() is "C"
-	assert {_D}::getName() is "D"
 
 	assert {_F}::getName() is "F"
 	assert {_G}::getName() is "F"
