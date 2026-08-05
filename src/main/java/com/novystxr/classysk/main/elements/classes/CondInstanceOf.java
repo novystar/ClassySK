@@ -8,6 +8,7 @@ import ch.njol.skript.doc.Since;
 import ch.njol.skript.lang.Condition;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
+import ch.njol.skript.lang.SyntaxStringBuilder;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassManager;
@@ -30,8 +31,8 @@ public class CondInstanceOf extends Condition {
         registry.register(
             SyntaxRegistry.CONDITION,
             SyntaxInfo.builder(CondInstanceOf.class)
-                .addPattern("%classinstance% is [a[n]] instance of <"+ CLASSNAME_PATTERN +">")
-                .addPattern("%classinstance% (isn't|is not) [a[n]] instance of <"+ CLASSNAME_PATTERN +">")
+                .addPattern("%classinstance% is [a[n]] [:exact] instance of <"+ CLASSNAME_PATTERN +">")
+                .addPattern("%classinstance% (isn't|is not) [a[n]] [:exact] instance of <"+ CLASSNAME_PATTERN +">")
                 .addPattern("%classinstance% belongs to <"+ CLASSNAME_PATTERN+">")
                 .addPattern("%classinstance% (doesn't|does not) belong to <"+ CLASSNAME_PATTERN+">")
                 .supplier(CondInstanceOf::new)
@@ -41,6 +42,7 @@ public class CondInstanceOf extends Condition {
 
     private Expression<ClassInstance> instanceExpr;
     private SkriptClass targetClass;
+    private boolean exact;
 
     @Override
     @SuppressWarnings("unchecked")
@@ -50,6 +52,7 @@ public class CondInstanceOf extends Condition {
 
         String name = StringUtils.getLowerCase(result.regexes.getFirst());
         targetClass = ClassManager.getClass(name);
+        exact = result.hasTag("exact");
 
         if (targetClass == null) {
             Skript.error("Class named " + name + " does not exist");
@@ -63,12 +66,22 @@ public class CondInstanceOf extends Condition {
         ClassInstance instance = instanceExpr.getSingle(event);
         if (instance == null) return false;
 
-        boolean isInstanceOf = instance.getParent() == targetClass;
-        return isNegated() != isInstanceOf;
+        SkriptClass skriptClass = instance.getParent();
+        if (skriptClass == null) return false;
+
+        boolean result = exact
+            ? skriptClass == targetClass
+            : skriptClass.inherits(targetClass);
+
+        return isNegated() != result;
     }
 
     @Override
     public String toString(@Nullable Event event, boolean debug) {
-        return "instance of";
+        return new SyntaxStringBuilder(event, debug)
+            .appendIf(exact, "exact")
+            .append("instance of")
+            .append(targetClass.getEffectiveName())
+            .toString();
     }
 }
