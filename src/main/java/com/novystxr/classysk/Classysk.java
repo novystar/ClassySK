@@ -1,9 +1,16 @@
 package com.novystxr.classysk;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.variables.Variables;
+import com.novystxr.classysk.api.classes.TypedClassAdvice;
 import com.novystxr.classysk.api.fields.SerializableField;
 import com.novystxr.classysk.main.MainModule;
+import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.agent.ByteBuddyAgent;
+import net.bytebuddy.asm.Advice;
+import net.bytebuddy.dynamic.loading.ClassReloadingStrategy;
+import net.bytebuddy.matcher.ElementMatchers;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.skriptlang.skript.addon.SkriptAddon;
@@ -19,6 +26,13 @@ public class Classysk extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        ByteBuddyAgent.install();
+        new ByteBuddy()
+            .redefine(Classes.class)
+            .visit(Advice.to(TypedClassAdvice.class).on(ElementMatchers.named("getClassInfoFromUserInput")))
+            .make()
+            .load(Classes.class.getClassLoader(), ClassReloadingStrategy.fromInstalledAgent());
+
         Variables.yggdrasil.registerSingleClass(SerializableField.class, "SerializableField");
 
         SkriptAddon addon = Skript.instance().registerAddon(Classysk.class, "ClassySK");

@@ -1,8 +1,11 @@
 package com.novystxr.classysk.api.classes;
 
+import com.novystxr.classysk.api.classes.TypedClassInfo.TypedInstanceWrapper;
 import com.novystxr.classysk.api.fields.SerializableField;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
+import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.dynamic.loading.ClassLoadingStrategy.Default;
 
 import java.util.*;
 
@@ -13,6 +16,19 @@ public class ClassManager {
 
     static final Map<String, Set<ClassInstance>> instances = new HashMap<>();
     static final Map<String, Set<ClassInstance>> awaitingParent = new HashMap<>();
+
+    private static final Map<String, Class<?>> generatedClasses = new HashMap<>();
+
+    public static Class<?> getSubclass(String name) {
+        return generatedClasses.computeIfAbsent(name, key ->
+            new ByteBuddy()
+                .subclass(TypedInstanceWrapper.class)
+                .name("com.novystxr.generated."+name)
+                .make()
+                .load(TypedInstanceWrapper.class.getClassLoader(), Default.WRAPPER)
+                .getLoaded()
+        );
+    }
 
     public static void setAwaitingParent(ClassInstance instance) {
         ClassManager.awaitingParent.computeIfAbsent(instance.name, key ->
