@@ -20,7 +20,7 @@ import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.SyntaxInfo;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
-import static com.novystxr.classysk.api.util.StringUtils.getLowerCase;
+import static com.novystxr.classysk.api.util.StringUtils.getConfigLowerCase;
 import static com.novystxr.classysk.api.util.StringUtils.titleCase;
 
 public class EffMethodCall extends Effect {
@@ -48,8 +48,8 @@ public class EffMethodCall extends Effect {
         isStatic = pattern == 1;
         SkriptClass contextClass = SkriptMethod.getContextClass(getParser());
 
-        String className = getLowerCase(result.regexes.getFirst().group(1));
-        String name = getLowerCase(result.regexes.getFirst().group(2));
+        String className = getConfigLowerCase(result.regexes.getFirst().group(1));
+        String name = getConfigLowerCase(result.regexes.getFirst().group(2));
         String args = result.regexes.size() == 1
             ? "" : result.regexes.get(1).group().trim();
 

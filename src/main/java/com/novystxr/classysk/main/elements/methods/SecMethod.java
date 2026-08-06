@@ -79,7 +79,7 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
             returnPlural = reference.isPlural().isTrue();
             returnType = reference.getClassInfo().getC();
         }
-        String methodName = StringUtils.getLowerCase(result.regexes.get(0));
+        String methodName = StringUtils.getConfigLowerCase(result.regexes.get(0));
         SequencedMap<String, MethodArgument> args = new LinkedHashMap<>();
 
         // parse arguments

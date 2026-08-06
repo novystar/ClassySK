@@ -13,6 +13,8 @@ repositories {
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
     compileOnly("com.github.SkriptLang:Skript:2.15.0")
+    implementation("net.bytebuddy:byte-buddy:1.18.11")
+    implementation("net.bytebuddy:byte-buddy-agent:1.18.11")
     implementation("org.bstats:bstats-bukkit:3.2.1")
 }
 
@@ -25,14 +27,11 @@ tasks {
         archiveClassifier.set("")
         configurations = project.configurations.runtimeClasspath.map { setOf(it) }
 
-        dependencies {
-            // Only merge bStats into the final jar, no other dependencies
-            exclude { it.moduleGroup != "org.bstats" }
-        }
-
         // Relocate bStats into the plugin's package to avoid conflicts with other
         // plugins using bStats
         relocate("org.bstats", project.group.toString())
+        relocate("net.bytebuddy", "com.novystxr.bytebuddy")
+        relocate("net.bytebuddy.agent", "com.novystxr.bytebuddy.agent")
     }
 
     runServer {

@@ -30,7 +30,7 @@ import static ch.njol.skript.classes.Changer.ChangeMode.*;
 import static com.novystxr.classysk.Classysk.CLASSNAME_PATTERN;
 import static com.novystxr.classysk.Classysk.NAME_PATTERN;
 import static com.novystxr.classysk.api.methods.MethodParser.HINT_PATTERN;
-import static com.novystxr.classysk.api.util.StringUtils.getLowerCase;
+import static com.novystxr.classysk.api.util.StringUtils.getConfigLowerCase;
 import static com.novystxr.classysk.api.util.StringUtils.titleCase;
 
 public class ExprFieldAccess extends SimpleExpression<Object> {
@@ -65,8 +65,8 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
         MatchResult regex = result.regexes.getFirst();
         SkriptClass contextClass = SkriptMethod.getContextClass(getParser());
 
-        String className = getLowerCase(regex.group(1));
-        fieldName = getLowerCase(regex.group(2));
+        String className = getConfigLowerCase(regex.group(1));
+        fieldName = getConfigLowerCase(regex.group(2));
 
         validator = new FieldValidator(getErrorSource(), contextClass, fieldName);
 
