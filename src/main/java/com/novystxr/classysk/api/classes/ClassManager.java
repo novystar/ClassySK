@@ -1,5 +1,6 @@
 package com.novystxr.classysk.api.classes;
 
+import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.classes.ClassInstance.TypedInstanceWrapper;
 import com.novystxr.classysk.api.fields.SerializableField;
 import com.novystxr.classysk.api.fields.SkriptField;
@@ -111,9 +112,9 @@ public class ClassManager {
         awaitingParent.remove(parent.name);
     }
 
-    public static Converter<ClassInstance, ?> getConditionalConverter(Class<? extends TypedInstanceWrapper> subclass) {
+    public static Converter<ClassInstance, ? extends TypedInstanceWrapper> getConditionalConverter(Class<? extends TypedInstanceWrapper> subclass) {
         try {
-            final Constructor<?> constructor = subclass.getDeclaredConstructor(ClassInstance.class);
+            final Constructor<? extends TypedInstanceWrapper> constructor = subclass.getDeclaredConstructor(ClassInstance.class);
             return instance -> {
                 if (subclass != getSubclass(instance.name)) {
                     return null;
@@ -132,18 +133,19 @@ public class ClassManager {
 
     public static void registerClass(SkriptClass skriptClass) {
         String name = skriptClass.name;
-        Class<? extends TypedInstanceWrapper> subclass = getSubclass(name);
+        if (Classysk.TYPES_ALLOWED) {
+            Class<? extends TypedInstanceWrapper> subclass = getSubclass(name);
+            ReflectUtils.allowRegistration();
 
-        ReflectUtils.allowRegistration();
-
-        if (!Converters.exactConverterExists(ClassInstance.class, subclass)) {
-            ReflectUtils.removeFromQuickAccess(ClassInstance.class, subclass);
-            ReflectUtils.registerConverter(ClassInstance.class, subclass, getConditionalConverter(subclass));
+            if (!Converters.exactConverterExists(ClassInstance.class, subclass)) {
+                ReflectUtils.removeFromQuickAccess(ClassInstance.class, subclass);
+                ReflectUtils.registerConverter(ClassInstance.class, subclass, getConditionalConverter(subclass));
+            }
+            if (!Converters.exactConverterExists(subclass, ClassInstance.class)) {
+                Converters.registerConverter(subclass, ClassInstance.class, from -> from.instance);
+            }
+            ReflectUtils.disableRegistration();
         }
-        if (!Converters.exactConverterExists(subclass, ClassInstance.class)) {
-            Converters.registerConverter(subclass, ClassInstance.class, from -> from.instance);
-        }
-        ReflectUtils.disableRegistration();
         classMap.put(name, skriptClass);
     }
 

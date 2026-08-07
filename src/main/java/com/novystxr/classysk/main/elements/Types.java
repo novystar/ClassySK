@@ -7,6 +7,7 @@ import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.yggdrasil.Fields;
 import ch.njol.yggdrasil.Fields.FieldContext;
+import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.classes.*;
 import com.novystxr.classysk.api.classes.ClassInstance.TypedInstanceWrapper;
 import com.novystxr.classysk.api.fields.SerializableField;
@@ -49,12 +50,14 @@ public class Types {
             })
         );
 
-        Classes.registerClass(new ClassInfo<>(TypedInstanceWrapper.class, "typedinstance")
-            .name("Typed Instance Wrapper")
-            .description("Transitory type that is used by converters to filter instances based on their type")
-            .serializeAs(ClassInstance.class)
-            .parser(new TypedInstanceParser<>())
-        );
+        if (Classysk.TYPES_ALLOWED) {
+            Classes.registerClass(new ClassInfo<>(TypedInstanceWrapper.class, "typedinstance")
+                .name("Typed Instance Wrapper")
+                .description("Transitory type that is used by converters to filter instances based on their type")
+                .serializeAs(ClassInstance.class)
+                .parser(new TypedInstanceParser<>())
+            );
+        }
 
         Classes.registerClass(new ClassInfo<>(ClassInstance.class, "classinstance")
             .user("class instance(s)?")

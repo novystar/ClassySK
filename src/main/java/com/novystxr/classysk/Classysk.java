@@ -5,6 +5,7 @@ import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.variables.Variables;
 import com.novystxr.classysk.api.classes.TypedClassAdvice;
 import com.novystxr.classysk.api.fields.SerializableField;
+import com.novystxr.classysk.api.util.Logger;
 import com.novystxr.classysk.main.MainModule;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.agent.ByteBuddyAgent;
@@ -24,14 +25,25 @@ public class Classysk extends JavaPlugin {
 
     public static final Priority SHADOW_REALM = Priority.after(SyntaxInfo.PATTERN_MATCHES_EVERYTHING);
 
+    public static boolean TYPES_ALLOWED = false;
+
     @Override
     public void onEnable() {
-        ByteBuddyAgent.install();
-        new ByteBuddy()
-            .redefine(Classes.class)
-            .visit(Advice.to(TypedClassAdvice.class).on(ElementMatchers.named("getClassInfoFromUserInput")))
-            .make()
-            .load(Classes.class.getClassLoader(), ClassReloadingStrategy.fromInstalledAgent());
+        try {
+            ByteBuddyAgent.install();
+            new ByteBuddy()
+                .redefine(Classes.class)
+                .visit(Advice.to(TypedClassAdvice.class).on(ElementMatchers.named("getClassInfoFromUserInput")))
+                .make()
+                .load(Classes.class.getClassLoader(), ClassReloadingStrategy.fromInstalledAgent());
+
+            TYPES_ALLOWED = true;
+        } catch (IllegalStateException e) {
+            Logger.log("<RED>The ByteBuddy agent failed to install, meaning dynamic agent loading has likely been disabled for this JVM.",
+            "The plugin will operate as normal but class-specific types will not be available.",
+            "To enable this feature, add <YELLOW>-XX:+EnableDynamicAgentLoading</YELLOW> to your JVM startup flags.<BR>");
+            Logger.warning(e.toString());
+        }
 
         Variables.yggdrasil.registerSingleClass(SerializableField.class, "SerializableField");
 
