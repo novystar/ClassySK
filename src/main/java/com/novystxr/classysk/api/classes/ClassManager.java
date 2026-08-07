@@ -111,7 +111,7 @@ public class ClassManager {
         awaitingParent.remove(parent.name);
     }
 
-    public static Converter<ClassInstance, ?> getConditionalConverter(Class<?> subclass) {
+    public static Converter<ClassInstance, ?> getConditionalConverter(Class<? extends TypedInstanceWrapper> subclass) {
         try {
             final Constructor<?> constructor = subclass.getDeclaredConstructor(ClassInstance.class);
             return instance -> {
@@ -132,7 +132,7 @@ public class ClassManager {
 
     public static void registerClass(SkriptClass skriptClass) {
         String name = skriptClass.name;
-        Class<?> subclass = getSubclass(name);
+        Class<? extends TypedInstanceWrapper> subclass = getSubclass(name);
 
         ReflectUtils.allowRegistration();
 
@@ -141,7 +141,7 @@ public class ClassManager {
             ReflectUtils.registerConverter(ClassInstance.class, subclass, getConditionalConverter(subclass));
         }
         if (!Converters.exactConverterExists(subclass, ClassInstance.class)) {
-            Converters.registerConverter(subclass, ClassInstance.class, from -> ((TypedInstanceWrapper) from).instance);
+            Converters.registerConverter(subclass, ClassInstance.class, from -> from.instance);
         }
         ReflectUtils.disableRegistration();
         classMap.put(name, skriptClass);
