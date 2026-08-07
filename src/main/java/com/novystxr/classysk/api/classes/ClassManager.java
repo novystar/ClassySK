@@ -128,9 +128,16 @@ public class ClassManager {
         String name = skriptClass.name;
         Class<?> subclass = getSubclass(name);
 
+        ReflectUtils.allowRegistration();
+
         if (!Converters.exactConverterExists(ClassInstance.class, subclass)) {
+            ReflectUtils.removeFromQuickAccess(ClassInstance.class, subclass);
             ReflectUtils.registerConverter(ClassInstance.class, subclass, getConditionalConverter(subclass));
         }
+        if (!Converters.exactConverterExists(subclass, ClassInstance.class)) {
+            Converters.registerConverter(subclass, ClassInstance.class, from -> ((TypedInstanceWrapper) from).instance);
+        }
+        ReflectUtils.disableRegistration();
         classMap.put(name, skriptClass);
     }
 

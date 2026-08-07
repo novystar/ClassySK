@@ -15,7 +15,6 @@ import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.util.StringUtils;
 import com.novystxr.classysk.api.util.TypedInstanceParser;
 import org.skriptlang.skript.addon.SkriptAddon;
-import org.skriptlang.skript.lang.converter.Converters;
 import org.skriptlang.skript.lang.properties.Property;
 import org.skriptlang.skript.lang.properties.handlers.base.ExpressionPropertyHandler;
 
@@ -56,7 +55,6 @@ public class Types {
             .serializeAs(ClassInstance.class)
             .parser(new TypedInstanceParser<>())
         );
-        Converters.registerConverter(TypedInstanceWrapper.class, ClassInstance.class, from -> from.instance);
 
         Classes.registerClass(new ClassInfo<>(ClassInstance.class, "classinstance")
             .user("class instance(s)?")
