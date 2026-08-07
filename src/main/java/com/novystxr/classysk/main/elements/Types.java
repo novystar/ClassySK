@@ -8,11 +8,12 @@ import ch.njol.skript.registrations.Classes;
 import ch.njol.yggdrasil.Fields;
 import ch.njol.yggdrasil.Fields.FieldContext;
 import com.novystxr.classysk.api.classes.*;
-import com.novystxr.classysk.api.classes.TypedClassInfo.TypedInstanceWrapper;
+import com.novystxr.classysk.api.classes.ClassInstance.TypedInstanceWrapper;
 import com.novystxr.classysk.api.fields.SerializableField;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.util.StringUtils;
+import com.novystxr.classysk.api.util.TypedInstanceParser;
 import org.skriptlang.skript.addon.SkriptAddon;
 import org.skriptlang.skript.lang.converter.Converters;
 import org.skriptlang.skript.lang.properties.Property;
@@ -49,38 +50,13 @@ public class Types {
             })
         );
 
-        Classes.registerClass(new TypedClassInfo<>(TypedInstanceWrapper.class, "typedinstance")
-            .user("(\\w+) instance(s)?")
+        Classes.registerClass(new ClassInfo<>(TypedInstanceWrapper.class, "typedinstance")
             .name("Typed Instance Wrapper")
-            .description("Transitory type that used by converters to filter instances based on their type")
+            .description("Transitory type that is used by converters to filter instances based on their type")
             .serializeAs(ClassInstance.class)
-            .parser(new Parser<>() {
-
-                @Override
-                public boolean canParse(ParseContext context) {
-                    return false;
-                }
-
-                @Override
-                public String toString(TypedInstanceWrapper o, int flags) {
-                    return "";
-                }
-
-                @Override
-                public String toVariableNameString(TypedInstanceWrapper o) {
-                    return "";
-                }
-            })
+            .parser(new TypedInstanceParser<>())
         );
-
-        Converters.registerConverter(ClassInstance.class, TypedInstanceWrapper.class, TypedInstanceWrapper::new);
-        Converters.registerConverter(TypedInstanceWrapper.class, ClassInstance.class, from -> {
-            ClassInstance instance = from.instance;
-            if (from.getClass().isAssignableFrom(ClassManager.getSubclass(instance.name))) {
-                return instance;
-            }
-            return null;
-        });
+        Converters.registerConverter(TypedInstanceWrapper.class, ClassInstance.class, from -> from.instance);
 
         Classes.registerClass(new ClassInfo<>(ClassInstance.class, "classinstance")
             .user("class instance(s)?")

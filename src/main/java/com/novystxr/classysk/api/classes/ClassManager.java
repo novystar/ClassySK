@@ -1,11 +1,14 @@
 package com.novystxr.classysk.api.classes;
 
-import com.novystxr.classysk.api.classes.TypedClassInfo.TypedInstanceWrapper;
+import com.novystxr.classysk.api.classes.ClassInstance.TypedInstanceWrapper;
 import com.novystxr.classysk.api.fields.SerializableField;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
+import com.novystxr.classysk.api.util.ReflectUtils;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy.Default;
+import org.skriptlang.skript.lang.converter.Converter;
+import org.skriptlang.skript.lang.converter.Converters;
 
 import java.util.*;
 
@@ -17,9 +20,9 @@ public class ClassManager {
     static final Map<String, Set<ClassInstance>> instances = new HashMap<>();
     static final Map<String, Set<ClassInstance>> awaitingParent = new HashMap<>();
 
-    private static final Map<String, Class<?>> generatedClasses = new HashMap<>();
+    private static final Map<String, Class<? extends TypedInstanceWrapper>> generatedClasses = new HashMap<>();
 
-    public static Class<?> getSubclass(String name) {
+    public static Class<? extends TypedInstanceWrapper> getSubclass(String name) {
         return generatedClasses.computeIfAbsent(name, key ->
             new ByteBuddy()
                 .subclass(TypedInstanceWrapper.class)
@@ -107,8 +110,28 @@ public class ClassManager {
         awaitingParent.remove(parent.name);
     }
 
+    public static Converter<ClassInstance, ?> getConditionalConverter(Class<?> subclass) {
+        return instance -> {
+            try {
+                if (subclass != getSubclass(instance.name)) {
+                    return null;
+                }
+                return subclass.getDeclaredConstructor(ClassInstance.class).newInstance(instance);
+
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        };
+    }
+
     public static void registerClass(SkriptClass skriptClass) {
-        classMap.put(skriptClass.name, skriptClass);
+        String name = skriptClass.name;
+        Class<?> subclass = getSubclass(name);
+
+        if (!Converters.exactConverterExists(ClassInstance.class, subclass)) {
+            ReflectUtils.registerConverter(ClassInstance.class, subclass, getConditionalConverter(subclass));
+        }
+        classMap.put(name, skriptClass);
     }
 
 

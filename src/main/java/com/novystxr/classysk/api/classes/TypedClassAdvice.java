@@ -1,29 +1,28 @@
 package com.novystxr.classysk.api.classes;
 
 import ch.njol.skript.classes.ClassInfo;
+import com.novystxr.classysk.api.classes.ClassInstance.TypedInstanceWrapper;
 import com.novystxr.classysk.api.util.StringUtils;
+import com.novystxr.classysk.api.util.TypedInstanceParser;
 import net.bytebuddy.asm.Advice;
 
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class TypedClassAdvice {
 
     @Advice.OnMethodExit
     static void onExit(@Advice.Argument(0) String input, @Advice.Return(readOnly = false) ClassInfo<?> result) {
-        if (result == null) return;
-        if (result instanceof TypedClassInfo<?> typedInfo) {
+        if (result != null) return;
 
-            Pattern[] patterns = typedInfo.getUserInputPatterns();
-            if (patterns == null) return;
+        Matcher matcher = TypedInstanceWrapper.pattern.matcher(input);
 
-            for (final Pattern pattern : typedInfo.getUserInputPatterns()) {
-                Matcher matcher = pattern.matcher(input);
-                if (matcher.matches()) {
-                    String name = StringUtils.getLowerCase(matcher.group(1));
-                    result = new TypedClassInfo<>(typedInfo.getC(), typedInfo.getCodeName(), name);
-                }
-            }
+        if (matcher.matches()) {
+            String name = StringUtils.getLowerCase(matcher.group(1));
+            Class<? extends TypedInstanceWrapper> subclass = ClassManager.getSubclass(name);
+
+            result = new ClassInfo<>(subclass, "typedinstance")
+                .serializeAs(ClassInstance.class)
+                .parser(new TypedInstanceParser<>());
         }
     }
 }

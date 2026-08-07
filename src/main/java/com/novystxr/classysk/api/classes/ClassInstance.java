@@ -2,7 +2,9 @@ package com.novystxr.classysk.api.classes;
 
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.regex.Pattern;
 
+import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.FieldHolder;
 import com.novystxr.classysk.api.fields.SerializableField;
 import com.novystxr.classysk.api.fields.SkriptField;
@@ -56,6 +58,18 @@ public class ClassInstance implements FieldHolder {
 
     public int getHashCode() {
         return Objects.hash(name, getFieldValueMap());
+    }
+
+    public static class TypedInstanceWrapper {
+
+        public static final Pattern pattern = Pattern.compile("("+Classysk.CLASSNAME_PATTERN + ") instances?");
+
+        public final ClassInstance instance;
+
+        public TypedInstanceWrapper(ClassInstance instance) {
+            this.instance = instance;
+        }
+
     }
 
 }
