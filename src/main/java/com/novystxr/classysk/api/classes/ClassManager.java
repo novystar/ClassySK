@@ -1,7 +1,6 @@
 package com.novystxr.classysk.api.classes;
 
 import com.novystxr.classysk.Classysk;
-import com.novystxr.classysk.api.classes.ClassInstance.TypedInstanceWrapper;
 import com.novystxr.classysk.api.fields.SerializableField;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;

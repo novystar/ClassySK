@@ -1,7 +1,6 @@
 package com.novystxr.classysk.api.classes;
 
 import ch.njol.skript.classes.ClassInfo;
-import com.novystxr.classysk.api.classes.ClassInstance.TypedInstanceWrapper;
 import com.novystxr.classysk.api.util.StringUtils;
 import com.novystxr.classysk.api.util.TypedInstanceParser;
 import net.bytebuddy.asm.Advice;
