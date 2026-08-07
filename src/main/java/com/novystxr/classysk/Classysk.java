@@ -39,7 +39,7 @@ public class Classysk extends JavaPlugin {
 
             TYPES_ALLOWED = true;
         } catch (IllegalStateException e) {
-            Logger.log("<RED>The ByteBuddy agent failed to install, meaning dynamic agent loading has likely been disabled for this JVM.",
+            Logger.log("<RED>The ByteBuddy agent failed to install, dynamic agent loading has likely been disabled for this JVM.",
             "The plugin will operate as normal but class-specific types will not be available.",
             "To enable this feature, add <YELLOW>-XX:+EnableDynamicAgentLoading</YELLOW> to your JVM startup flags.<BR>");
             Logger.warning(e.toString());
