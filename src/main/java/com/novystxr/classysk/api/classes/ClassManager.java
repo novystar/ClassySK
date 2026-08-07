@@ -10,6 +10,7 @@ import net.bytebuddy.dynamic.loading.ClassLoadingStrategy.Default;
 import org.skriptlang.skript.lang.converter.Converter;
 import org.skriptlang.skript.lang.converter.Converters;
 
+import java.lang.reflect.Constructor;
 import java.util.*;
 
 public class ClassManager {
@@ -111,17 +112,22 @@ public class ClassManager {
     }
 
     public static Converter<ClassInstance, ?> getConditionalConverter(Class<?> subclass) {
-        return instance -> {
-            try {
+        try {
+            final Constructor<?> constructor = subclass.getDeclaredConstructor(ClassInstance.class);
+            return instance -> {
                 if (subclass != getSubclass(instance.name)) {
                     return null;
                 }
-                return subclass.getDeclaredConstructor(ClassInstance.class).newInstance(instance);
+                try {
+                    return constructor.newInstance(instance);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            };
 
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        };
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static void registerClass(SkriptClass skriptClass) {
