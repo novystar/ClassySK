@@ -101,6 +101,7 @@ public class Types {
                 @Override
                 protected ClassInstance deserialize(Fields fields) throws StreamCorruptedException {
                     String name = fields.getAndRemoveObject("name", String.class);
+                    name = StringUtils.getLowerCase(name);
                     SkriptClass parentClass = ClassManager.getClass(name);
 
                     ClassInstance instance;
