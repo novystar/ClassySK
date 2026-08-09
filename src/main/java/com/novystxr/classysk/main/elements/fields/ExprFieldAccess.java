@@ -74,7 +74,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
             instanceExpr = (Expression<ClassInstance>) exprs[0];
         }
         if (className != null) {
-            if (className.isEmpty()) return true;
+            if (className.isEmpty()) return valid();
 
             skriptClass = ClassManager.getClass(className);
             if (skriptClass == null) {
@@ -92,10 +92,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
             if (validator.validateUnknown(skriptClass).isFalse())
                 return false;
         }
-        shouldBeSingle = validator.shouldBeSingle();
-        possibleTypes = validator.possibleTypes();
-        bestReturnType = AccessValidator.bestReturnType(possibleTypes);
-        return true;
+        return valid();
     }
 
     @Override
@@ -148,6 +145,13 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
         }
     }
 
+    private boolean valid() {
+        shouldBeSingle = validator.shouldBeSingle();
+        possibleTypes = validator.possibleTypes();
+        bestReturnType = AccessValidator.bestReturnType(possibleTypes);
+        return true;
+    }
+
     private void setValueAndSave(Object[] value, FieldHolder holder, Event event) {
         if (holder.setFieldValue(fieldName, value)) {
             save(event);
@@ -197,7 +201,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
 
     @Override
     public Class<?> getReturnType() {
-        return AccessValidator.bestReturnType(possibleTypes);
+        return bestReturnType;
     }
 
     @Override

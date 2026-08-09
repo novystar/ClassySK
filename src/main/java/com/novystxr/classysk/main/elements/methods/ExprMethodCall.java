@@ -67,7 +67,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
             instanceExpr = (Expression<ClassInstance>) exprs[0];
         }
         if (className != null) {
-            if (className.isEmpty()) return true;
+            if (className.isEmpty()) return valid();
 
             skriptClass = ClassManager.getClass(className);
             if (skriptClass == null) {
@@ -85,10 +85,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
             if (validator.validateUnknown(skriptClass).isFalse())
                 return false;
         }
-        shouldBeSingle = validator.shouldBeSingle();
-        possibleTypes = validator.possibleTypes();
-        bestReturnType = AccessValidator.bestReturnType(possibleTypes);
-        return true;
+        return valid();
     }
 
     @Override
@@ -106,6 +103,13 @@ public class ExprMethodCall extends SimpleExpression<Object> {
             return null;
         }
         return reference.method().run(event, instance, reference.args());
+    }
+
+    private boolean valid() {
+        shouldBeSingle = validator.shouldBeSingle();
+        possibleTypes = validator.possibleTypes();
+        bestReturnType = AccessValidator.bestReturnType(possibleTypes);
+        return true;
     }
 
     @Override
