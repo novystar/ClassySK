@@ -1,0 +1,49 @@
+class TypeA:
+	instance: TypeB instance
+
+	public set(TypeB instance):
+		set self::instance to {_instance}
+
+class TypeB:
+
+
+local function test(a: TypeA instance, b: TypeB instance):
+	set {-typed::a} to {_a}
+	set {-typed::b} to {_b}
+
+test "ClassySK - Types":
+
+	set {_A} to new instance of TypeA
+	set {_B} to new instance of TypeB
+
+	set {_A}::instance to {_A}
+	assert {_A}::instance is not set
+
+	set {_A}::instance to {_B}
+	assert {_A}::instance is set
+	assert {_A}::instance is a TypeB instance
+
+	delete {_A}::instance
+
+	{_A}::set({_A})
+	assert {_A}::instance is not set
+
+	{_A}::set({_B})
+	assert {_A}::instance is set
+	assert {_A}::instance is a TypeB instance
+
+	assert {_A}::instance is an instance of TypeB
+
+	test({_B}, {_A})
+	assert {-typed::a} is not set
+	assert {-typed::b} is not set
+
+	delete {-typed::*}
+	test({_A}, {_A})
+	assert {_typed::a} is set
+	assert {_typed::b} is not set
+
+	delete {-typed::*}
+	test({_A}, {_B})
+	assert {-typed::a} is set
+	assert {-typed::b} is set
