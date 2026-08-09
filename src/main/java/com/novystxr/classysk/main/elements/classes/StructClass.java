@@ -61,24 +61,19 @@ public class StructClass extends Structure {
     }
 
     private final List<SecMethod> methodSections = new ArrayList<>();
+    private SkriptClass newClass;
 
-    private EntryContainer entryContainer;
     private String name;
 
     @Override
     public boolean init(Literal<?>[] args, int pattern, ParseResult result, @UnknownNullability EntryContainer entryContainer) {
-        this.entryContainer = entryContainer;
         name = StringUtils.getLowerCase(result.regexes.getFirst());
-        return true;
-    }
 
-    @Override
-    public boolean preLoad() {
         if (ClassManager.classExists(name)) {
             Skript.error("A class named '%s' already exists", name);
             return false;
         }
-        SkriptClass newClass = new SkriptClass(name);
+        newClass = new SkriptClass(name);
 
         for (Node node : entryContainer.getUnhandledNodes()) {
             var element = ParserUtils.parseNodeAsInfos(node, "Could not recognize entry: "+node.getKey(), EffField.INFO, SecMethod.INFO);
@@ -101,10 +96,13 @@ public class StructClass extends Structure {
             }
         }
         ClassManager.registerClass(newClass);
+        return true;
+    }
 
+    @Override
+    public boolean preLoad() {
         ClassManager.checkAwaitingParent(newClass);
         ClassManager.revalidateFields(newClass);
-
         return true;
     }
 
