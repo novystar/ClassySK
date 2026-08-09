@@ -6,6 +6,8 @@ import ch.njol.yggdrasil.Fields;
 import ch.njol.yggdrasil.YggdrasilSerializable.YggdrasilExtendedSerializable;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import org.jetbrains.annotations.NotNull;
+import org.skriptlang.skript.lang.converter.Converters;
+
 import java.io.StreamCorruptedException;
 
 public class SerializableField implements YggdrasilExtendedSerializable {
@@ -47,6 +49,8 @@ public class SerializableField implements YggdrasilExtendedSerializable {
             if (serializeAs != null) {
                 classInfo = Classes.getExactClassInfo(serializeAs);
                 if (classInfo == null) return false;
+                value = Converters.convert(value, serializeAs);
+                signatureType = serializeAs;
             }
             if (classInfo.getSerializer() == null) {
                 return false;
