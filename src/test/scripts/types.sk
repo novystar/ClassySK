@@ -1,5 +1,5 @@
 class TypeA:
-	instance: TypeB instance
+	public instance: TypeB instance
 
 	public set(TypeB instance):
 		set self::instance to {_instance}
