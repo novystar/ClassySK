@@ -91,20 +91,20 @@ public class ClassManager {
                 String fieldName = entry.getKey();
                 SerializableField sField = entry.getValue();
 
+                Object[] value = sField.value;
                 FieldSignature targetSignature = instance.getFieldSignature(fieldName);
-                SkriptField createdField;
 
                 if (targetSignature == null) {
                     FieldSignature newSignature = FieldSignature.fromSerializableField(fieldName, sField);
-                    createdField = instance.createField(newSignature);
+                    instance.createField(newSignature).value = value;
 
-                } else if (targetSignature.canConvert(sField.value)) {
-                    createdField = instance.createField(targetSignature);
+                } else if (targetSignature.canConvert(value)) {
+                    instance.createField(targetSignature).value = Converters.convert(value, targetSignature.type());
+
                 } else {
                     FieldSignature newSignature = sField.mergeSignature(targetSignature);
-                    createdField = instance.createField(newSignature);
+                    instance.createField(newSignature).value = value;
                 }
-                createdField.value = sField.value;
             }
             instance.awaitingFields.clear();
         }
