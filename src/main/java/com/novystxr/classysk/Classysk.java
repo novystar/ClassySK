@@ -46,8 +46,9 @@ public class Classysk extends JavaPlugin {
         }
 
         Variables.yggdrasil.registerSingleClass(SerializableField.class, "SerializableField");
-
         SkriptAddon addon = Skript.instance().registerAddon(Classysk.class, "ClassySK");
+
+        addon.localizer().setSourceDirectories("lang", null);
         addon.loadModules(new MainModule());
 
         int pluginId = 31871;

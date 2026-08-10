@@ -40,8 +40,8 @@ test "ClassySK - Types":
 
 	delete {-typed::*}
 	test({_A}, {_A})
-	assert {_typed::a} is set
-	assert {_typed::b} is not set
+	assert {-typed::a} is set
+	assert {-typed::b} is not set
 
 	delete {-typed::*}
 	test({_A}, {_B})

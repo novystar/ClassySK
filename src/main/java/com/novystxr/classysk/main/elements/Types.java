@@ -59,7 +59,7 @@ public class Types {
         }
 
         Classes.registerClass(new ClassInfo<>(ClassInstance.class, "classinstance")
-            .user("class instance(s)?")
+            .user("class instances?")
             .name("Class Instance")
             .property(Property.NAME, "The name of the class this instance belongs to", addon,
                 ExpressionPropertyHandler.of(instance -> instance.name, String.class))

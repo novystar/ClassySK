@@ -20,6 +20,7 @@ public class TypedClassAdvice {
             Class<? extends TypedInstanceWrapper> subclass = ClassManager.getSubclass(name);
 
             result = new ClassInfo<>(subclass, "typedinstance")
+                .name("Typed Instance Wrapper")
                 .serializeAs(ClassInstance.class)
                 .parser(new TypedInstanceParser<>());
         }
