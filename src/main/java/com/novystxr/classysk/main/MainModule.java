@@ -1,5 +1,6 @@
 package com.novystxr.classysk.main;
 
+import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.util.Logger;
 import com.novystxr.classysk.main.elements.*;
 import com.novystxr.classysk.main.elements.classes.*;
@@ -37,6 +38,9 @@ public class MainModule implements AddonModule {
             PropExprClass::register,
             ExprClass::register
             );
+
+        if (Classysk.TYPES_ALLOWED)
+            register(addon, ExprTypedInstance::register);
 
         //onlyForDocs(addon);
     }

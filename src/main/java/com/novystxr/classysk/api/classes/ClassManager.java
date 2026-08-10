@@ -1,9 +1,16 @@
 package com.novystxr.classysk.api.classes;
 
+import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.fields.SerializableField;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
+import com.novystxr.classysk.api.util.ReflectUtils;
+import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.dynamic.loading.ClassLoadingStrategy.Default;
+import org.skriptlang.skript.lang.converter.Converter;
+import org.skriptlang.skript.lang.converter.Converters;
 
+import java.lang.reflect.Constructor;
 import java.util.*;
 
 public class ClassManager {
@@ -13,6 +20,19 @@ public class ClassManager {
 
     static final Map<String, Set<ClassInstance>> instances = new HashMap<>();
     static final Map<String, Set<ClassInstance>> awaitingParent = new HashMap<>();
+
+    private static final Map<String, Class<? extends TypedInstanceWrapper>> generatedClasses = new HashMap<>();
+
+    public static Class<? extends TypedInstanceWrapper> getSubclass(String name) {
+        return generatedClasses.computeIfAbsent(name, key ->
+            new ByteBuddy()
+                .subclass(TypedInstanceWrapper.class)
+                .name("com.novystxr.generated."+name)
+                .make()
+                .load(TypedInstanceWrapper.class.getClassLoader(), Default.WRAPPER)
+                .getLoaded()
+        );
+    }
 
     public static void setAwaitingParent(ClassInstance instance) {
         ClassManager.awaitingParent.computeIfAbsent(instance.name, key ->
@@ -71,28 +91,61 @@ public class ClassManager {
                 String fieldName = entry.getKey();
                 SerializableField sField = entry.getValue();
 
+                Object[] value = sField.value;
                 FieldSignature targetSignature = instance.getFieldSignature(fieldName);
-                SkriptField createdField;
 
                 if (targetSignature == null) {
                     FieldSignature newSignature = FieldSignature.fromSerializableField(fieldName, sField);
-                    createdField = instance.createField(newSignature);
+                    instance.createField(newSignature).value = value;
 
-                } else if (targetSignature.canConvert(sField.value)) {
-                    createdField = instance.createField(targetSignature);
+                } else if (targetSignature.canConvert(value)) {
+                    instance.createField(targetSignature).value = Converters.convert(value, targetSignature.type());
+
                 } else {
                     FieldSignature newSignature = sField.mergeSignature(targetSignature);
-                    createdField = instance.createField(newSignature);
+                    instance.createField(newSignature).value = value;
                 }
-                createdField.value = sField.value;
             }
             instance.awaitingFields.clear();
         }
         awaitingParent.remove(parent.name);
     }
 
+    public static Converter<ClassInstance, ? extends TypedInstanceWrapper> getConditionalConverter(Class<? extends TypedInstanceWrapper> subclass) {
+        try {
+            final Constructor<? extends TypedInstanceWrapper> constructor = subclass.getDeclaredConstructor(ClassInstance.class);
+            return instance -> {
+                if (subclass != getSubclass(instance.name)) {
+                    return null;
+                }
+                try {
+                    return constructor.newInstance(instance);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            };
+
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static void registerClass(SkriptClass skriptClass) {
-        classMap.put(skriptClass.name, skriptClass);
+        String name = skriptClass.name;
+        if (Classysk.TYPES_ALLOWED) {
+            Class<? extends TypedInstanceWrapper> subclass = getSubclass(name);
+            ReflectUtils.allowRegistration();
+
+            if (!Converters.exactConverterExists(ClassInstance.class, subclass)) {
+                ReflectUtils.removeFromQuickAccess(ClassInstance.class, subclass);
+                ReflectUtils.registerConverter(ClassInstance.class, subclass, getConditionalConverter(subclass));
+            }
+            if (!Converters.exactConverterExists(subclass, ClassInstance.class)) {
+                Converters.registerConverter(subclass, ClassInstance.class, from -> from.instance);
+            }
+            ReflectUtils.disableRegistration();
+        }
+        classMap.put(name, skriptClass);
     }
 
 

@@ -30,7 +30,7 @@ import static ch.njol.skript.classes.Changer.ChangeMode.*;
 import static com.novystxr.classysk.Classysk.CLASSNAME_PATTERN;
 import static com.novystxr.classysk.Classysk.NAME_PATTERN;
 import static com.novystxr.classysk.api.methods.MethodParser.HINT_PATTERN;
-import static com.novystxr.classysk.api.util.StringUtils.getLowerCase;
+import static com.novystxr.classysk.api.util.StringUtils.getConfigLowerCase;
 import static com.novystxr.classysk.api.util.StringUtils.titleCase;
 
 public class ExprFieldAccess extends SimpleExpression<Object> {
@@ -65,8 +65,8 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
         MatchResult regex = result.regexes.getFirst();
         SkriptClass contextClass = SkriptMethod.getContextClass(getParser());
 
-        String className = getLowerCase(regex.group(1));
-        fieldName = getLowerCase(regex.group(2));
+        String className = getConfigLowerCase(regex.group(1));
+        fieldName = getConfigLowerCase(regex.group(2));
 
         validator = new FieldValidator(getErrorSource(), contextClass, fieldName);
 
@@ -74,7 +74,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
             instanceExpr = (Expression<ClassInstance>) exprs[0];
         }
         if (className != null) {
-            if (className.isEmpty()) return true;
+            if (className.isEmpty()) return valid();
 
             skriptClass = ClassManager.getClass(className);
             if (skriptClass == null) {
@@ -92,10 +92,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
             if (validator.validateUnknown(skriptClass).isFalse())
                 return false;
         }
-        shouldBeSingle = validator.shouldBeSingle();
-        possibleTypes = validator.possibleTypes();
-        bestReturnType = AccessValidator.bestReturnType(possibleTypes);
-        return true;
+        return valid();
     }
 
     @Override
@@ -148,6 +145,13 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
         }
     }
 
+    private boolean valid() {
+        shouldBeSingle = validator.shouldBeSingle();
+        possibleTypes = validator.possibleTypes();
+        bestReturnType = AccessValidator.bestReturnType(possibleTypes);
+        return true;
+    }
+
     private void setValueAndSave(Object[] value, FieldHolder holder, Event event) {
         if (holder.setFieldValue(fieldName, value)) {
             save(event);
@@ -197,7 +201,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
 
     @Override
     public Class<?> getReturnType() {
-        return AccessValidator.bestReturnType(possibleTypes);
+        return bestReturnType;
     }
 
     @Override

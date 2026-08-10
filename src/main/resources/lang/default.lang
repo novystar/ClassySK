@@ -1,0 +1,6 @@
+version: 1.0.0
+
+types:
+	typedinstance: typed instance¦s @a
+	classinstance: class instance¦s @a
+	classreference: class reference¦s @a

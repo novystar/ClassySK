@@ -79,7 +79,7 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
                 Skript.error("Invalid field name: " + key);
                 return false;
             }
-            String fieldName = StringUtils.getLowerCase(matcher.group(1));
+            String fieldName = StringUtils.getConfigLowerCase(matcher.group(1));
             String unparsedValue = matcher.group(2);
 
             FieldSignature signature = skriptClass.getFieldSignature(fieldName);

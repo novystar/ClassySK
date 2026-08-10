@@ -4,12 +4,14 @@ import java.util.*;
 import java.util.Map.Entry;
 
 import com.novystxr.classysk.api.FieldHolder;
+import com.novystxr.classysk.api.TypeWrappable;
 import com.novystxr.classysk.api.fields.SerializableField;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.lang.converter.Converters;
 
-public class ClassInstance implements FieldHolder {
+public class ClassInstance implements FieldHolder, TypeWrappable<TypedInstanceWrapper, ClassInstance> {
     public final String name;
 
     public final Map<String, SkriptField> fieldMap = new HashMap<>();
@@ -58,4 +60,18 @@ public class ClassInstance implements FieldHolder {
         return Objects.hash(name, getFieldValueMap());
     }
 
+    @Override
+    public TypedInstanceWrapper wrap() {
+        return Converters.convert(this, getSubclass());
+    }
+
+    @Override
+    public ClassInstance unwrap() {
+        return this;
+    }
+
+    @Override
+    public Class<? extends TypedInstanceWrapper> getSubclass() {
+        return ClassManager.getSubclass(name);
+    }
 }

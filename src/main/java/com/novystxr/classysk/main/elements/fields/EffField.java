@@ -36,7 +36,7 @@ public class EffField extends Effect {
     @SuppressWarnings("unchecked")
     @Override
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result) {
-        fieldName = StringUtils.getLowerCase(result.regexes.getFirst());
+        fieldName = StringUtils.getConfigLowerCase(result.regexes.getFirst());
 
         AccessType accessType = result.hasTag("private") ? PRIVATE : PUBLIC;
         boolean isStatic = result.hasTag("static");

@@ -2,8 +2,11 @@ package com.novystxr.classysk.api.fields;
 
 import ch.njol.skript.lang.Expression;
 import com.novystxr.classysk.api.AccessModifiable;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.converter.Converters;
+
+import java.util.Arrays;
 
 public class SkriptField {
     public record FieldSignature (
@@ -25,17 +28,11 @@ public class SkriptField {
 
             return new FieldSignature(fieldName, sField.signatureType, null, AccessType.PUBLIC, false, sField.isPlural);
         }
-        public boolean canConvert(@Nullable Object[] values) {
-            if (values == null) return true;
+        public boolean canConvert(@NotNull Object[] values) {
             if (values.length > 1 && !isPlural) return false;
 
-            for (Object value : values) {
-                if (value == null) continue;
-                if (!Converters.converterExists(value.getClass(), type)) {
-                    return false;
-                }
-            }
-            return true;
+            return Arrays.stream(values)
+                .allMatch(value -> Converters.converterExists(value.getClass(), type));
         }
     }
 

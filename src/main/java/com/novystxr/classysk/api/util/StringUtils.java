@@ -33,13 +33,22 @@ public class StringUtils {
 
     public static String getLowerCase(String value) {
         if (value == null) return null;
+        return value.trim().toLowerCase(Locale.ENGLISH);
+    }
+
+    public static String getLowerCase(MatchResult matchResult) {
+        return getLowerCase(matchResult.group(0));
+    }
+
+    public static String getConfigLowerCase(String value) {
+        if (value == null) return null;
         if (SkriptConfig.caseSensitive.value()) {
             return value.trim();
         }
         return value.trim().toLowerCase(Locale.ENGLISH);
     }
 
-    public static String getLowerCase(MatchResult matchResult) {
-        return getLowerCase(matchResult.group(0));
+    public static String getConfigLowerCase(MatchResult matchResult) {
+        return getConfigLowerCase(matchResult.group(0));
     }
 }

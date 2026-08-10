@@ -21,7 +21,7 @@ import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
-import static com.novystxr.classysk.api.util.StringUtils.getLowerCase;
+import static com.novystxr.classysk.api.util.StringUtils.getConfigLowerCase;
 import static com.novystxr.classysk.api.util.StringUtils.titleCase;
 
 public class ExprMethodCall extends SimpleExpression<Object> {
@@ -53,8 +53,8 @@ public class ExprMethodCall extends SimpleExpression<Object> {
         isStatic = pattern == 1;
         SkriptClass contextClass = SkriptMethod.getContextClass(getParser());
 
-        String className = getLowerCase(result.regexes.getFirst().group(1));
-        String name = getLowerCase(result.regexes.getFirst().group(2));
+        String className = getConfigLowerCase(result.regexes.getFirst().group(1));
+        String name = getConfigLowerCase(result.regexes.getFirst().group(2));
         String args = result.regexes.size() == 1
             ? "" : result.regexes.get(1).group().trim();
 
@@ -67,7 +67,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
             instanceExpr = (Expression<ClassInstance>) exprs[0];
         }
         if (className != null) {
-            if (className.isEmpty()) return true;
+            if (className.isEmpty()) return valid();
 
             skriptClass = ClassManager.getClass(className);
             if (skriptClass == null) {
@@ -85,10 +85,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
             if (validator.validateUnknown(skriptClass).isFalse())
                 return false;
         }
-        shouldBeSingle = validator.shouldBeSingle();
-        possibleTypes = validator.possibleTypes();
-        bestReturnType = AccessValidator.bestReturnType(possibleTypes);
-        return true;
+        return valid();
     }
 
     @Override
@@ -106,6 +103,13 @@ public class ExprMethodCall extends SimpleExpression<Object> {
             return null;
         }
         return reference.method().run(event, instance, reference.args());
+    }
+
+    private boolean valid() {
+        shouldBeSingle = validator.shouldBeSingle();
+        possibleTypes = validator.possibleTypes();
+        bestReturnType = AccessValidator.bestReturnType(possibleTypes);
+        return true;
     }
 
     @Override

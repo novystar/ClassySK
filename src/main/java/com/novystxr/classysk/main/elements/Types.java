@@ -7,14 +7,13 @@ import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.yggdrasil.Fields;
 import ch.njol.yggdrasil.Fields.FieldContext;
-import com.novystxr.classysk.api.classes.SkriptClass;
-import com.novystxr.classysk.api.classes.ClassManager;
-import com.novystxr.classysk.api.classes.ClassInstance;
-import com.novystxr.classysk.api.classes.ClassReference;
+import com.novystxr.classysk.Classysk;
+import com.novystxr.classysk.api.classes.*;
 import com.novystxr.classysk.api.fields.SerializableField;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.util.StringUtils;
+import com.novystxr.classysk.api.util.TypedInstanceParser;
 import org.skriptlang.skript.addon.SkriptAddon;
 import org.skriptlang.skript.lang.properties.Property;
 import org.skriptlang.skript.lang.properties.handlers.base.ExpressionPropertyHandler;
@@ -26,6 +25,7 @@ public class Types {
     public static void register(SkriptAddon addon) {
 
         Classes.registerClass(new ClassInfo<>(ClassReference.class, "classreference")
+            .since("1.0.0")
             .user("class reference(s)?")
             .name("Class Reference")
             .property(Property.NAME, "The name of the class", addon,
@@ -50,8 +50,19 @@ public class Types {
             })
         );
 
+        if (Classysk.TYPES_ALLOWED) {
+            Classes.registerClass(new ClassInfo<>(TypedInstanceWrapper.class, "typedinstance")
+                .since("1.1.0")
+                .name("Typed Instance")
+                .description("Transitory wrapper that is used by converters to filter instances based on their type.")
+                .serializeAs(ClassInstance.class)
+                .parser(new TypedInstanceParser<>())
+            );
+        }
+
         Classes.registerClass(new ClassInfo<>(ClassInstance.class, "classinstance")
-            .user("class instance(s)?")
+            .since("1.0.0")
+            .user("class instances?")
             .name("Class Instance")
             .property(Property.NAME, "The name of the class this instance belongs to", addon,
                 ExpressionPropertyHandler.of(instance -> instance.name, String.class))
@@ -93,6 +104,7 @@ public class Types {
                 @Override
                 protected ClassInstance deserialize(Fields fields) throws StreamCorruptedException {
                     String name = fields.getAndRemoveObject("name", String.class);
+                    name = StringUtils.getLowerCase(name);
                     SkriptClass parentClass = ClassManager.getClass(name);
 
                     ClassInstance instance;
