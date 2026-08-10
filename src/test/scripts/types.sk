@@ -1,38 +1,45 @@
 class TypeA:
-	public instance: TypeB instance
+	public B_instance: TypeB instance
 
 	public set(instance: TypeB instance):
-		set self::instance to {_instance}
+		set self::B_instance to {_instance}
 
 class TypeB:
+	public A_instances: TypeA instances
+
+	public setPlural(instances: TypeA instances):
+		set {-typed::a::*} to {_a::*}
 
 
 local function test(a: TypeA instance, b: TypeB instance):
 	set {-typed::a} to {_a}
 	set {-typed::b} to {_b}
 
+local function test1(a: TypeA instances):
+	set {-typed::a::*} to {_a::*}
+
 test "ClassySK - Types":
 
 	set {_A} to new instance of TypeA
 	set {_B} to new instance of TypeB
 
-	set {_A}::instance to {_A}
-	assert {_A}::instance is not set
+	set {_A}::B_instance to {_A}
+	assert {_A}::B_instance is not set
 
-	set {_A}::instance to {_B}
-	assert {_A}::instance is set
-	assert {_A}::instance is a TypeB instance
+	set {_A}::B_instance to {_B}
+	assert {_A}::B_instance is set
+	assert {_A}::B_instance is a TypeB instance
 
-	delete {_A}::instance
+	delete {_A}::B_instance
 
 	{_A}::set({_A})
-	assert {_A}::instance is not set
+	assert {_A}::B_instance is not set
 
 	{_A}::set({_B})
-	assert {_A}::instance is set
-	assert {_A}::instance is a TypeB instance
+	assert {_A}::B_instance is set
+	assert {_A}::B_instance is a TypeB instance
 
-	assert {_A}::instance is an instance of TypeB
+	assert {_A}::B_instance is an instance of TypeB
 
 	test({_B}, {_A})
 	assert {-typed::a} is not set
@@ -47,3 +54,21 @@ test "ClassySK - Types":
 	test({_A}, {_B})
 	assert {-typed::a} is set
 	assert {-typed::b} is set
+
+	test1(({_A}, {_A}, {_A}, {_B}))
+	assert size of {-typed::a::*} is 3
+
+	delete {-typed::a::*}
+	{_B}::setPlural(({_A}, {_A}, {_B}, {_A}))
+	assert size of {-typed::a::*} is 3
+
+	set {_B}::A_instances to {_A}, {_A}, {_A}
+	assert size of {_B}::A_instances is 3
+
+	delete {_B}::A_instances
+	set {_B}::A_instances to {_B}
+	assert {_B}::A_instances is not set
+
+	set {_B}::A_instances to {_A}, {_A}, {_B}, {_A}
+
+	assert size of {_B}::A_instances is 3
