@@ -17,8 +17,8 @@ import org.skriptlang.skript.registration.SyntaxRegistry;
 @Keywords({"typed instance", "untyped instance"})
 @Description("This expression can be used to wrap/unwrap an instance respective to it's given typed wrapper. This is useful is niche scenarios where the concrete type of the instance actually matters.")
 @Example("""
-    # if this were a generic instance this check would fail, so we make sure it's wrapped before doing a vanilla type check
-    # in this scenario it's recommended to use the dedicated 'instance of' expression though
+    # if this were a generic instance the check would fail, so we make sure it's wrapped before doing a vanilla type check
+    # in this scenario it's recommended to use the dedicated 'is an instance of' condition though
     if typed {_instance} is an Example instance
     """)
 @Example("""
