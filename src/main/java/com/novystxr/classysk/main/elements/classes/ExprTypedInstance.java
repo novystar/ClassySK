@@ -1,5 +1,6 @@
 package com.novystxr.classysk.main.elements.classes;
 
+import ch.njol.skript.doc.*;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.util.SimpleExpression;
@@ -11,6 +12,22 @@ import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
+@Name("Typed/Untyped instance")
+@Since("1.1.0")
+@Keywords({"typed instance", "untyped instance"})
+@Description("This expression can be used to wrap/unwrap an instance respective to it's given typed wrapper. This is useful is niche scenarios where the concrete type of the instance actually matters.")
+@Example("""
+    # if this were a generic instance this check would fail, so we make sure it's wrapped before doing a vanilla type check
+    # in this scenario it's recommended to use the dedicated 'instance of' expression though
+    if typed {_instance} is an Example instance
+    """)
+@Example("""
+    # with reflection we wanna make sure it's the correct type before calling methods on it
+    set {_value} to (untyped {_instance}).getFieldValue("myField")
+    
+    # typed and untyped instances are also interfaced, so we could also just call unwrap() or wrap() respectively, which is what this expression does under the hood
+    set {_value} to {_instance}.unwrap().getFieldValue("myField")
+    """)
 public class ExprTypedInstance extends SimpleExpression<Object> {
 
     public static void register(SyntaxRegistry registry) {

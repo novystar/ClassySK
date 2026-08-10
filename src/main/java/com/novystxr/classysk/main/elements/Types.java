@@ -25,6 +25,7 @@ public class Types {
     public static void register(SkriptAddon addon) {
 
         Classes.registerClass(new ClassInfo<>(ClassReference.class, "classreference")
+            .since("1.0.0")
             .user("class reference(s)?")
             .name("Class Reference")
             .property(Property.NAME, "The name of the class", addon,
@@ -51,14 +52,16 @@ public class Types {
 
         if (Classysk.TYPES_ALLOWED) {
             Classes.registerClass(new ClassInfo<>(TypedInstanceWrapper.class, "typedinstance")
-                .name("Typed Instance Wrapper")
-                .description("Transitory type that is used by converters to filter instances based on their type")
+                .since("1.1.0")
+                .name("Typed Instance")
+                .description("Transitory wrapper that is used by converters to filter instances based on their type.")
                 .serializeAs(ClassInstance.class)
                 .parser(new TypedInstanceParser<>())
             );
         }
 
         Classes.registerClass(new ClassInfo<>(ClassInstance.class, "classinstance")
+            .since("1.0.0")
             .user("class instances?")
             .name("Class Instance")
             .property(Property.NAME, "The name of the class this instance belongs to", addon,
