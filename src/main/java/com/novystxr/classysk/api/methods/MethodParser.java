@@ -107,7 +107,7 @@ public class MethodParser {
             ClassInfo<?> classInfo = Classes.getClassInfoFromUserInput(unparsedType);
             boolean isPlural = Utils.isPlural(unparsedType).plural();
             if (classInfo == null) {
-                Skript.error("Unable to resolve classInfo '%s'", unparsedType);
+                Skript.error("Unable to resolve type: %s", unparsedType);
                 return null;
             }
             Class<?> type = Utils.getComponentType(classInfo.getC());
@@ -132,7 +132,7 @@ public class MethodParser {
                     return null;
                 }
                 if (!Converters.converterExists(type, defaultValue.getReturnType())) {
-                    Skript.error("Default value does not match the specified classInfo");
+                    Skript.error("Default value does not match the specified type");
                     return null;
                 }
             }
