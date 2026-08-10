@@ -8,7 +8,7 @@ class TypeB:
 	public A_instances: TypeA instances
 
 	public setPlural(instances: TypeA instances):
-		set {-typed::a::*} to {_a::*}
+		set {-typed::a::*} to {_instances::*}
 
 
 local function test(a: TypeA instance, b: TypeB instance):
