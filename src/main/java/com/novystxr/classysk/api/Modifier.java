@@ -2,6 +2,7 @@ package com.novystxr.classysk.api;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 public enum Modifier {
     PUBLIC(0),
@@ -9,11 +10,14 @@ public enum Modifier {
 
     STATIC(1);
 
-    public final int i;
-    private static final int MAX_SIZE = values().length + 1;
+    public final int index;
 
-    Modifier(int i) {
-        this.i = i;
+    private static final int MAX_SIZE = 1 + Arrays.stream(values())
+        .map(mod -> mod.index)
+        .max(Integer::compare).orElseThrow();
+
+    Modifier(int index) {
+        this.index = index;
     }
 
     public static Modifier[] without(Modifier[] modifiers, Modifier... without) {
@@ -32,10 +36,11 @@ public enum Modifier {
     public static Modifier[] collect(Modifier... modifiers) {
         Modifier[] result = new Modifier[MAX_SIZE];
         for (Modifier modifier : modifiers) {
-            if (result[modifier.i] != null)
+            int i = modifier.index;
+            if (result[i] != null)
                 throw new IllegalArgumentException("Only 1 modifier per index is allowed");
 
-            result[modifier.i] = modifier;
+            result[i] = modifier;
         }
         return result;
     }
@@ -52,10 +57,9 @@ public enum Modifier {
      */
     public static Modifier[] collect(List<String> tags) {
         return collect(Arrays.stream(values())
-            .filter(value -> tags.contains(value.name()))
+            .filter(value -> tags.contains(value.name().toLowerCase(Locale.ENGLISH)))
             .toArray(Modifier[]::new));
     }
-
 
     public Modifier[] array() {
         return collect(this);
