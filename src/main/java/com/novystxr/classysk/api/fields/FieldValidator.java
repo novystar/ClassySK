@@ -22,13 +22,16 @@ public class FieldValidator extends AccessValidator<FieldSignature> {
 
     @Override
     protected boolean validate(FieldSignature signature, boolean isStatic, SkriptClass target) {
-
         if (signature.accessType() == PRIVATE && target != contextClass) {
-            Skript.error("Private fields can't be accessed here");
+            Skript.error("Private fields can only be accessed from within their own class");
             return false;
         }
-        if (signature.isStatic() != isStatic) {
-            Skript.error("Field accessed from improper context");
+        if (signature.isStatic() && !isStatic) {
+            Skript.error("Static fields do not belong to any instance");
+            return false;
+        }
+        if (!signature.isStatic() && isStatic) {
+            Skript.error("This field is only accessible from instances");
             return false;
         }
         return true;

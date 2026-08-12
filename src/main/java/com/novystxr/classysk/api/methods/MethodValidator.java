@@ -19,6 +19,8 @@ import org.skriptlang.skript.log.runtime.ErrorSource;
 
 import java.util.*;
 
+import static com.novystxr.classysk.api.Modifier.PRIVATE;
+
 public class MethodValidator extends AccessValidator<ValidReference> {
 
     private final MethodReference reference;
@@ -56,16 +58,20 @@ public class MethodValidator extends AccessValidator<ValidReference> {
 
     @Override
     protected boolean validate(ValidReference reference, boolean isStatic, SkriptClass target) {
-        if (reference.accessType() == Modifier.PRIVATE && target != contextClass) {
-            Skript.error("This method can't be accessed here");
-            return false;
-        }
-        if (reference.isStatic() != isStatic) {
-            Skript.error("Method accessed from improper context");
-            return false;
-        }
         if (expectsReturn && reference.type() == null) {
             Skript.error("This method can't return anything");
+            return false;
+        }
+        if (reference.accessType() == PRIVATE && target != contextClass) {
+            Skript.error("Private methods can only be accessed from within their own class");
+            return false;
+        }
+        if (reference.isStatic() && !isStatic) {
+            Skript.error("Static methods do not belong to any instance");
+            return false;
+        }
+        if (!reference.isStatic() && isStatic) {
+            Skript.error("This method is only accessible from instances");
             return false;
         }
         return true;
