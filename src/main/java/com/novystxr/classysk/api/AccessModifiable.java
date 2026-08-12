@@ -9,7 +9,7 @@ public interface AccessModifiable {
     Class<?> type();
 
     default boolean hasModifier(Modifier modifier) {
-        return modifiers()[modifier.i] == modifier;
+        return modifiers()[modifier.index] == modifier;
     }
 
     default boolean isStatic() {
