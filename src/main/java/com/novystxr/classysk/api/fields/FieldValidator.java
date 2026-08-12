@@ -9,7 +9,7 @@ import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import org.jspecify.annotations.Nullable;
 import org.skriptlang.skript.log.runtime.ErrorSource;
 
-import static com.novystxr.classysk.api.AccessModifiable.AccessType.PRIVATE;
+import static com.novystxr.classysk.api.AccessModifiable.Modifier.PRIVATE;
 
 public class FieldValidator extends AccessValidator<FieldSignature> {
 
@@ -21,9 +21,9 @@ public class FieldValidator extends AccessValidator<FieldSignature> {
     }
 
     @Override
-    protected boolean validate(FieldSignature signature, boolean isStatic, boolean isSameContext) {
+    protected boolean validate(FieldSignature signature, boolean isStatic, SkriptClass target) {
 
-        if (signature.accessType() == PRIVATE && !isSameContext) {
+        if (signature.accessType() == PRIVATE && target != contextClass) {
             Skript.error("Private fields can't be accessed here");
             return false;
         }

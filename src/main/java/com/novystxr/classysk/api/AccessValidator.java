@@ -21,7 +21,7 @@ import java.util.List;
 
 public abstract class AccessValidator<T extends AccessModifiable> implements RuntimeErrorProducer {
     private ClassInstance instance;
-    private final SkriptClass contextClass;
+    protected final SkriptClass contextClass;
 
     private T product = null;
     private final List<T> guesses = new ArrayList<>();
@@ -43,7 +43,7 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
     /**
      * Validate your signature and set any extra data
      */
-    protected abstract boolean validate(T product, boolean isStatic, boolean isSameContext);
+    protected abstract boolean validate(T product, boolean isStatic, SkriptClass targetClass);
 
     protected abstract @Nullable T getProductFromClass(SkriptClass skriptClass);
     protected abstract @Nullable T getProductFromInstance(ClassInstance instance);
@@ -187,10 +187,9 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
             return Kleenean.UNKNOWN;
 
         this.product = guesses.getFirst();
-        boolean isSameContext = contextClass == resultClass;
 
         try (var handler = new SimpleErrorHandler().start()) {
-            if (validate(product, false, isSameContext)) {
+            if (validate(product, false, resultClass)) {
                 return Kleenean.TRUE;
             }
             error = handler.getLastError();
@@ -207,8 +206,7 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
     public final boolean validateStatic(@NotNull SkriptClass skriptClass) {
         this.product = getProductFromClass(skriptClass);
         if (product != null) {
-            boolean isSameContext = contextClass == skriptClass;
-            return validate(product, true, isSameContext);
+            return validate(product, true, skriptClass);
         }
         return false;
     }
@@ -223,9 +221,7 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
     public final boolean validateInstance(@NotNull ClassInstance newInstance, SkriptClass parent) {
         this.product = getProductFromInstance(newInstance);
         if (product != null) {
-            boolean isSameContext = contextClass == parent;
-
-            if (validate(product, false, isSameContext)) {
+            if (validate(product, false, parent)) {
                 this.instance = newInstance;
                 return true;
             }

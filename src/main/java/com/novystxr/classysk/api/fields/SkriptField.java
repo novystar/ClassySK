@@ -14,8 +14,7 @@ public class SkriptField {
         Class<?> type,
         @Nullable Expression<?> defaultExpr,
 
-        AccessType accessType,
-        boolean isStatic,
+        Modifier[] modifiers,
         boolean isPlural
 
     ) implements AccessModifiable {
@@ -26,7 +25,8 @@ public class SkriptField {
          */
         public static FieldSignature fromSerializableField(String fieldName, SerializableField sField) {
 
-            return new FieldSignature(fieldName, sField.signatureType, null, AccessType.PUBLIC, false, sField.isPlural);
+            return new FieldSignature(fieldName, sField.signatureType, null,
+                Modifier.PUBLIC.array(), sField.isPlural);
         }
         public boolean canConvert(@NotNull Object[] values) {
             if (values.length > 1 && !isPlural) return false;

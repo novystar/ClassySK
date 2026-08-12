@@ -8,7 +8,7 @@ import ch.njol.skript.util.ClassInfoReference;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.*;
-import com.novystxr.classysk.api.AccessModifiable.AccessType;
+import com.novystxr.classysk.api.AccessModifiable.Modifier;
 import com.novystxr.classysk.api.methods.MethodParser;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
@@ -59,7 +59,7 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
     }
 
     public static SyntaxInfo<SecMethod> INFO = SyntaxInfo.builder(SecMethod.class)
-        .addPattern("(public|:private) [:static] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [(\\:\\:|returns|->) %-*classinfo%]")
+        .addPattern("(:public|:private) [:static] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [(\\:\\:|returns|->) %-*classinfo%]")
         .supplier(SecMethod::new)
         .build();
 
@@ -90,10 +90,8 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
                 return false;
             }
         }
-        AccessType accessType = result.hasTag("private") ? AccessModifiable.AccessType.PRIVATE : AccessModifiable.AccessType.PUBLIC;
-        boolean isStatic = result.hasTag("static");
 
-        this.signature = new MethodSignature(methodName, args, accessType, isStatic, returnType, returnPlural);
+        this.signature = new MethodSignature(methodName, args, Modifier.collect(result.tags), returnType, returnPlural);
         this.sectionNode = sectionNode;
         return true;
     }
