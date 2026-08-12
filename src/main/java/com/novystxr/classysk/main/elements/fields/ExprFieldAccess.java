@@ -29,6 +29,7 @@ import java.util.regex.MatchResult;
 import static ch.njol.skript.classes.Changer.ChangeMode.*;
 import static com.novystxr.classysk.Classysk.CLASSNAME_PATTERN;
 import static com.novystxr.classysk.Classysk.NAME_PATTERN;
+import static com.novystxr.classysk.api.Modifier.CONST;
 import static com.novystxr.classysk.api.methods.MethodParser.HINT_PATTERN;
 import static com.novystxr.classysk.api.util.StringUtils.getConfigLowerCase;
 import static com.novystxr.classysk.api.util.StringUtils.titleCase;
@@ -114,6 +115,29 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
     }
 
     @Override
+    public Class<?> @Nullable [] acceptChange(ChangeMode mode) {
+        FieldSignature signature = validator.product();
+        if (signature != null && signature.hasModifier(CONST)) {
+            Skript.error("Constant fields can only be set on definition");
+            return null;
+        }
+        if (mode == DELETE || mode == RESET) {
+            return new Class[]{};
+        }
+        Class<?> type = validator.exactTypeOr(Object.class);
+        boolean isPlural = !canBeSingle();
+        if (isPlural) {
+            type = type.arrayType();
+        }
+        Class<?>[] typeArray = CollectionUtils.array(type);
+
+        if ((mode == REMOVE_ALL && isPlural) || mode == SET || mode == ADD || mode == REMOVE) {
+            return typeArray;
+        }
+        return null;
+    }
+
+    @Override
     public void change(Event event, Object @Nullable [] delta, ChangeMode mode) {
         FieldHolder fieldHolder = getValidHolder(event);
         if (fieldHolder == null) return;
@@ -164,24 +188,6 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
             // set variable to the same value it is to trigger serialization
             variable.changeInPlace(event, value -> value);
         }
-    }
-
-    @Override
-    public Class<?> @Nullable [] acceptChange(ChangeMode mode) {
-        if (mode == DELETE || mode == RESET) {
-            return new Class[]{};
-        }
-        Class<?> type = validator.exactTypeOr(Object.class);
-        boolean isPlural = !canBeSingle();
-        if (isPlural) {
-            type = type.arrayType();
-        }
-        Class<?>[] typeArray = CollectionUtils.array(type);
-
-        if ((mode == REMOVE_ALL && isPlural) || mode == SET || mode == ADD || mode == REMOVE) {
-            return typeArray;
-        }
-        return null;
     }
 
     private @Nullable FieldHolder getValidHolder(Event event) {

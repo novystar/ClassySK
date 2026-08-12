@@ -8,7 +8,8 @@ public enum Modifier {
     PUBLIC(0),
     PRIVATE(0),
 
-    STATIC(1);
+    STATIC(1),
+    CONST(2);
 
     public final int index;
 
