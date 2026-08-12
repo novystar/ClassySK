@@ -9,7 +9,7 @@ import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import org.jspecify.annotations.Nullable;
 import org.skriptlang.skript.log.runtime.ErrorSource;
 
-import static com.novystxr.classysk.api.AccessModifiable.Modifier.PRIVATE;
+import static com.novystxr.classysk.api.Modifier.PRIVATE;
 
 public class FieldValidator extends AccessValidator<FieldSignature> {
 

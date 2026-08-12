@@ -4,7 +4,7 @@ import ch.njol.skript.Skript;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.registrations.Classes;
 import com.novystxr.classysk.api.AccessModifiable;
-import com.novystxr.classysk.api.AccessModifiable.Modifier;
+import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.AccessValidator;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.SkriptClass;

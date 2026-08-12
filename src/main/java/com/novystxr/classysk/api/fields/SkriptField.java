@@ -2,6 +2,7 @@ package com.novystxr.classysk.api.fields;
 
 import ch.njol.skript.lang.Expression;
 import com.novystxr.classysk.api.AccessModifiable;
+import com.novystxr.classysk.api.Modifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.converter.Converters;
