@@ -12,6 +12,7 @@ import ch.njol.skript.util.LiteralUtils;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.SyntaxInfo;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.stream.Stream;
 
@@ -51,14 +52,8 @@ public class ParserUtils {
     @SuppressWarnings("unchecked")
     public static <T extends SyntaxElement> Iterator<SyntaxInfo<T>> infoIterator(SyntaxInfo<?>[] infos, Class<?>... filterAs) {
         return (Iterator<SyntaxInfo<T>>) (Iterator<?>) Stream.of(infos)
-            .filter(info -> {
-                Class<?> type = info.type();
-                for (Class<?> filterClass : filterAs) {
-                    if (filterClass.isAssignableFrom(type))
-                        return true;
-                }
-                return filterAs.length == 0;
-            })
+            .filter(info -> Arrays.stream(filterAs)
+                .anyMatch(cls -> cls.isAssignableFrom(info.type())) || filterAs.length == 0)
             .iterator();
     }
  }
