@@ -51,7 +51,7 @@ public class ParserUtils {
 
     @SuppressWarnings("unchecked")
     public static <T extends SyntaxElement> Iterator<SyntaxInfo<T>> infoIterator(SyntaxInfo<?>[] infos, Class<?>... filterAs) {
-        return (Iterator<SyntaxInfo<T>>) (Iterator<?>) Stream.of(infos)
+        return (Iterator<SyntaxInfo<T>>) (Iterator<?>) Arrays.stream(infos)
             .filter(info -> Arrays.stream(filterAs)
                 .anyMatch(cls -> cls.isAssignableFrom(info.type())) || filterAs.length == 0)
             .iterator();
