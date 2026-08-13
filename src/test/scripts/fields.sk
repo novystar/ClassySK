@@ -285,7 +285,7 @@ test "ClassySK - Constant Fields":
 	assert {_inst}::constInst is 1
 	assert {_inst}::const_undef is not set
 
-	set {_inst}<>constInst to 2
+	set {_inst}<>::constInst to 2
 	assert {_inst}::constInst is 1
 
 	set {_inst}<>::const_undef to 2
