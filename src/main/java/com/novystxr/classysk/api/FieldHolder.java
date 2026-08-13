@@ -11,8 +11,6 @@ import org.skriptlang.skript.lang.converter.Converters;
 import java.util.Arrays;
 import java.util.Map;
 
-import static com.novystxr.classysk.api.Modifier.CONST;
-
 public interface FieldHolder {
 
     Map<String, SkriptField> fieldMap();
@@ -59,7 +57,6 @@ public interface FieldHolder {
 
         FieldSignature signature = getFieldSignature(fieldName);
         if (signature == null) return false;
-        if (signature.hasModifier(CONST)) return false;
 
         SkriptField field = getField(fieldName);
         if (field == null) {

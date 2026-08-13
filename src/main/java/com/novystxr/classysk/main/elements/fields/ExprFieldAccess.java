@@ -142,6 +142,9 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
         FieldHolder fieldHolder = getValidHolder(event);
         if (fieldHolder == null) return;
 
+        FieldSignature signature = validator.product();
+        if (signature.hasModifier(CONST)) return;
+
         switch (mode) {
             case SET -> setValueAndSave(delta, fieldHolder, event);
             case DELETE -> {
@@ -155,7 +158,6 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
             case ADD, REMOVE, REMOVE_ALL -> {
                 if (delta == null) return;
                 Object[] initialValue = fieldHolder.getFieldValue(fieldName);
-                FieldSignature signature = validator.product();
 
                 if (signature.isPlural()) {
                     ExprUtils.mutatePlural(initialValue, delta, mode, result ->
