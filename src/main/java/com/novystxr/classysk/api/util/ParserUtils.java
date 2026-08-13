@@ -22,15 +22,17 @@ public class ParserUtils {
     /**
      *
      * Parses expressions and section expressions.
-     * This method properly modifies the section context for the given node, if necessary.
-     * Designed to support nested section parsing.
+     * This method properly modifies the section context for the given node if necessary.
+     * This also converts unparsed literals so the resulting expression is safe to use.
      *
      * @param rawExpr Raw string to parse
      * @param node The node belonging to this syntax
      * @param types Types to convert to
      *
-     * @see SectionContext#modify(SectionNode, List, Supplier)
+     * @return The resulting expression - null if it failed to parse or could not be converted
+     *
      * @see SkriptParser#parseExpression(Class[])
+     * @see SectionContext#modify(SectionNode, List, Supplier)
      */
     public static @Nullable Expression<?> parseExprNode(String rawExpr, Node node, Class<?>... types) {
         SectionContext context = ParserInstance.get().getData(SectionContext.class);
