@@ -279,3 +279,14 @@ test "ClassySK - Constant Fields":
 
 	set {_inst}<>::const_undef to 8
 	assert {_inst}::const_undef is 7
+
+	set {_inst} to new instance of TestConstants
+
+	assert {_inst}::constInst is 1
+	assert {_inst}::const_undef is not set
+
+	set {_inst}<>constInst to 2
+	assert {_inst}::constInst is 1
+
+	set {_inst}<>::const_undef to 2
+	assert {_inst}::const_undef is not set
