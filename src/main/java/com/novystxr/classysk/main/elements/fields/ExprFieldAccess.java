@@ -118,7 +118,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
     public Class<?> @Nullable [] acceptChange(ChangeMode mode) {
         FieldSignature signature = validator.product();
         if (signature != null && signature.hasModifier(CONST)) {
-            Skript.error("Constant fields can only be set on definition");
+            Skript.error("Constant fields can't be changed after definition");
             return null;
         }
         if (mode == DELETE || mode == RESET) {
@@ -143,8 +143,10 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
         if (fieldHolder == null) return;
 
         FieldSignature signature = validator.product();
-        if (signature.hasModifier(CONST)) return;
-
+        if (signature.hasModifier(CONST)) {
+            error("Constant fields can't be changed after definition");
+            return;
+        }
         switch (mode) {
             case SET -> setValueAndSave(delta, fieldHolder, event);
             case DELETE -> {
