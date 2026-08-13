@@ -247,3 +247,35 @@ test "ClassySK - Changers & Arithmetic":
 	set {_instance}::testReset to 5
 	reset {_instance}::testReset
 	assert {_instance}::testReset is 1, 2
+
+class TestConstants:
+	public static const static: integer = 1
+	public static const static_undef: integer
+
+	public const constInst: integer = 1
+	public const const_undef: integer
+
+test "ClassySK - Constant Fields":
+	parse:
+		set TestConstants::static to 2
+	assert last parse logs are set
+
+	parse:
+		set TestConstants::static_undef to 2
+	assert last parse logs are set
+
+	assert TestConstants::static is 1
+	assert TestConstants::static_undef is not set
+
+	set {_inst} to new instance of TestConstants:
+		constInst: 6
+		const_undef: 7
+
+	assert {_inst}::constInst is 6
+	assert {_inst}::const_undef is 7
+
+	set {_inst}<>::constInst to 8
+	assert {_inst}::constInst is 6
+
+	set {_inst}<>::const_undef to 8
+	assert {_inst}::const_undef is 7
