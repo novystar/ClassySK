@@ -43,9 +43,21 @@ test "ClassySK - Compare":
 		int: 1
 		str: "a"
 
+	set {_a} to new instance of Comparison:
+		int: 1
+		str: "a"
+
+	set {_b} to new instance of Comparison:
+		int: 1
+		str: "a"
+
 	assert {_a} is {_a}
 
+	assert untyped {_a} is typed {_a}
+
 	assert typed {_a} is {_a}
+	assert typed {_a} is untyped {_a}
+	assert untyped {_a} is typed {_a}
 	assert {_a} is typed {_a}
 	assert typed {_a} is typed {_a}
 	assert {_a} is untyped {_a}
