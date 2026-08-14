@@ -21,8 +21,7 @@ import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
-import static com.novystxr.classysk.api.util.StringUtils.getConfigLowerCase;
-import static com.novystxr.classysk.api.util.StringUtils.titleCase;
+import static com.novystxr.classysk.api.util.StringUtils.*;
 
 public class ExprMethodCall extends SimpleExpression<Object> {
 
@@ -53,7 +52,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
         isStatic = pattern == 1;
         SkriptClass contextClass = SkriptMethod.getContextClass(getParser());
 
-        String className = getConfigLowerCase(result.regexes.getFirst().group(1));
+        String className = getLowerCase(result.regexes.getFirst().group(1));
         String name = getConfigLowerCase(result.regexes.getFirst().group(2));
         String args = result.regexes.size() == 1
             ? "" : result.regexes.get(1).group().trim();
