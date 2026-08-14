@@ -62,12 +62,14 @@ public class ExprMethodCall extends SimpleExpression<Object> {
         if (reference == null) return false;
 
         validator = new MethodValidator(getErrorSource(), contextClass, reference, true);
-
-        if (!isStatic) {
-            instanceExpr = (Expression<ClassInstance>) exprs[0];
+        if (isStatic) {
+            return validator.validateStatic(skriptClass) && postInit();
         }
-        if (className != null) {
-            if (className.isEmpty()) return valid();
+        instanceExpr = (Expression<ClassInstance>) exprs[0];
+        if (instanceExpr.getSource() instanceof ExprSelf) {
+            skriptClass = contextClass;
+        } else if (className != null) {
+            if (className.isEmpty()) return postInit();
 
             skriptClass = ClassManager.getClass(className);
             if (skriptClass == null) {
@@ -75,17 +77,14 @@ public class ExprMethodCall extends SimpleExpression<Object> {
                 return false;
             }
         }
-        if (isStatic) {
-            if (!validator.validateStatic(skriptClass))
-                return false;
-        } else {
-            if (instanceExpr.getSource() instanceof ExprSelf)
-                skriptClass = contextClass;
+        return !validator.validateUnknown(skriptClass).isFalse() && postInit();
+    }
 
-            if (validator.validateUnknown(skriptClass).isFalse())
-                return false;
-        }
-        return valid();
+    private boolean postInit() {
+        shouldBeSingle = validator.shouldBeSingle();
+        possibleTypes = validator.possibleTypes();
+        bestReturnType = AccessValidator.bestReturnType(possibleTypes);
+        return true;
     }
 
     @Override
@@ -103,13 +102,6 @@ public class ExprMethodCall extends SimpleExpression<Object> {
             return null;
         }
         return reference.method().run(event, instance, reference.args());
-    }
-
-    private boolean valid() {
-        shouldBeSingle = validator.shouldBeSingle();
-        possibleTypes = validator.possibleTypes();
-        bestReturnType = AccessValidator.bestReturnType(possibleTypes);
-        return true;
     }
 
     @Override

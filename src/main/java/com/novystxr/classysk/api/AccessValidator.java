@@ -178,14 +178,14 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
             }
             error = handler.getLastError();
         }
-        if (guesses.isEmpty() && error != null)
-            Skript.error(error.getMessage());
-
-        if (guesses.isEmpty())
+        if (guesses.isEmpty()) {
+            if (error != null)
+                Skript.error(error.getMessage());
             return Kleenean.FALSE;
-        if (guesses.size() != 1)
+        }
+        if (guesses.size() != 1) {
             return Kleenean.UNKNOWN;
-
+        }
         this.product = guesses.getFirst();
 
         try (var handler = new SimpleErrorHandler().start()) {
@@ -205,10 +205,9 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
      */
     public final boolean validateStatic(@NotNull SkriptClass skriptClass) {
         this.product = getProductFromClass(skriptClass);
-        if (product != null) {
-            return validate(product, true, skriptClass);
-        }
-        return false;
+        if (product == null) return false;
+
+        return validate(product, true, skriptClass);
     }
 
     /**

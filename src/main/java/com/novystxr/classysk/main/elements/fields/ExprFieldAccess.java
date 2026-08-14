@@ -48,10 +48,10 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
         );
     }
     private FieldValidator validator;
-    private boolean isStaticReference;
+    private boolean isStatic;
     private String fieldName;
 
-    private SkriptClass skriptClass;
+    private SkriptClass skriptClass = null;
     private Expression<ClassInstance> instanceExpr;
 
     private Kleenean shouldBeSingle;
@@ -61,7 +61,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
     @SuppressWarnings("unchecked")
     @Override
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result) {
-        isStaticReference = pattern == 1;
+        isStatic = pattern == 1;
 
         MatchResult regex = result.regexes.getFirst();
         SkriptClass contextClass = SkriptMethod.getContextClass(getParser());
@@ -70,12 +70,14 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
         fieldName = getConfigLowerCase(regex.group(2));
 
         validator = new FieldValidator(getErrorSource(), contextClass, fieldName);
-
-        if (!isStaticReference) {
-            instanceExpr = (Expression<ClassInstance>) exprs[0];
+        if (isStatic) {
+            return validator.validateStatic(skriptClass) && postInit();
         }
-        if (className != null) {
-            if (className.isEmpty()) return valid();
+        instanceExpr = (Expression<ClassInstance>) exprs[0];
+        if (instanceExpr.getSource() instanceof ExprSelf) {
+            skriptClass = contextClass;
+        } else if (className != null) {
+            if (className.isEmpty()) return postInit();
 
             skriptClass = ClassManager.getClass(className);
             if (skriptClass == null) {
@@ -83,17 +85,14 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
                 return false;
             }
         }
-        if (isStaticReference) {
-            if (!validator.validateStatic(skriptClass))
-                return false;
-        } else {
-            if (instanceExpr.getSource() instanceof ExprSelf)
-                skriptClass = contextClass;
+        return !validator.validateUnknown(skriptClass).isFalse() && postInit();
+    }
 
-            if (validator.validateUnknown(skriptClass).isFalse())
-                return false;
-        }
-        return valid();
+    private boolean postInit() {
+        possibleTypes = validator.possibleTypes();
+        bestReturnType = AccessValidator.bestReturnType(possibleTypes);
+        shouldBeSingle = validator.shouldBeSingle();
+        return true;
     }
 
     @Override
@@ -173,13 +172,6 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
         }
     }
 
-    private boolean valid() {
-        shouldBeSingle = validator.shouldBeSingle();
-        possibleTypes = validator.possibleTypes();
-        bestReturnType = AccessValidator.bestReturnType(possibleTypes);
-        return true;
-    }
-
     private void setValueAndSave(Object[] value, FieldHolder holder, Event event) {
         if (holder.setFieldValue(fieldName, value)) {
             save(event);
@@ -187,7 +179,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
     }
 
     private void save(Event event) {
-        if (isStaticReference) return;
+        if (isStatic) return;
         if (instanceExpr.getSource() instanceof Variable<?> variable) {
             // set variable to the same value it is to trigger serialization
             variable.changeInPlace(event, value -> value);
@@ -195,7 +187,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
     }
 
     private @Nullable FieldHolder getValidHolder(Event event) {
-        if (isStaticReference) return skriptClass;
+        if (isStatic) return skriptClass;
         return validator.getValidInstance(event, instanceExpr, skriptClass);
     }
 
