@@ -29,17 +29,4 @@ public class TypedInstanceWrapper implements TypeWrappable<TypedInstanceWrapper,
     public Class<? extends TypedInstanceWrapper> getSubclass() {
         return getClass();
     }
-
-    @Override
-    public int hashCode() {
-        return unwrap().hashCode();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof TypeWrappable<?,?> wrapped) {
-            return instance.equals(wrapped.unwrap());
-        }
-        return false;
-    }
 }

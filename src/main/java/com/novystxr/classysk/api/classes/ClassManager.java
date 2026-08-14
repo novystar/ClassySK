@@ -119,7 +119,10 @@ public class ClassManager {
                     return null;
                 }
                 try {
-                    return constructor.newInstance(instance);
+                    if (instance.wrapper == null) {
+                        instance.wrapper = constructor.newInstance(instance);
+                    }
+                    return instance.wrapper;
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }

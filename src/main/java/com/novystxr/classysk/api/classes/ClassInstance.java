@@ -13,6 +13,8 @@ import org.skriptlang.skript.lang.converter.Converters;
 public class ClassInstance implements FieldHolder, TypeWrappable<TypedInstanceWrapper, ClassInstance> {
     public final String name;
 
+    public TypedInstanceWrapper wrapper = null;
+
     public final Map<String, SkriptField> fieldMap = new HashMap<>();
 
     // set on deserialization for when parent class becomes known
