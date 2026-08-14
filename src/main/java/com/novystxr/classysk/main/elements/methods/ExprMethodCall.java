@@ -61,6 +61,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
         MethodReference reference = MethodParser.parseReference(name, args);
         if (reference == null) return false;
 
+        instanceExpr = isStatic ? null : (Expression<ClassInstance>) exprs[0];
         validator = new MethodValidator(getErrorSource(), contextClass, reference, true);
         if (className != null) {
             if (className.isEmpty()) return postInit();
@@ -74,7 +75,6 @@ public class ExprMethodCall extends SimpleExpression<Object> {
         if (isStatic) {
             return validator.validateStatic(skriptClass) && postInit();
         }
-        instanceExpr = (Expression<ClassInstance>) exprs[0];
         if (instanceExpr.getSource() instanceof ExprSelf) {
             skriptClass = contextClass;
         }
