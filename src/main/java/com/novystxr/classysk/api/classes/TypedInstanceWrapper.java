@@ -37,8 +37,8 @@ public class TypedInstanceWrapper implements TypeWrappable<TypedInstanceWrapper,
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof TypedInstanceWrapper wrapped) {
-            return instance.equals(wrapped.instance);
+        if (obj instanceof TypeWrappable<?,?> wrapped) {
+            return instance.equals(wrapped.unwrap());
         }
         return false;
     }
