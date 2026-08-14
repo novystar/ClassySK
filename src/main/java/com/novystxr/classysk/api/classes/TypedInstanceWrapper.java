@@ -29,4 +29,12 @@ public class TypedInstanceWrapper implements TypeWrappable<TypedInstanceWrapper,
     public Class<? extends TypedInstanceWrapper> getSubclass() {
         return getClass();
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof TypeWrappable<?,?> wrappable) {
+            return wrappable.unwrap().equals(wrappable.unwrap());
+        }
+        return obj.equals(this);
+    }
 }
