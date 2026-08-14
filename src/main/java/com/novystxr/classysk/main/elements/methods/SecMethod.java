@@ -1,5 +1,6 @@
 package com.novystxr.classysk.main.elements.methods;
 
+import ch.njol.skript.Skript;
 import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.doc.*;
 import ch.njol.skript.lang.*;
@@ -55,6 +56,9 @@ import java.util.*;
 public class SecMethod extends Section implements ReturnHandler<Object> {
 
     public static void register(SyntaxRegistry registry) {
+        //noinspection ThrowableInstanceNeverThrown
+        Skript.exception(new IllegalStateException("SecMethod should not be registered"));
+
         registry.register(SyntaxRegistry.SECTION, INFO);
     }
 

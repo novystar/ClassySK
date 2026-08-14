@@ -18,6 +18,9 @@ import org.skriptlang.skript.registration.SyntaxRegistry;
 public class EffField extends Effect {
 
     public static void register(SyntaxRegistry registry) {
+        //noinspection ThrowableInstanceNeverThrown
+        Skript.exception(new IllegalStateException("EffField should not be registered"));
+
         registry.register(SyntaxRegistry.EFFECT, INFO);
     }
 
