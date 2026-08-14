@@ -1,7 +1,6 @@
 package com.novystxr.classysk.api.classes;
 
 import java.util.*;
-import java.util.Map.Entry;
 
 import com.novystxr.classysk.api.FieldHolder;
 import com.novystxr.classysk.api.TypeWrappable;
@@ -44,20 +43,8 @@ public class ClassInstance implements FieldHolder, TypeWrappable<TypedInstanceWr
         return field.signature;
     }
 
-    public Map<String, Object[]> getFieldValueMap() {
-        Map<String, Object[]> result = new TreeMap<>();
-        for (Entry<String, SkriptField> entry : fieldMap.entrySet()) {
-            result.put(entry.getKey(), entry.getValue().value);
-        }
-        return result;
-    }
-
     public SkriptClass getParent() {
         return ClassManager.getClass(name);
-    }
-
-    public int getHashCode() {
-        return Objects.hash(name, getFieldValueMap());
     }
 
     @Override

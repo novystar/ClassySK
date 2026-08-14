@@ -81,7 +81,7 @@ public class Types {
 
                 @Override
                 public String toVariableNameString(ClassInstance o) {
-                    return "Class Instance " + o.name + " (" + o.getHashCode() + ")";
+                    return "Class Instance " + o.name + " (" + o.hashCode() + ")";
                 }
             })
             .serializer(new Serializer<>() {
