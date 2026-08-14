@@ -57,13 +57,7 @@ public class EffMethodCall extends Effect {
         if (reference == null) return false;
 
         validator = new MethodValidator(getErrorSource(), contextClass, reference, false);
-        if (isStatic) {
-            return validator.validateStatic(skriptClass);
-        }
-        instanceExpr = (Expression<ClassInstance>) exprs[0];
-        if (instanceExpr.getSource() instanceof ExprSelf) {
-            skriptClass = contextClass;
-        } else if (className != null) {
+        if (className != null) {
             if (className.isEmpty()) return true;
 
             skriptClass = ClassManager.getClass(className);
@@ -71,6 +65,13 @@ public class EffMethodCall extends Effect {
                 Skript.error("Class '%s' does not exist", titleCase(className));
                 return false;
             }
+        }
+        if (isStatic) {
+            return validator.validateStatic(skriptClass);
+        }
+        instanceExpr = (Expression<ClassInstance>) exprs[0];
+        if (instanceExpr.getSource() instanceof ExprSelf) {
+            skriptClass = contextClass;
         }
         return !validator.validateUnknown(skriptClass).isFalse();
     }

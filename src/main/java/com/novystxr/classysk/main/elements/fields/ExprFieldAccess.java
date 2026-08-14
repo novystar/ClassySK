@@ -70,13 +70,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
         fieldName = getConfigLowerCase(regex.group(2));
 
         validator = new FieldValidator(getErrorSource(), contextClass, fieldName);
-        if (isStatic) {
-            return validator.validateStatic(skriptClass) && postInit();
-        }
-        instanceExpr = (Expression<ClassInstance>) exprs[0];
-        if (instanceExpr.getSource() instanceof ExprSelf) {
-            skriptClass = contextClass;
-        } else if (className != null) {
+        if (className != null) {
             if (className.isEmpty()) return postInit();
 
             skriptClass = ClassManager.getClass(className);
@@ -84,6 +78,13 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
                 Skript.error("Class '%s' does not exist", titleCase(className));
                 return false;
             }
+        }
+        if (isStatic) {
+            return validator.validateStatic(skriptClass) && postInit();
+        }
+        instanceExpr = (Expression<ClassInstance>) exprs[0];
+        if (instanceExpr.getSource() instanceof ExprSelf) {
+            skriptClass = contextClass;
         }
         return !validator.validateUnknown(skriptClass).isFalse() && postInit();
     }
