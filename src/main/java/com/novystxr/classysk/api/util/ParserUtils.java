@@ -42,8 +42,9 @@ public class ParserUtils {
 
         Expression<?> expr = context.modify(secNode, null, () -> (Expression<?>) parser.parseExpression(types));
         expr = LiteralUtils.defendExpression(expr);
+        if (expr == null) return null;
 
-        if (!(expr instanceof SectionExpression<?>) && secNode != null) {
+        if (!(expr.getSource() instanceof SectionExpression<?>) && secNode != null) {
             Skript.error("This expression is not usable as a section");
             return null;
         }
