@@ -3,6 +3,7 @@ package com.novystxr.classysk.api.methods;
 import ch.njol.skript.lang.*;
 import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.variables.Variables;
+import com.novystxr.classysk.api.AccessModifiable;
 import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassInstance;
@@ -28,10 +29,10 @@ public class SkriptMethod {
         SequencedMap<String, MethodArgument> arguments,
         Modifier[] modifiers,
 
-        @Nullable Class<?> returnType,
-        boolean returnPlural
+        @Nullable Class<?> type,
+        boolean isPlural
 
-    ) {}
+    ) implements AccessModifiable {}
 
     public SkriptMethod(MethodSignature signature) {
         this.signature = signature;

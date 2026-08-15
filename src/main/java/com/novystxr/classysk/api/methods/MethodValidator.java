@@ -34,7 +34,8 @@ public class MethodValidator extends AccessValidator<ValidReference> {
 
     @Override
     protected @Nullable ValidReference getProductFromClass(SkriptClass skriptClass) {
-        List<SkriptMethod> candidates = skriptClass.methodRegistry.getCandidates(reference);
+        List<SkriptMethod> candidates = skriptClass.methodRegistry.candidates(reference).toList();
+
         if (candidates.isEmpty()) {
             Skript.error("Could not identify method signature from reference: "+reference.name());
             return null;
@@ -168,7 +169,7 @@ public class MethodValidator extends AccessValidator<ValidReference> {
     public record ValidReference(@NotNull SkriptMethod method, @NotNull Map<String, Expression<?>> args) implements AccessModifiable {
         @Override
         public boolean isPlural() {
-            return method.signature.returnPlural();
+            return method.signature.isPlural();
         }
         @Override
         public Modifier[] modifiers() {
@@ -176,7 +177,7 @@ public class MethodValidator extends AccessValidator<ValidReference> {
         }
         @Override
         public Class<?> type() {
-            return method.signature.returnType();
+            return method.signature.type();
         }
     }
 }

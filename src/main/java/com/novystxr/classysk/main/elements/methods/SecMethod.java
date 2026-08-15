@@ -8,7 +8,6 @@ import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.util.ClassInfoReference;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
-import com.novystxr.classysk.api.*;
 import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.methods.MethodParser;
 import com.novystxr.classysk.api.methods.SkriptMethod;
@@ -112,7 +111,7 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
         if (sectionNode == null) return;
         Trigger trigger;
 
-        if (signature.returnType() != null) {
+        if (signature.type() != null) {
             trigger = loadReturnableSectionCode(sectionNode, "method body", new Class[]{MethodRunEvent.class});
         } else {
             trigger = loadCode(sectionNode, "method body", MethodRunEvent.class);
@@ -134,12 +133,12 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
 
     @Override
     public boolean isSingleReturnValue() {
-        return !signature.returnPlural();
+        return !signature.isPlural();
     }
 
     @Override
     public @Nullable Class<?> returnValueType() {
-        return signature.returnType();
+        return signature.type();
         }
 
     @Override

@@ -4,6 +4,8 @@ import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 
 import java.util.*;
+import java.util.Map.Entry;
+import java.util.stream.Stream;
 
 public class MethodRegistry {
 
@@ -14,12 +16,8 @@ public class MethodRegistry {
     ) {
         @Override
         public boolean equals(Object o) {
-            if (o instanceof MethodIdentifier that) {
-                return minArgCount == that.minArgCount &&
-                    Objects.equals(name, that.name) &&
-                    Arrays.equals(argTypes, that.argTypes);
-            }
-            return false;
+            if (!(o instanceof MethodIdentifier(String otherName, int otherCount, Class<?>[] otherTypes))) return false;
+            return minArgCount == otherCount && name.equals(otherName) && Arrays.equals(argTypes, otherTypes);
         }
 
         @Override
@@ -30,23 +28,15 @@ public class MethodRegistry {
 
     private Map<MethodIdentifier, SkriptMethod> registry = new HashMap<>();
 
-    public List<SkriptMethod> getCandidates(MethodReference reference) {
-        List<SkriptMethod> result = new ArrayList<>();
+    public Stream<SkriptMethod> candidates(MethodReference reference) {
+        final String refName = reference.name();
+        final int refArgs = reference.args().size();
 
-        for (var entry : registry.entrySet()) {
-            MethodIdentifier identifier = entry.getKey();
-            SkriptMethod method = entry.getValue();
-
-            if (!identifier.name.equals(reference.name())) continue;
-
-            int refArgCount = reference.args().size();
-
-            if (refArgCount < identifier.minArgCount ||
-                refArgCount > identifier.argTypes.length) continue;
-
-            result.add(method);
-        }
-        return result;
+        return registry.entrySet().stream()
+            .filter(entry -> !entry.getKey().name.equals(refName))
+            .filter(entry ->
+                refArgs < entry.getKey().minArgCount || refArgs > entry.getKey().argTypes.length)
+            .map(Entry::getValue);
     }
 
     public void init() {
@@ -56,17 +46,16 @@ public class MethodRegistry {
     public boolean registerMethod(SkriptMethod method) {
         String name = method.signature.name();
 
-        SequencedMap<String, MethodArgument> args = method.signature.arguments();
-        Class<?>[] argTypes = new Class<?>[args.size()];
+        Collection<MethodArgument> args = method.signature.arguments().sequencedValues();
 
-        int i = 0;
-        int minArgCount = 0;
-        for (MethodArgument arg : args.sequencedValues()) {
-            argTypes[i++] = arg.type();
-            if (arg.defaultValue() == null)  {
-                minArgCount++;
-            }
-        }
+        Class<?>[] argTypes = args.stream()
+            .map(MethodArgument::type)
+            .toArray(Class[]::new);
+
+        int minArgCount = Math.toIntExact(args.stream()
+            .filter(arg -> arg.defaultValue() != null)
+            .count());
+
         MethodIdentifier identifier = new MethodIdentifier(name, minArgCount, argTypes);
         return registry.putIfAbsent(identifier, method) == null;
     }
