@@ -21,8 +21,7 @@ import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
-import static com.novystxr.classysk.api.util.StringUtils.getConfigLowerCase;
-import static com.novystxr.classysk.api.util.StringUtils.titleCase;
+import static com.novystxr.classysk.api.util.StringUtils.*;
 
 public class ExprMethodCall extends SimpleExpression<Object> {
 
@@ -53,7 +52,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
         isStatic = pattern == 1;
         SkriptClass contextClass = SkriptMethod.getContextClass(getParser());
 
-        String className = getConfigLowerCase(result.regexes.getFirst().group(1));
+        String className = getLowerCase(result.regexes.getFirst().group(1));
         String name = getConfigLowerCase(result.regexes.getFirst().group(2));
         String args = result.regexes.size() == 1
             ? "" : result.regexes.get(1).group().trim();
@@ -61,13 +60,10 @@ public class ExprMethodCall extends SimpleExpression<Object> {
         MethodReference reference = MethodParser.parseReference(name, args);
         if (reference == null) return false;
 
+        instanceExpr = isStatic ? null : (Expression<ClassInstance>) exprs[0];
         validator = new MethodValidator(getErrorSource(), contextClass, reference, true);
-
-        if (!isStatic) {
-            instanceExpr = (Expression<ClassInstance>) exprs[0];
-        }
         if (className != null) {
-            if (className.isEmpty()) return valid();
+            if (className.isEmpty()) return postInit();
 
             skriptClass = ClassManager.getClass(className);
             if (skriptClass == null) {
@@ -76,16 +72,19 @@ public class ExprMethodCall extends SimpleExpression<Object> {
             }
         }
         if (isStatic) {
-            if (!validator.validateStatic(skriptClass))
-                return false;
-        } else {
-            if (instanceExpr.getSource() instanceof ExprSelf)
-                skriptClass = contextClass;
-
-            if (validator.validateUnknown(skriptClass).isFalse())
-                return false;
+            return validator.validateStatic(skriptClass) && postInit();
         }
-        return valid();
+        if (instanceExpr.getSource() instanceof ExprSelf) {
+            skriptClass = contextClass;
+        }
+        return !validator.validateUnknown(skriptClass).isFalse() && postInit();
+    }
+
+    private boolean postInit() {
+        shouldBeSingle = validator.shouldBeSingle();
+        possibleTypes = validator.possibleTypes();
+        bestReturnType = AccessValidator.bestReturnType(possibleTypes);
+        return true;
     }
 
     @Override
@@ -103,13 +102,6 @@ public class ExprMethodCall extends SimpleExpression<Object> {
             return null;
         }
         return reference.method().run(event, instance, reference.args());
-    }
-
-    private boolean valid() {
-        shouldBeSingle = validator.shouldBeSingle();
-        possibleTypes = validator.possibleTypes();
-        bestReturnType = AccessValidator.bestReturnType(possibleTypes);
-        return true;
     }
 
     @Override

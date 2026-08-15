@@ -1,5 +1,6 @@
 package com.novystxr.classysk.main.elements.methods;
 
+import ch.njol.skript.Skript;
 import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.doc.*;
 import ch.njol.skript.lang.*;
@@ -8,7 +9,7 @@ import ch.njol.skript.util.ClassInfoReference;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.*;
-import com.novystxr.classysk.api.AccessModifiable.AccessType;
+import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.methods.MethodParser;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
@@ -55,11 +56,14 @@ import java.util.*;
 public class SecMethod extends Section implements ReturnHandler<Object> {
 
     public static void register(SyntaxRegistry registry) {
+        //noinspection ThrowableInstanceNeverThrown
+        Skript.exception(new IllegalStateException("SecMethod should not be registered"));
+
         registry.register(SyntaxRegistry.SECTION, INFO);
     }
 
     public static SyntaxInfo<SecMethod> INFO = SyntaxInfo.builder(SecMethod.class)
-        .addPattern("(public|:private) [:static] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [(\\:\\:|returns|->) %-*classinfo%]")
+        .addPattern("(:public|:private) [:static] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [(\\:\\:|returns|->) %-*classinfo%]")
         .supplier(SecMethod::new)
         .build();
 
@@ -90,10 +94,8 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
                 return false;
             }
         }
-        AccessType accessType = result.hasTag("private") ? AccessModifiable.AccessType.PRIVATE : AccessModifiable.AccessType.PUBLIC;
-        boolean isStatic = result.hasTag("static");
 
-        this.signature = new MethodSignature(methodName, args, accessType, isStatic, returnType, returnPlural);
+        this.signature = new MethodSignature(methodName, args, Modifier.collect(result.tags), returnType, returnPlural);
         this.sectionNode = sectionNode;
         return true;
     }

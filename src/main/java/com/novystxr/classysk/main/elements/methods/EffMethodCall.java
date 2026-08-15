@@ -56,11 +56,8 @@ public class EffMethodCall extends Effect {
         MethodReference reference = MethodParser.parseReference(name, args);
         if (reference == null) return false;
 
+        instanceExpr = isStatic ? null : (Expression<ClassInstance>) exprs[0];
         validator = new MethodValidator(getErrorSource(), contextClass, reference, false);
-
-        if (!isStatic) {
-            instanceExpr = (Expression<ClassInstance>) exprs[0];
-        }
         if (className != null) {
             if (className.isEmpty()) return true;
 
@@ -70,14 +67,13 @@ public class EffMethodCall extends Effect {
                 return false;
             }
         }
-        if (isStatic)
+        if (isStatic) {
             return validator.validateStatic(skriptClass);
-        else {
-            if (instanceExpr.getSource() instanceof ExprSelf)
-                skriptClass = contextClass;
-
-            return !validator.validateUnknown(skriptClass).isFalse();
         }
+        if (instanceExpr.getSource() instanceof ExprSelf) {
+            skriptClass = contextClass;
+        }
+        return !validator.validateUnknown(skriptClass).isFalse();
     }
 
     @Override

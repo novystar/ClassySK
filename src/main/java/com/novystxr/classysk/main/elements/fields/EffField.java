@@ -6,7 +6,7 @@ import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.util.ClassInfoReference;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
-import com.novystxr.classysk.api.AccessModifiable.AccessType;
+import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.util.StringUtils;
 import com.novystxr.classysk.api.util.ExprUtils;
@@ -15,17 +15,17 @@ import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.SyntaxInfo;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
-import static com.novystxr.classysk.api.AccessModifiable.AccessType.PRIVATE;
-import static com.novystxr.classysk.api.AccessModifiable.AccessType.PUBLIC;
-
 public class EffField extends Effect {
 
     public static void register(SyntaxRegistry registry) {
+        //noinspection ThrowableInstanceNeverThrown
+        Skript.exception(new IllegalStateException("EffField should not be registered"));
+
         registry.register(SyntaxRegistry.EFFECT, INFO);
     }
 
     public static SyntaxInfo<EffField> INFO = SyntaxInfo.builder(EffField.class)
-        .addPattern("(public|:private) [:static] <"+ Classysk.NAME_PATTERN +">\\: %*classinfo% [= %-objects%]")
+        .addPattern("(:public|:private) [:static] [:const] <"+ Classysk.NAME_PATTERN +">\\: %*classinfo% [= %-objects%]")
         .supplier(EffField::new)
         .build();
 
@@ -37,9 +37,6 @@ public class EffField extends Effect {
     @Override
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result) {
         fieldName = StringUtils.getConfigLowerCase(result.regexes.getFirst());
-
-        AccessType accessType = result.hasTag("private") ? PRIVATE : PUBLIC;
-        boolean isStatic = result.hasTag("static");
 
         ClassInfoReference reference = ExprUtils.getClassRef(exprs[0]);
         boolean isPlural = reference.isPlural().isTrue();
@@ -59,7 +56,7 @@ public class EffField extends Effect {
                 return false;
             }
         }
-        signature = new FieldSignature(fieldName, type, defaultExpr, accessType, isStatic, isPlural);
+        signature = new FieldSignature(fieldName, type, defaultExpr, Modifier.collect(result.tags), isPlural);
         return true;
     }
 

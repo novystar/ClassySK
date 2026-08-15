@@ -18,6 +18,6 @@ public class TypedInstanceParser<T extends TypedInstanceWrapper> extends Parser<
 
     @Override
     public String toVariableNameString(T o) {
-        return "Class Instance " + o.instance.name + " (" + o.instance.getHashCode() + ")";
+        return "Class Instance " + o.instance.name + " (" + o.instance.hashCode() + ")";
     }
 }

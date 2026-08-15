@@ -4,6 +4,7 @@ import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.yggdrasil.Fields;
 import ch.njol.yggdrasil.YggdrasilSerializable.YggdrasilExtendedSerializable;
+import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import org.jetbrains.annotations.NotNull;
 import org.skriptlang.skript.lang.converter.Converters;
@@ -61,13 +62,7 @@ public class SerializableField implements YggdrasilExtendedSerializable {
     }
 
     public FieldSignature mergeSignature(FieldSignature signature) {
-        return new FieldSignature(
-            signature.name(),
-            signatureType,
-            null,
-            signature.accessType(),
-            false,
-            isPlural
-        );
+        Modifier[] modifiers = Modifier.without(signature.modifiers(), Modifier.STATIC);
+        return new FieldSignature(signature.name(), signatureType, null, modifiers, isPlural);
     }
 }

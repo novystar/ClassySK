@@ -72,3 +72,7 @@ test "ClassySK - Types":
 	set {_B}::A_instances to {_A}, {_A}, {_B}, {_A}
 
 	assert size of {_B}::A_instances is 3
+
+	# typed expression output should be Object
+	test(typed {_A}, {_B})
+	test({_A}, typed {_B})

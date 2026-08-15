@@ -2,6 +2,7 @@ package com.novystxr.classysk.api.fields;
 
 import ch.njol.skript.lang.Expression;
 import com.novystxr.classysk.api.AccessModifiable;
+import com.novystxr.classysk.api.Modifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.converter.Converters;
@@ -14,8 +15,7 @@ public class SkriptField {
         Class<?> type,
         @Nullable Expression<?> defaultExpr,
 
-        AccessType accessType,
-        boolean isStatic,
+        Modifier[] modifiers,
         boolean isPlural
 
     ) implements AccessModifiable {
@@ -26,7 +26,8 @@ public class SkriptField {
          */
         public static FieldSignature fromSerializableField(String fieldName, SerializableField sField) {
 
-            return new FieldSignature(fieldName, sField.signatureType, null, AccessType.PUBLIC, false, sField.isPlural);
+            return new FieldSignature(fieldName, sField.signatureType, null,
+                Modifier.PUBLIC.array(), sField.isPlural);
         }
         public boolean canConvert(@NotNull Object[] values) {
             if (values.length > 1 && !isPlural) return false;

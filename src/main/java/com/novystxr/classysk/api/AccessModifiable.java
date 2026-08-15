@@ -1,13 +1,22 @@
 package com.novystxr.classysk.api;
 
+import org.jetbrains.annotations.NotNull;
+
 public interface AccessModifiable {
-    boolean isStatic();
+    Modifier[] modifiers();
+
     boolean isPlural();
-    AccessType accessType();
     Class<?> type();
 
-    enum AccessType {
-        PUBLIC,
-        PRIVATE
+    default boolean hasModifier(Modifier modifier) {
+        return modifiers()[modifier.index] == modifier;
+    }
+
+    default boolean isStatic() {
+        return hasModifier(Modifier.STATIC);
+    }
+
+    default @NotNull Modifier accessType() {
+        return modifiers()[0];
     }
 }

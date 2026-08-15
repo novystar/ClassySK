@@ -7,6 +7,7 @@ import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import ch.njol.util.coll.CollectionUtils;
 import com.novystxr.classysk.api.TypeWrappable;
+import com.novystxr.classysk.api.classes.ClassInstance;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
@@ -64,7 +65,7 @@ public class ExprTypedInstance extends SimpleExpression<Object> {
 
     @Override
     public Class<?> getReturnType() {
-        return TypeWrappable.class;
+        return typed ? Object.class : ClassInstance.class;
     }
 
     @Override

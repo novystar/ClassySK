@@ -4,6 +4,7 @@ import ch.njol.skript.Skript;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.registrations.Classes;
 import com.novystxr.classysk.api.AccessModifiable;
+import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.AccessValidator;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.SkriptClass;
@@ -18,7 +19,7 @@ import org.skriptlang.skript.log.runtime.ErrorSource;
 
 import java.util.*;
 
-import static com.novystxr.classysk.api.AccessModifiable.AccessType.PRIVATE;
+import static com.novystxr.classysk.api.Modifier.PRIVATE;
 
 public class MethodValidator extends AccessValidator<ValidReference> {
 
@@ -56,17 +57,21 @@ public class MethodValidator extends AccessValidator<ValidReference> {
     }
 
     @Override
-    protected boolean validate(ValidReference reference, boolean isStatic, boolean isSameContext) {
-        if (reference.accessType() == PRIVATE && !isSameContext) {
-            Skript.error("This method can't be accessed here");
-            return false;
-        }
-        if (reference.isStatic() != isStatic) {
-            Skript.error("Method accessed from improper context");
-            return false;
-        }
+    protected boolean validate(ValidReference reference, boolean isStatic, SkriptClass target) {
         if (expectsReturn && reference.type() == null) {
             Skript.error("This method can't return anything");
+            return false;
+        }
+        if (reference.accessType() == PRIVATE && target != contextClass) {
+            Skript.error("Private methods can only be accessed from within their own class");
+            return false;
+        }
+        if (reference.isStatic() && !isStatic) {
+            Skript.error("Static methods do not belong to any instance");
+            return false;
+        }
+        if (!reference.isStatic() && isStatic) {
+            Skript.error("This method is only accessible from instances");
             return false;
         }
         return true;
@@ -162,16 +167,12 @@ public class MethodValidator extends AccessValidator<ValidReference> {
 
     public record ValidReference(@NotNull SkriptMethod method, @NotNull Map<String, Expression<?>> args) implements AccessModifiable {
         @Override
-        public boolean isStatic() {
-            return method.signature.isStatic();
-        }
-        @Override
         public boolean isPlural() {
             return method.signature.returnPlural();
         }
         @Override
-        public AccessType accessType() {
-            return method.signature.accessType();
+        public Modifier[] modifiers() {
+            return method.signature.modifiers();
         }
         @Override
         public Class<?> type() {

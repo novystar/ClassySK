@@ -1,27 +1,14 @@
 package com.novystxr.classysk.main;
 
 import com.novystxr.classysk.Classysk;
-import com.novystxr.classysk.api.util.Logger;
 import com.novystxr.classysk.main.elements.*;
 import com.novystxr.classysk.main.elements.classes.*;
-import com.novystxr.classysk.main.elements.fields.EffField;
-import com.novystxr.classysk.main.elements.fields.ExprFieldAccess;
-import com.novystxr.classysk.main.elements.methods.EffMethodCall;
-import com.novystxr.classysk.main.elements.methods.ExprMethodCall;
-import com.novystxr.classysk.main.elements.methods.SecMethod;
+import com.novystxr.classysk.main.elements.fields.*;
+import com.novystxr.classysk.main.elements.methods.*;
 import org.skriptlang.skript.addon.AddonModule;
 import org.skriptlang.skript.addon.SkriptAddon;
 
 public class MainModule implements AddonModule {
-
-    // Should not be called in release builds
-    public void onlyForDocs(SkriptAddon addon) {
-        register(addon,
-            SecMethod::register,
-            EffField::register
-        );
-        Logger.severe("Addon registered syntax that should not be registered in release builds");
-    }
 
     @Override
     public void load(SkriptAddon addon) {
@@ -42,7 +29,7 @@ public class MainModule implements AddonModule {
         if (Classysk.TYPES_ALLOWED)
             register(addon, ExprTypedInstance::register);
 
-        //onlyForDocs(addon);
+        //register(addon, SecMethod::register, EffField::register); // docs only
     }
 
     @Override

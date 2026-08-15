@@ -29,9 +29,9 @@ import java.util.regex.MatchResult;
 import static ch.njol.skript.classes.Changer.ChangeMode.*;
 import static com.novystxr.classysk.Classysk.CLASSNAME_PATTERN;
 import static com.novystxr.classysk.Classysk.NAME_PATTERN;
+import static com.novystxr.classysk.api.Modifier.CONST;
 import static com.novystxr.classysk.api.methods.MethodParser.HINT_PATTERN;
-import static com.novystxr.classysk.api.util.StringUtils.getConfigLowerCase;
-import static com.novystxr.classysk.api.util.StringUtils.titleCase;
+import static com.novystxr.classysk.api.util.StringUtils.*;
 
 public class ExprFieldAccess extends SimpleExpression<Object> {
     public static void register(SyntaxRegistry registry) {
@@ -47,10 +47,10 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
         );
     }
     private FieldValidator validator;
-    private boolean isStaticReference;
+    private boolean isStatic;
     private String fieldName;
 
-    private SkriptClass skriptClass;
+    private SkriptClass skriptClass = null;
     private Expression<ClassInstance> instanceExpr;
 
     private Kleenean shouldBeSingle;
@@ -60,21 +60,18 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
     @SuppressWarnings("unchecked")
     @Override
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result) {
-        isStaticReference = pattern == 1;
+        isStatic = pattern == 1;
 
         MatchResult regex = result.regexes.getFirst();
         SkriptClass contextClass = SkriptMethod.getContextClass(getParser());
 
-        String className = getConfigLowerCase(regex.group(1));
+        String className = getLowerCase(regex.group(1));
         fieldName = getConfigLowerCase(regex.group(2));
 
+        instanceExpr = isStatic ? null : (Expression<ClassInstance>) exprs[0];
         validator = new FieldValidator(getErrorSource(), contextClass, fieldName);
-
-        if (!isStaticReference) {
-            instanceExpr = (Expression<ClassInstance>) exprs[0];
-        }
         if (className != null) {
-            if (className.isEmpty()) return valid();
+            if (className.isEmpty()) return postInit();
 
             skriptClass = ClassManager.getClass(className);
             if (skriptClass == null) {
@@ -82,17 +79,20 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
                 return false;
             }
         }
-        if (isStaticReference) {
-            if (!validator.validateStatic(skriptClass))
-                return false;
-        } else {
-            if (instanceExpr.getSource() instanceof ExprSelf)
-                skriptClass = contextClass;
-
-            if (validator.validateUnknown(skriptClass).isFalse())
-                return false;
+        if (isStatic) {
+            return validator.validateStatic(skriptClass) && postInit();
         }
-        return valid();
+        if (instanceExpr.getSource() instanceof ExprSelf) {
+            skriptClass = contextClass;
+        }
+        return !validator.validateUnknown(skriptClass).isFalse() && postInit();
+    }
+
+    private boolean postInit() {
+        possibleTypes = validator.possibleTypes();
+        bestReturnType = AccessValidator.bestReturnType(possibleTypes);
+        shouldBeSingle = validator.shouldBeSingle();
+        return true;
     }
 
     @Override
@@ -114,60 +114,12 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
     }
 
     @Override
-    public void change(Event event, Object @Nullable [] delta, ChangeMode mode) {
-        FieldHolder fieldHolder = getValidHolder(event);
-        if (fieldHolder == null) return;
-
-        switch (mode) {
-            case SET -> setValueAndSave(delta, fieldHolder, event);
-            case DELETE -> {
-                fieldHolder.removeField(fieldName);
-                save(event);
-            }
-            case RESET -> {
-                fieldHolder.resetField(fieldName);
-                save(event);
-            }
-            case ADD, REMOVE, REMOVE_ALL -> {
-                if (delta == null) return;
-                Object[] initialValue = fieldHolder.getFieldValue(fieldName);
-                FieldSignature signature = validator.product();
-
-                if (signature.isPlural()) {
-                    ExprUtils.mutatePlural(initialValue, delta, mode, result ->
-                        setValueAndSave(result, fieldHolder, event));
-                } else {
-                    Object singleValue = initialValue.length == 1 ? initialValue[0] : null;
-                    ExprUtils.mutateSingle(singleValue, delta, mode, value ->
-                        setValueAndSave(new Object[]{value}, fieldHolder, event));
-                }
-            }
-        }
-    }
-
-    private boolean valid() {
-        shouldBeSingle = validator.shouldBeSingle();
-        possibleTypes = validator.possibleTypes();
-        bestReturnType = AccessValidator.bestReturnType(possibleTypes);
-        return true;
-    }
-
-    private void setValueAndSave(Object[] value, FieldHolder holder, Event event) {
-        if (holder.setFieldValue(fieldName, value)) {
-            save(event);
-        }
-    }
-
-    private void save(Event event) {
-        if (isStaticReference) return;
-        if (instanceExpr.getSource() instanceof Variable<?> variable) {
-            // set variable to the same value it is to trigger serialization
-            variable.changeInPlace(event, value -> value);
-        }
-    }
-
-    @Override
     public Class<?> @Nullable [] acceptChange(ChangeMode mode) {
+        FieldSignature signature = validator.product();
+        if (signature != null && signature.hasModifier(CONST)) {
+            Skript.error("Constant fields can't be changed after definition");
+            return null;
+        }
         if (mode == DELETE || mode == RESET) {
             return new Class[]{};
         }
@@ -184,8 +136,58 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
         return null;
     }
 
+    @Override
+    public void change(Event event, Object @Nullable [] delta, ChangeMode mode) {
+        FieldHolder fieldHolder = getValidHolder(event);
+        if (fieldHolder == null) return;
+
+        FieldSignature signature = validator.product();
+        if (signature.hasModifier(CONST)) {
+            error("Constant fields can't be changed after definition");
+            return;
+        }
+        switch (mode) {
+            case SET -> setValueAndSave(delta, fieldHolder, event);
+            case DELETE -> {
+                fieldHolder.removeField(fieldName);
+                save(event);
+            }
+            case RESET -> {
+                fieldHolder.resetField(fieldName);
+                save(event);
+            }
+            case ADD, REMOVE, REMOVE_ALL -> {
+                if (delta == null) return;
+                Object[] initialValue = fieldHolder.getFieldValue(fieldName);
+
+                if (signature.isPlural()) {
+                    ExprUtils.mutatePlural(initialValue, delta, mode, result ->
+                        setValueAndSave(result, fieldHolder, event));
+                } else {
+                    Object singleValue = initialValue.length == 1 ? initialValue[0] : null;
+                    ExprUtils.mutateSingle(singleValue, delta, mode, value ->
+                        setValueAndSave(new Object[]{value}, fieldHolder, event));
+                }
+            }
+        }
+    }
+
+    private void setValueAndSave(Object[] value, FieldHolder holder, Event event) {
+        if (holder.setFieldValue(fieldName, value)) {
+            save(event);
+        }
+    }
+
+    private void save(Event event) {
+        if (isStatic) return;
+        if (instanceExpr.getSource() instanceof Variable<?> variable) {
+            // set variable to the same value it is to trigger serialization
+            variable.changeInPlace(event, value -> value);
+        }
+    }
+
     private @Nullable FieldHolder getValidHolder(Event event) {
-        if (isStaticReference) return skriptClass;
+        if (isStatic) return skriptClass;
         return validator.getValidInstance(event, instanceExpr, skriptClass);
     }
 
