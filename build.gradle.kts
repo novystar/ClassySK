@@ -12,7 +12,7 @@ repositories {
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
-    compileOnly("com.github.SkriptLang:Skript:2.15.0")
+    compileOnly("com.github.SkriptLang:Skript:2.16.0")
     implementation("net.bytebuddy:byte-buddy:1.18.11")
     implementation("net.bytebuddy:byte-buddy-agent:1.18.11")
     implementation("org.bstats:bstats-bukkit:3.2.1")
