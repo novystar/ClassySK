@@ -51,9 +51,9 @@ public class MethodRegistry {
             .map(MethodArgument::type)
             .toArray(Class[]::new);
 
-        int minArgCount = Math.toIntExact(args.stream()
-            .filter(arg -> arg.defaultValue() != null)
-            .count());
+        int minArgCount = args.stream()
+            .filter(arg -> arg.defaultValue() == null)
+            .mapToInt(arg -> 1).sum();
 
         MethodIdentifier identifier = new MethodIdentifier(name, minArgCount, argTypes);
         return registry.putIfAbsent(identifier, method) == null;
