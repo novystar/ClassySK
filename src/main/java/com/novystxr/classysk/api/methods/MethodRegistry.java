@@ -33,9 +33,9 @@ public class MethodRegistry {
         final int refArgs = reference.args().size();
 
         return registry.entrySet().stream()
-            .filter(entry -> !entry.getKey().name.equals(refName))
+            .filter(entry -> entry.getKey().name.equals(refName))
             .filter(entry ->
-                refArgs < entry.getKey().minArgCount || refArgs > entry.getKey().argTypes.length)
+                refArgs >= entry.getKey().minArgCount && refArgs <= entry.getKey().argTypes.length)
             .map(Entry::getValue);
     }
 
@@ -45,7 +45,6 @@ public class MethodRegistry {
 
     public boolean registerMethod(SkriptMethod method) {
         String name = method.signature.name();
-
         Collection<MethodArgument> args = method.signature.arguments().sequencedValues();
 
         Class<?>[] argTypes = args.stream()
