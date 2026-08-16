@@ -1,10 +1,8 @@
 package com.novystxr.classysk.api.methods;
 
-import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodSignature;
 
-import java.util.Collection;
 import java.util.List;
 
 public interface MethodHolder {

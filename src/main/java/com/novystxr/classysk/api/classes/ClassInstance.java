@@ -8,7 +8,9 @@ import com.novystxr.classysk.api.fields.SerializableField;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.methods.MethodHolder;
+import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.MethodRegistry;
+import com.novystxr.classysk.api.methods.SkriptMethod;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.converter.Converters;
 
@@ -69,5 +71,10 @@ public class ClassInstance implements FieldHolder, MethodHolder, TypeWrappable<T
     @Override
     public MethodRegistry getRegistry() {
         return getParent().getRegistry();
+    }
+
+    @Override
+    public List<SkriptMethod> getCandidates(MethodReference reference) {
+        return getParent().getCandidates(reference);
     }
 }
