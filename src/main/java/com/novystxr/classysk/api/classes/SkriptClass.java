@@ -22,13 +22,16 @@ import org.jetbrains.annotations.Nullable;
 public class SkriptClass implements FieldHolder, MethodHolder {
 
     public final String name;
-    public String extendsName = null;
+    public final String extendsName;
+    public final boolean isFinal;
 
     public final MethodRegistry methodRegistry = new MethodRegistry();
     public final Map<String, FieldSignature> fieldSignatures = new HashMap<>();
 
-    public SkriptClass(String name) {
+    public SkriptClass(String name, String extendsName, boolean isFinal) {
         this.name = name;
+        this.extendsName = extendsName;
+        this.isFinal = isFinal;
     }
 
     public @Nullable Set<ClassInstance> instances() {

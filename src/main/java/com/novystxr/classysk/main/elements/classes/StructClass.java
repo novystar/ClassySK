@@ -53,7 +53,7 @@ public class StructClass extends Structure {
         registry.register(
             SyntaxRegistry.STRUCTURE,
             SyntaxInfo.Structure.builder(StructClass.class)
-                .addPattern("class <"+ CLASSNAME_PATTERN +"> [:extends <" + CLASSNAME_PATTERN + ">]")
+                .addPattern("[:final] class <"+ CLASSNAME_PATTERN +"> [:extends <" + CLASSNAME_PATTERN + ">]")
                 .nodeType(NodeType.BOTH)
                 .supplier(StructClass::new)
                 .build()
@@ -64,17 +64,19 @@ public class StructClass extends Structure {
     private SkriptClass newClass;
 
     private String name;
+    private String extendsName;
 
     @Override
     public boolean init(Literal<?>[] args, int pattern, ParseResult result, @UnknownNullability EntryContainer entryContainer) {
         name = StringUtils.getLowerCase(result.regexes.getFirst());
+        extendsName = result.hasTag("extends") ? StringUtils.getLowerCase(result.regexes.get(1)) : null;
+        boolean isFinal = result.hasTag("final");
 
         if (ClassManager.classExists(name)) {
             Skript.error("A class named '%s' already exists", name);
             return false;
         }
-        newClass = new SkriptClass(name);
-        newClass.extendsName = result.hasTag("extends") ? StringUtils.getLowerCase(result.regexes.get(1)) : null;
+        newClass = new SkriptClass(name, extendsName, isFinal);
 
         for (Node node : entryContainer.getUnhandledNodes()) {
             var element = ParserUtils.parseNodeAsInfos(node, "Could not recognize entry: "+node.getKey(), EffField.INFO, SecMethod.INFO);
@@ -109,9 +111,14 @@ public class StructClass extends Structure {
     @Override
     public boolean preLoad() {
         SkriptClass extendsClass = newClass.getExtends();
-        if (newClass.extendsName != null) {
+        if (extendsName != null) {
             if (extendsClass == null) {
                 Skript.error("Class named '%s' does not exist", StringUtils.titleCase(newClass.extendsName));
+                unregisterClass();
+                return false;
+            }
+            if (extendsClass.isFinal) {
+                Skript.error("Can't extend a class that is final");
                 unregisterClass();
                 return false;
             }

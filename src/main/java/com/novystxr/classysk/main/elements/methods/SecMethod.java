@@ -62,7 +62,7 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
     }
 
     public static SyntaxInfo<SecMethod> INFO = SyntaxInfo.builder(SecMethod.class)
-        .addPattern("(:public|:private) [:static|:override] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [(\\:\\:|returns|->) %-*classinfo%]")
+        .addPattern("(:public|:private) [:final] [:static|:override] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [(\\:\\:|returns|->) %-*classinfo%]")
         .supplier(SecMethod::new)
         .build();
 
@@ -85,13 +85,18 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
         String methodName = StringUtils.getConfigLowerCase(result.regexes.get(0));
         SequencedMap<String, MethodArgument> args = new LinkedHashMap<>();
 
-        // parse arguments
         if (result.hasTag("args")) {
             String argsString = result.regexes.get(1).group();
             args = MethodParser.parseArguments(argsString);
             if (args == null) {
                 return false;
             }
+        }
+
+        Modifier[] modifiers = Modifier.collect(result.tags);
+        if (modifiers[2] == Modifier.FINAL && modifiers[1] != null && modifiers[1] != Modifier.OVERRIDE) {
+            Skript.error("Modifier 'final' cannot be combined with '%s'", modifiers[1].name().toLowerCase(Locale.ENGLISH));
+            return false;
         }
 
         this.signature = new MethodSignature(methodName, args, Modifier.collect(result.tags), returnType, returnPlural);

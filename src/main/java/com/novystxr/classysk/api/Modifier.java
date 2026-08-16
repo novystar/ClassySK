@@ -11,6 +11,7 @@ public enum Modifier {
     STATIC(1),
     OVERRIDE(1),
 
+    FINAL(2),
     CONST(2);
 
     public final int index;

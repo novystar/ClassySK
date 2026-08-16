@@ -94,6 +94,9 @@ public class MethodRegistry {
             } else if (overridden == null) {
                 Skript.error("Method '%s' does not override any method from it's extending class.", signature.name());
                 return false;
+            } else if (overridden.signature.hasModifier(Modifier.FINAL)) {
+                Skript.error("Method '%s' would override a method that is final.", signature.name());
+                return false;
             } else if (signature.accessType().ordinal() > overridden.signature.accessType().ordinal()) {
                 Skript.error("Method '%s' cannot have a lower access-type than the target method.", signature.name());
                 return false;
