@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public abstract class AccessValidator<T extends AccessModifiable> implements RuntimeErrorProducer {
+public abstract class Validator<T extends AccessModifiable> implements RuntimeErrorProducer {
     private ClassInstance instance;
     protected final SkriptClass contextClass;
 
@@ -35,7 +35,7 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
     /**
      * Extend with extra data that is necessary
      */
-    public AccessValidator(ErrorSource errorSource, SkriptClass contextClass) {
+    public Validator(ErrorSource errorSource, SkriptClass contextClass) {
         this.errorSource = errorSource;
         this.contextClass = contextClass;
     }
@@ -49,8 +49,8 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
     protected abstract @Nullable T getProductFromInstance(ClassInstance instance);
 
     /**
-     * A helper method to get all possible return types based off of previous guesses from {@link AccessValidator#validateUnknown(SkriptClass)}
-     * @return The {@link AccessValidator#product} return type, OR all return types of {@link AccessValidator#guesses}
+     * A helper method to get all possible return types based off of previous guesses from {@link Validator#validateUnknown(SkriptClass)}
+     * @return The {@link Validator#product} return type, OR all return types of {@link Validator#guesses}
      */
     public final Class<?>[] possibleTypes() {
         if (product != null) return new Class<?>[]{product.type()};
@@ -71,7 +71,7 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
     /**
      * Tries to find the best possible return type for that pattern to report
      *
-     * @param possibleTypes Must contain atleast one class, see {@link AccessValidator#possibleTypes()}
+     * @param possibleTypes Must contain atleast one class, see {@link Validator#possibleTypes()}
      *
      * @return The highest denominator of possible return types
      */

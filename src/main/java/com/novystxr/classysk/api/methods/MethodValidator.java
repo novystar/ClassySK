@@ -5,7 +5,7 @@ import ch.njol.skript.lang.Expression;
 import ch.njol.skript.registrations.Classes;
 import com.novystxr.classysk.api.AccessModifiable;
 import com.novystxr.classysk.api.Modifier;
-import com.novystxr.classysk.api.AccessValidator;
+import com.novystxr.classysk.api.Validator;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
@@ -21,7 +21,7 @@ import java.util.*;
 
 import static com.novystxr.classysk.api.Modifier.PRIVATE;
 
-public class MethodValidator extends AccessValidator<ValidReference> {
+public class MethodValidator extends Validator<ValidReference> {
 
     private final MethodReference reference;
     private final boolean expectsReturn;

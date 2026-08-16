@@ -6,7 +6,7 @@ import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
-import com.novystxr.classysk.api.AccessValidator;
+import com.novystxr.classysk.api.Validator;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
@@ -83,7 +83,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
     private boolean postInit() {
         shouldBeSingle = validator.shouldBeSingle();
         possibleTypes = validator.possibleTypes();
-        bestReturnType = AccessValidator.bestReturnType(possibleTypes);
+        bestReturnType = Validator.bestReturnType(possibleTypes);
         return true;
     }
 

@@ -1,7 +1,7 @@
 package com.novystxr.classysk.api.fields;
 
 import ch.njol.skript.Skript;
-import com.novystxr.classysk.api.AccessValidator;
+import com.novystxr.classysk.api.Validator;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
@@ -10,7 +10,7 @@ import org.skriptlang.skript.log.runtime.ErrorSource;
 
 import static com.novystxr.classysk.api.Modifier.PRIVATE;
 
-public class FieldValidator extends AccessValidator<FieldSignature> {
+public class FieldValidator extends Validator<FieldSignature> {
 
     private final String fieldName;
 

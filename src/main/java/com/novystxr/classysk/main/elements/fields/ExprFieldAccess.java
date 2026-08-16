@@ -9,7 +9,7 @@ import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import ch.njol.util.coll.CollectionUtils;
 import com.novystxr.classysk.Classysk;
-import com.novystxr.classysk.api.AccessValidator;
+import com.novystxr.classysk.api.Validator;
 import com.novystxr.classysk.api.fields.FieldHolder;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.ClassManager;
@@ -90,7 +90,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
 
     private boolean postInit() {
         possibleTypes = validator.possibleTypes();
-        bestReturnType = AccessValidator.bestReturnType(possibleTypes);
+        bestReturnType = Validator.bestReturnType(possibleTypes);
         shouldBeSingle = validator.shouldBeSingle();
         return true;
     }
