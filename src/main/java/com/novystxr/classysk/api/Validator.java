@@ -15,9 +15,7 @@ import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.log.runtime.ErrorSource;
 import org.skriptlang.skript.log.runtime.RuntimeErrorProducer;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public abstract class Validator<T extends AccessModifiable> implements RuntimeErrorProducer {
     private ClassInstance instance;
@@ -40,9 +38,6 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
         this.contextClass = contextClass;
     }
 
-    /**
-     * Validate your signature and set any extra data
-     */
     protected abstract boolean validate(T product, boolean isStatic, SkriptClass targetClass);
 
     protected abstract @Nullable T getProductFromClass(SkriptClass skriptClass);
@@ -134,16 +129,8 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
             error("Given instance does not match '"+ hintClass.getEffectiveName() +"'");
             return null;
         }
-
-        LogEntry error;
-        try (var handler = new SimpleErrorHandler()) {
-            if (validateInstance(newInstance, parent)) {
-                return newInstance;
-            }
-            error = handler.getLastError();
-        }
-        if (error != null) {
-            error(error.getMessage());
+        if (validateInstance(newInstance, parent)) {
+            return newInstance;
         }
         return null;
     }
@@ -157,24 +144,16 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
      * UNKNOWN if could not find the right class
      */
     public final Kleenean validateUnknown(@Nullable SkriptClass hintClass) {
+        Collection<SkriptClass> check = hintClass == null ? ClassManager.getClasses() : List.of(hintClass);
         LogEntry error;
-        SkriptClass resultClass = null;
-
         try (var handler = new SimpleErrorHandler().start()) {
-            if (hintClass != null) {
-                T product = getProductFromClass(hintClass);
-                if (product != null) {
-                    guesses.add(product);
-                    resultClass = hintClass;
-                }
-            } else {
-                for (SkriptClass skriptClass : ClassManager.getClasses()) {
-                    T product = getProductFromClass(skriptClass);
-                    if (product != null) {
-                        guesses.add(product);
-                        resultClass = skriptClass;
-                    }
-                }
+            for (SkriptClass skriptClass : check) {
+
+                T product = getProductFromClass(skriptClass);
+                if (product == null || !validate(product, false, skriptClass))
+                    continue;
+
+                guesses.add(product);
             }
             error = handler.getLastError();
         }
@@ -187,15 +166,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
             return Kleenean.UNKNOWN;
         }
         this.product = guesses.getFirst();
-
-        try (var handler = new SimpleErrorHandler().start()) {
-            if (validate(product, false, resultClass)) {
-                return Kleenean.TRUE;
-            }
-            error = handler.getLastError();
-        }
-        if (error != null) Skript.error(error.getMessage());
-        return Kleenean.FALSE;
+        return Kleenean.TRUE;
     }
 
     /**
@@ -218,12 +189,19 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
      *
      */
     public final boolean validateInstance(@NotNull ClassInstance newInstance, SkriptClass parent) {
-        this.product = getProductFromInstance(newInstance);
-        if (product != null) {
-            if (validate(product, false, parent)) {
-                this.instance = newInstance;
-                return true;
+        LogEntry error;
+        try (var handler = new SimpleErrorHandler().start()) {
+            this.product = getProductFromInstance(newInstance);
+            if (product != null) {
+                if (validate(product, false, parent)) {
+                    this.instance = newInstance;
+                    return true;
+                }
             }
+            error = handler.getLastError();
+        }
+        if (error != null) {
+            error(error.getMessage());
         }
         return false;
     }
