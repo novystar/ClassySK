@@ -9,6 +9,8 @@ public enum Modifier {
     PRIVATE(0),
 
     STATIC(1),
+    OVERRIDE(1),
+
     CONST(2);
 
     public final int index;

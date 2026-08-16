@@ -32,7 +32,13 @@ public class SkriptMethod {
         @Nullable Class<?> type,
         boolean isPlural
 
-    ) implements AccessModifiable {}
+    ) implements AccessModifiable {
+        public boolean matches(MethodSignature signature) {
+            return isPlural == signature.isPlural
+                && type == signature.type
+                && Arrays.equals(modifiers, signature.modifiers);
+        }
+    }
 
     public SkriptMethod(MethodSignature signature) {
         this.signature = signature;

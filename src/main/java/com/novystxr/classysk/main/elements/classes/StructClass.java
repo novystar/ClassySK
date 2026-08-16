@@ -53,7 +53,7 @@ public class StructClass extends Structure {
         registry.register(
             SyntaxRegistry.STRUCTURE,
             SyntaxInfo.Structure.builder(StructClass.class)
-                .addPattern("class <"+ CLASSNAME_PATTERN +">")
+                .addPattern("class <"+ CLASSNAME_PATTERN +"> [:extends <" + CLASSNAME_PATTERN + ">]")
                 .nodeType(NodeType.BOTH)
                 .supplier(StructClass::new)
                 .build()

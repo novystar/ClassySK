@@ -1,22 +1,28 @@
 package com.novystxr.classysk.api.classes;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 import ch.njol.skript.lang.Expression;
 import com.novystxr.classysk.api.FieldHolder;
 import com.novystxr.classysk.api.event.FieldEvalEvent;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
+import com.novystxr.classysk.api.methods.MethodHolder;
+import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.MethodRegistry;
+import com.novystxr.classysk.api.methods.MethodRegistry.MethodIdentifier;
+import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.api.util.StringUtils;
 import org.jetbrains.annotations.Nullable;
 
 /**
  * The single non-instance version of a class
  */
-public class SkriptClass implements FieldHolder {
+public class SkriptClass implements FieldHolder, MethodHolder {
 
     public final String name;
+    public String extendsName = null;
 
     public final MethodRegistry methodRegistry = new MethodRegistry();
     public final Map<String, FieldSignature> fieldSignatures = new HashMap<>();
@@ -29,6 +35,14 @@ public class SkriptClass implements FieldHolder {
         return ClassManager.instances.get(name);
     }
 
+    public Stream<SkriptClass> inheritanceStream() {
+        return Stream.iterate(this, Objects::nonNull, SkriptClass::getExtends);
+    }
+
+    public @Nullable SkriptClass getExtends() {
+        return extendsName != null ? ClassManager.getClass(extendsName) : null;
+    }
+
     @Override
     public Map<String, SkriptField> fieldMap() {
         return ClassManager.staticFields.computeIfAbsent(name, key -> new HashMap<>());
@@ -36,7 +50,10 @@ public class SkriptClass implements FieldHolder {
 
     @Override
     public FieldSignature getFieldSignature(String key) {
-        return fieldSignatures.get(key);
+        return inheritanceStream()
+            .map(target -> target.fieldSignatures.get(key))
+            .filter(Objects::nonNull)
+            .findFirst().orElse(null);
     }
 
     void setDefaults(FieldHolder fieldHolder) {
@@ -67,5 +84,19 @@ public class SkriptClass implements FieldHolder {
 
     public String getEffectiveName() {
         return StringUtils.titleCase(name);
+    }
+
+    @Override
+    public MethodRegistry getRegistry() {
+        return methodRegistry;
+    }
+
+    @Override
+    public List<SkriptMethod> getCandidates(MethodReference reference) {
+        Map<MethodIdentifier, SkriptMethod> result = new HashMap<>();
+        for (SkriptClass target : inheritanceStream().toList().reversed()) {
+            result.putAll(target.methodRegistry.candidates(reference));
+        }
+        return result.values().stream().toList();
     }
 }
