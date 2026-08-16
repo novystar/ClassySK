@@ -74,6 +74,7 @@ public class StructClass extends Structure {
             return false;
         }
         newClass = new SkriptClass(name);
+        newClass.extendsName = result.hasTag("extends") ? StringUtils.getLowerCase(result.regexes.get(1)) : null;
 
         for (Node node : entryContainer.getUnhandledNodes()) {
             var element = ParserUtils.parseNodeAsInfos(node, "Could not recognize entry: "+node.getKey(), EffField.INFO, SecMethod.INFO);
@@ -96,11 +97,34 @@ public class StructClass extends Structure {
             }
         }
         ClassManager.registerClass(newClass);
+
+        if (cyclic()) {
+            Skript.error("Cyclic inheritance is not allowed. (feeding back into itself)");
+            unregisterClass();
+            return false;
+        }
         return true;
     }
 
     @Override
     public boolean preLoad() {
+        SkriptClass extendsClass = newClass.getExtends();
+        if (newClass.extendsName != null) {
+            if (extendsClass == null) {
+                Skript.error("Class named '%s' does not exist", StringUtils.titleCase(newClass.extendsName));
+                unregisterClass();
+                return false;
+            }
+            if (extendsClass == newClass) {
+                Skript.error("A class cannot extend itself");
+                unregisterClass();
+                return false;
+            }
+        }
+        if (!newClass.getRegistry().validateOverrides(extendsClass)) {
+            unregisterClass();
+            return false;
+        }
         ClassManager.checkAwaitingParent(newClass);
         ClassManager.revalidateFields(newClass);
         return true;
@@ -108,7 +132,6 @@ public class StructClass extends Structure {
 
     @Override
     public boolean load() {
-        // load method triggers after initial registration so it will always know about other methods within a class
         for (SecMethod secMethod : methodSections) {
             secMethod.loadTrigger();
         }
@@ -118,7 +141,17 @@ public class StructClass extends Structure {
 
     @Override
     public void unload() {
+        unregisterClass();
+    }
+
+    private void unregisterClass() {
         ClassManager.removeClass(name);
+    }
+
+    private boolean cyclic() {
+        Set<SkriptClass> matches = new HashSet<>();
+        return newClass.inheritanceStream()
+            .anyMatch(target -> !matches.add(target));
     }
 
     public String getName() {

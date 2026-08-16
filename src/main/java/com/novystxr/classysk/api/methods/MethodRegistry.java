@@ -1,5 +1,8 @@
 package com.novystxr.classysk.api.methods;
 
+import ch.njol.skript.Skript;
+import com.novystxr.classysk.api.Modifier;
+import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodSignature;
@@ -45,11 +48,8 @@ public class MethodRegistry {
 
     private Map<MethodIdentifier, SkriptMethod> registry = new HashMap<>();
 
-    public @Nullable SkriptMethod getExactMethod(MethodSignature signature) {
-        if (signature == null) return null;
-        SkriptMethod method = registry.get(MethodIdentifier.from(signature));
-        if (method == null) return null;
-        return method.signature.matches(signature) ? method : null;
+    public @Nullable SkriptMethod getExactMethod(MethodIdentifier identifier) {
+        return registry.get(identifier);
     }
 
     public Map<MethodIdentifier, SkriptMethod> candidates(MethodReference reference) {
@@ -69,6 +69,40 @@ public class MethodRegistry {
 
     public boolean registerMethod(SkriptMethod method) {
         return registry.putIfAbsent(MethodIdentifier.from(method.signature), method) == null;
+    }
+
+    public boolean validateOverrides(@Nullable SkriptClass extendsClass) {
+        for (var entry : registry.entrySet()) {
+            MethodSignature signature = entry.getValue().signature;
+            MethodIdentifier identifier = entry.getKey();
+
+            if (extendsClass == null) {
+                if (signature.hasModifier(Modifier.OVERRIDE)) {
+                    Skript.error("This class does not extend any other");
+                    return false;
+                }
+                continue;
+            }
+            SkriptMethod overridden = extendsClass.getRegistry().getExactMethod(identifier);
+
+            if (!signature.hasModifier(Modifier.OVERRIDE)) {
+                if (overridden != null) {
+                    Skript.error("Method '%s' would override a method from it's extending class. Mark it with 'override' or rename it.", signature.name());
+                    return false;
+                }
+                return true;
+            } else if (overridden == null) {
+                Skript.error("Method '%s' does not override any method from it's extending class.", signature.name());
+                return false;
+            } else if (signature.accessType().ordinal() > overridden.signature.accessType().ordinal()) {
+                Skript.error("Method '%s' cannot have a lower access-type than the target method.", signature.name());
+                return false;
+            } else if (signature.type() != overridden.signature.type()) {
+                Skript.error("Method '%s' does not match the return-type of the target method.", signature.name());
+                return false;
+            }
+        }
+        return true;
     }
 
 }

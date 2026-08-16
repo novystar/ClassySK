@@ -92,6 +92,14 @@ public class SkriptClass implements FieldHolder, MethodHolder {
     }
 
     @Override
+    public SkriptMethod getExactMethod(MethodIdentifier identifier) {
+        return inheritanceStream()
+            .map(target -> target.getRegistry().getExactMethod(identifier))
+            .filter(Objects::nonNull)
+            .findFirst().orElse(null);
+    }
+
+    @Override
     public List<SkriptMethod> getCandidates(MethodReference reference) {
         Map<MethodIdentifier, SkriptMethod> result = new HashMap<>();
         for (SkriptClass target : inheritanceStream().toList().reversed()) {
