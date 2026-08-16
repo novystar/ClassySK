@@ -54,7 +54,8 @@ public class MethodValidator extends Validator<ValidReference> {
 
     @Override
     protected @Nullable ValidReference getProductFromInstance(ClassInstance instance) {
-        SkriptMethod method = instance.getExactMethod(product().method.signature);
+        SkriptMethod method = product() == null ? null
+            : instance.getExactMethod(product().method.signature);
         if (method == null) {
             return getProductFromClass(instance.getParent());
         }
