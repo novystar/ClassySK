@@ -4,7 +4,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import ch.njol.skript.lang.Expression;
-import com.novystxr.classysk.api.FieldHolder;
+import com.novystxr.classysk.api.fields.FieldHolder;
 import com.novystxr.classysk.api.event.FieldEvalEvent;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;

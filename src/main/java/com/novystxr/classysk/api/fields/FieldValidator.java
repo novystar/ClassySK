@@ -2,7 +2,6 @@ package com.novystxr.classysk.api.fields;
 
 import ch.njol.skript.Skript;
 import com.novystxr.classysk.api.AccessValidator;
-import com.novystxr.classysk.api.FieldHolder;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;

@@ -2,7 +2,7 @@ package com.novystxr.classysk.api.classes;
 
 import java.util.*;
 
-import com.novystxr.classysk.api.FieldHolder;
+import com.novystxr.classysk.api.fields.FieldHolder;
 import com.novystxr.classysk.api.TypeWrappable;
 import com.novystxr.classysk.api.fields.SerializableField;
 import com.novystxr.classysk.api.fields.SkriptField;
