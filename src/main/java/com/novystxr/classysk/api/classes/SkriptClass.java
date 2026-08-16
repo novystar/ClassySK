@@ -46,6 +46,11 @@ public class SkriptClass implements FieldHolder, MethodHolder {
         return extendsName != null ? ClassManager.getClass(extendsName) : null;
     }
 
+    public boolean inherits(SkriptClass otherClass) {
+        return inheritanceStream()
+            .anyMatch(target -> target == otherClass);
+    }
+
     @Override
     public Map<String, SkriptField> fieldMap() {
         return ClassManager.staticFields.computeIfAbsent(name, key -> new HashMap<>());

@@ -30,8 +30,8 @@ public class CondInstanceOf extends Condition {
         registry.register(
             SyntaxRegistry.CONDITION,
             SyntaxInfo.builder(CondInstanceOf.class)
-                .addPattern("%classinstance% is [a[n]] instance of <"+ CLASSNAME_PATTERN +">")
-                .addPattern("%classinstance% (isn't|is not) [a[n]] instance of <"+ CLASSNAME_PATTERN +">")
+                .addPattern("%classinstance% is [a[n]] [:exact] instance of <"+ CLASSNAME_PATTERN +">")
+                .addPattern("%classinstance% (isn't|is not) [a[n]] [:exact] instance of <"+ CLASSNAME_PATTERN +">")
                 .addPattern("%classinstance% belongs to <"+ CLASSNAME_PATTERN+">")
                 .addPattern("%classinstance% (doesn't|does not) belong to <"+ CLASSNAME_PATTERN+">")
                 .supplier(CondInstanceOf::new)
@@ -41,6 +41,7 @@ public class CondInstanceOf extends Condition {
 
     private Expression<ClassInstance> instanceExpr;
     private SkriptClass targetClass;
+    private boolean isExact;
 
     @Override
     @SuppressWarnings("unchecked")
@@ -50,6 +51,7 @@ public class CondInstanceOf extends Condition {
 
         String name = StringUtils.getLowerCase(result.regexes.getFirst());
         targetClass = ClassManager.getClass(name);
+        isExact = result.hasTag("exact");
 
         if (targetClass == null) {
             Skript.error("Class named " + name + " does not exist");
@@ -63,7 +65,10 @@ public class CondInstanceOf extends Condition {
         ClassInstance instance = instanceExpr.getSingle(event);
         if (instance == null) return false;
 
-        boolean isInstanceOf = instance.getParent() == targetClass;
+        SkriptClass parent = instance.getParent();
+        if (parent == null) return false;
+
+        boolean isInstanceOf = isExact ? parent == targetClass : parent.inherits(targetClass);
         return isNegated() != isInstanceOf;
     }
 
