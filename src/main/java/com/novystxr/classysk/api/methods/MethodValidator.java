@@ -34,7 +34,7 @@ public class MethodValidator extends AccessValidator<ValidReference> {
 
     @Override
     protected @Nullable ValidReference getProductFromClass(SkriptClass skriptClass) {
-        List<SkriptMethod> candidates = skriptClass.methodRegistry.candidates(reference).toList();
+        List<SkriptMethod> candidates = skriptClass.getCandidates(reference);
 
         if (candidates.isEmpty()) {
             Skript.error("Could not identify method signature from reference: "+reference.name());
@@ -54,7 +54,11 @@ public class MethodValidator extends AccessValidator<ValidReference> {
 
     @Override
     protected @Nullable ValidReference getProductFromInstance(ClassInstance instance) {
-        return getProductFromClass(instance.getParent());
+        SkriptMethod method = instance.getExactMethod(product().method.signature);
+        if (method == null) {
+            return getProductFromClass(instance.getParent());
+        }
+        return product().copy(method);
     }
 
     @Override
@@ -178,6 +182,10 @@ public class MethodValidator extends AccessValidator<ValidReference> {
         @Override
         public Class<?> type() {
             return method.signature.type();
+        }
+
+        public ValidReference copy(SkriptMethod method) {
+            return new ValidReference(method, args);
         }
     }
 }

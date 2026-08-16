@@ -7,10 +7,12 @@ import com.novystxr.classysk.api.TypeWrappable;
 import com.novystxr.classysk.api.fields.SerializableField;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
+import com.novystxr.classysk.api.methods.MethodHolder;
+import com.novystxr.classysk.api.methods.MethodRegistry;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.converter.Converters;
 
-public class ClassInstance implements FieldHolder, TypeWrappable<TypedInstanceWrapper, ClassInstance> {
+public class ClassInstance implements FieldHolder, MethodHolder, TypeWrappable<TypedInstanceWrapper, ClassInstance> {
     public final String name;
 
     public final Map<String, SkriptField> fieldMap = new HashMap<>();
@@ -62,5 +64,10 @@ public class ClassInstance implements FieldHolder, TypeWrappable<TypedInstanceWr
     @Override
     public Class<? extends TypedInstanceWrapper> getSubclass() {
         return ClassManager.getSubclass(name);
+    }
+
+    @Override
+    public MethodRegistry getRegistry() {
+        return getParent().getRegistry();
     }
 }
