@@ -95,8 +95,8 @@ public class SkriptClass implements FieldHolder, MethodHolder {
     }
 
     @Override
-    public SkriptMethod getExactMethod(MethodIdentifier identifier) {
-        return inheritanceStream()
+    public SkriptMethod getExactMethod(MethodIdentifier identifier, boolean isSuper) {
+        return inheritanceStream().skip(isSuper ? 1 : 0)
             .map(target -> target.getRegistry().getExactMethod(identifier))
             .filter(Objects::nonNull)
             .findFirst().orElse(null);

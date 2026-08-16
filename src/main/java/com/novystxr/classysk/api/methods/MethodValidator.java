@@ -25,15 +25,20 @@ public class MethodValidator extends Validator<ValidReference> {
 
     private final MethodReference reference;
     private final boolean expectsReturn;
+    private final boolean isSuper;
 
-    public MethodValidator(ErrorSource errorSource, SkriptClass contextClass, @NotNull MethodReference reference, boolean expectsReturn) {
+    public MethodValidator(ErrorSource errorSource, SkriptClass contextClass, @NotNull MethodReference reference, boolean expectsReturn, boolean isSuper) {
         super(errorSource, contextClass);
         this.reference = reference;
         this.expectsReturn = expectsReturn;
+        this.isSuper = isSuper;
     }
 
     @Override
     protected @Nullable ValidReference getProductFromClass(SkriptClass skriptClass) {
+        if (isSuper) skriptClass = skriptClass.getExtends();
+        if (skriptClass == null) return null;
+
         List<SkriptMethod> candidates = skriptClass.getCandidates(reference);
 
         if (candidates.isEmpty()) {
@@ -55,7 +60,7 @@ public class MethodValidator extends Validator<ValidReference> {
     @Override
     protected @Nullable ValidReference getProductFromInstance(ClassInstance instance) {
         SkriptMethod method = product() == null ? null
-            : instance.getExactMethod(product().method.signature);
+            : instance.getExactMethod(product().method.signature, isSuper);
         if (method == null) {
             return getProductFromClass(instance.getParent());
         }

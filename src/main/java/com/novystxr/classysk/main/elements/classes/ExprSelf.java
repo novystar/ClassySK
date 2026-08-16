@@ -7,6 +7,7 @@ import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.classes.ClassInstance;
+import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.event.MethodRunEvent;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import org.bukkit.event.Event;
@@ -39,9 +40,13 @@ public class ExprSelf extends SimpleExpression<ClassInstance> {
         );
     }
 
+    protected SkriptClass contextClass;
+
     @Override
     public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, SkriptParser.ParseResult parseResult) {
-        if (!SkriptMethod.isMethodBody(getParser())) {
+        contextClass = SkriptMethod.getContextClass(getParser());
+
+        if (contextClass == null) {
             Skript.error("This expression can only be used within a method section.");
             return false;
         }

@@ -34,7 +34,7 @@ public class MethodParser {
 
     public static final String HINT_PATTERN = "(?:<("+CLASSNAME_PATTERN+"|)\\u003E)?";
 
-    public static final String METHOD_PATTERN = "%classinstance%<"+HINT_PATTERN+"::("+NAME_PATTERN+")>\\([<.+>]\\)";
+    public static final String METHOD_PATTERN = "(%-classinstance%|:super)<"+HINT_PATTERN+"::("+NAME_PATTERN+")>\\([<.+>]\\)";
     public static final String STATIC_METHOD_PATTERN = "<("+CLASSNAME_PATTERN+")::("+NAME_PATTERN+")>\\([<.+>]\\)";
 
     public record ReferenceArgument(

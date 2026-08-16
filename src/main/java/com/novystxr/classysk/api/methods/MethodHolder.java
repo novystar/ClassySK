@@ -11,13 +11,13 @@ public interface MethodHolder {
 
     MethodRegistry getRegistry();
 
-    SkriptMethod getExactMethod(MethodIdentifier identifier);
+    SkriptMethod getExactMethod(MethodIdentifier identifier, boolean isSuper);
 
     List<SkriptMethod> getCandidates(MethodReference reference);
 
-    default @Nullable SkriptMethod getExactMethod(MethodSignature signature) {
+    default @Nullable SkriptMethod getExactMethod(MethodSignature signature, boolean isSuper) {
         if (signature == null) return null;
-        SkriptMethod method = getExactMethod(MethodIdentifier.from(signature));
+        SkriptMethod method = getExactMethod(MethodIdentifier.from(signature), isSuper);
         if (method == null) return null;
         return method.signature.matches(signature) ? method : null;
     }

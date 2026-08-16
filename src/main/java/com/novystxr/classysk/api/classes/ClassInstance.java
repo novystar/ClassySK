@@ -74,9 +74,10 @@ public class ClassInstance implements FieldHolder, MethodHolder, TypeWrappable<T
         return getParent().getRegistry();
     }
 
+
     @Override
-    public SkriptMethod getExactMethod(MethodIdentifier identifier) {
-        return getParent().getExactMethod(identifier);
+    public SkriptMethod getExactMethod(MethodIdentifier identifier, boolean isSuper) {
+        return getParent().getExactMethod(identifier, isSuper);
     }
 
     @Override

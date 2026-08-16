@@ -83,7 +83,7 @@ public class MethodRegistry {
                 }
                 continue;
             }
-            SkriptMethod overridden = extendsClass.getExactMethod(identifier);
+            SkriptMethod overridden = extendsClass.getExactMethod(identifier, false);
 
             if (!signature.hasModifier(Modifier.OVERRIDE)) {
                 if (overridden != null) {

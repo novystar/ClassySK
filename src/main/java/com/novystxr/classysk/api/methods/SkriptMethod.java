@@ -81,7 +81,7 @@ public class SkriptMethod {
         return false;
     }
 
-    public static @Nullable SkriptClass getContextClass(ParserInstance parser) {
+    public static SkriptClass getContextClass(ParserInstance parser) {
         if (parser.getCurrentStructure() instanceof SectionSkriptEvent secSkriptEvent) {
             if (secSkriptEvent.getSection() instanceof SecMethod secMethod) {
                 return secMethod.contextClass;

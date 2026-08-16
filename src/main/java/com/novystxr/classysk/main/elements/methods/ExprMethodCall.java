@@ -60,8 +60,10 @@ public class ExprMethodCall extends SimpleExpression<Object> {
         MethodReference reference = MethodParser.parseReference(name, args);
         if (reference == null) return false;
 
+        boolean isSuper = result.hasTag("super");
         instanceExpr = isStatic ? null : (Expression<ClassInstance>) exprs[0];
-        validator = new MethodValidator(getErrorSource(), contextClass, reference, true);
+
+        validator = new MethodValidator(getErrorSource(), contextClass, reference, true, isSuper);
         if (className != null) {
             if (className.isEmpty()) return postInit();
 
@@ -73,6 +75,11 @@ public class ExprMethodCall extends SimpleExpression<Object> {
         }
         if (isStatic) {
             return validator.validateStatic(skriptClass) && postInit();
+        }
+        if (isSuper) {
+            instanceExpr = new ExprSuper();
+            if (!instanceExpr.init(null, 0, null, null))
+                return false;
         }
         if (instanceExpr.getSource() instanceof ExprSelf) {
             skriptClass = contextClass;
