@@ -112,6 +112,11 @@ public class StructClass extends Structure {
     public boolean preLoad() {
         SkriptClass extendsClass = newClass.getExtends();
         if (extendsName != null) {
+            if (!checkFieldOverrides(extendsClass)) {
+                Skript.error("Field names must be unique to their inheritors");
+                unregisterClass();
+                return false;
+            }
             if (extendsClass == null) {
                 Skript.error("Class named '%s' does not exist", StringUtils.titleCase(newClass.extendsName));
                 unregisterClass();
@@ -153,6 +158,11 @@ public class StructClass extends Structure {
 
     private void unregisterClass() {
         ClassManager.removeClass(name);
+    }
+
+    private boolean checkFieldOverrides(SkriptClass extendsClass) {
+        return newClass.fieldSignatures.keySet().stream()
+            .anyMatch(name -> extendsClass.getFieldSignature(name) != null);
     }
 
     private boolean cyclic() {

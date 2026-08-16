@@ -42,7 +42,7 @@ public class SkriptClass implements FieldHolder, MethodHolder {
         return Stream.iterate(this, Objects::nonNull, SkriptClass::getExtends);
     }
 
-    public @Nullable SkriptClass getExtends() {
+    public SkriptClass getExtends() {
         return extendsName != null ? ClassManager.getClass(extendsName) : null;
     }
 
