@@ -61,6 +61,11 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
         registry.register(SyntaxRegistry.SECTION, INFO);
     }
 
+    public static SyntaxInfo<SecMethod> ANONYMOUS_INFO = SyntaxInfo.builder(SecMethod.class)
+        .addPattern("[override] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [(\\:\\:|returns|->) %-*classinfo%]")
+        .supplier(SecMethod::new)
+        .build();
+
     public static SyntaxInfo<SecMethod> INFO = SyntaxInfo.builder(SecMethod.class)
         .addPattern("(:public|:private) [:final] [:static|:override] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [(\\:\\:|returns|->) %-*classinfo%]")
         .supplier(SecMethod::new)
@@ -105,6 +110,10 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
     }
 
     public boolean registerMethod(SkriptClass contextClass) {
+        return registerMethod(contextClass, signature);
+    }
+
+    public boolean registerMethod(SkriptClass contextClass, MethodSignature signature) {
         this.contextClass = contextClass;
         skriptMethod = new SkriptMethod(signature);
 

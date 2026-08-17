@@ -79,14 +79,17 @@ public class SkriptClass implements FieldHolder, MethodHolder {
         }
     }
 
-    public ClassInstance createInstance() {
-        ClassInstance newInstance = new ClassInstance(name);
-
+    public void setupInstance(ClassInstance instance) {
         ClassManager.instances.computeIfAbsent(name, key ->
                 Collections.newSetFromMap(new WeakHashMap<>()))
-            .add(newInstance);
+            .add(instance);
 
-        setDefaults(newInstance);
+        setDefaults(instance);
+    }
+
+    public ClassInstance createInstance() {
+        ClassInstance newInstance = new ClassInstance(name);
+        setupInstance(newInstance);
         return newInstance;
     }
 

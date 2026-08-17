@@ -10,18 +10,24 @@ import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.Modifier;
+import com.novystxr.classysk.api.classes.AnonymousInstance;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
+import com.novystxr.classysk.api.methods.MethodRegistry;
+import com.novystxr.classysk.api.methods.MethodRegistry.MethodIdentifier;
 import com.novystxr.classysk.api.methods.SkriptMethod;
+import com.novystxr.classysk.api.methods.SkriptMethod.MethodSignature;
 import com.novystxr.classysk.api.util.ParserUtils;
 import com.novystxr.classysk.api.util.StringUtils;
+import com.novystxr.classysk.main.elements.methods.SecMethod;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,9 +62,14 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
     private SkriptClass skriptClass;
     private final Map<String, Expression<?>> fields = new HashMap<>();
 
+    private SkriptClass anonymous = null;
+    private final List<SecMethod> methods = new ArrayList<>();
+
+    private String name;
+
     @Override
     public boolean init(Expression<?>[] expressions, int pattern, Kleenean delayed, ParseResult result, @Nullable SectionNode sectionNode, @Nullable List<TriggerItem> triggerItems) {
-        String name = StringUtils.getLowerCase(result.regexes.getFirst());
+        name = StringUtils.getLowerCase(result.regexes.getFirst());
         if (!ClassManager.classExists(name)) {
             Skript.error("Class named " + name + " does not exist");
             return false;
@@ -74,38 +85,66 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
             if (key == null) throw new IllegalStateException("Got node with null key");
 
             Matcher matcher = VALID_NODE_PATTERN.matcher(key);
-            if (!matcher.matches()) {
-                Skript.error("Invalid field name: " + key);
-                return false;
-            }
-            String fieldName = StringUtils.getConfigLowerCase(matcher.group(1));
-            String unparsedValue = matcher.group(2);
+            if (matcher.matches()) {
+                String fieldName = StringUtils.getConfigLowerCase(matcher.group(1));
+                String unparsedValue = matcher.group(2);
 
-            FieldSignature signature = skriptClass.getFieldSignature(fieldName);
-            if (signature == null) {
-                Skript.error("Could not find field from class: " + skriptClass.getEffectiveName());
-                return false;
-            }
-            if (signature.isStatic()) {
-                Skript.error("Static field cannot be set on an instance");
-                return false;
-            }
-            if (signature.accessType() == Modifier.PRIVATE && !inParent) {
-                Skript.error("Private fields can't be accessed here");
-                return false;
-            }
-            Expression<?> valueExpr = ParserUtils.parseExprNode(unparsedValue, node, signature.type());
-            if (valueExpr == null) return false;
+                FieldSignature signature = skriptClass.getFieldSignature(fieldName);
+                if (signature == null) {
+                    Skript.error("Could not find field from class: " + skriptClass.getEffectiveName());
+                    return false;
+                }
+                if (signature.isStatic()) {
+                    Skript.error("Static field cannot be set on an instance");
+                    return false;
+                }
+                if (signature.accessType() == Modifier.PRIVATE && !inParent) {
+                    Skript.error("Private fields can't be accessed here");
+                    return false;
+                }
+                Expression<?> valueExpr = ParserUtils.parseExprNode(unparsedValue, node, signature.type());
+                if (valueExpr == null) return false;
 
-            fields.put(fieldName, valueExpr);
+                fields.put(fieldName, valueExpr);
+            } else {
+                SecMethod secMethod = ParserUtils.parseNodeAsInfos(node, "Invalid field name: "+ key, SecMethod.ANONYMOUS_INFO);
+                if (secMethod == null) return false;
+
+                if (anonymous == null) {
+                    anonymous = new SkriptClass(name, name, true);
+                }
+
+                SkriptMethod target = skriptClass.getExactMethod(MethodIdentifier.from(secMethod.signature), false);
+                if (target == null) {
+                    Skript.error("This would not override any method from it's extending class");
+                    return false;
+                }
+                MethodSignature overridden = target.signature;
+                MethodSignature signature = secMethod.signature.withModifiers(overridden.accessType(), Modifier.OVERRIDE);
+
+                if (!MethodRegistry.validateOverride(signature, overridden)) {
+                    return false;
+                }
+
+                secMethod.registerMethod(anonymous, signature);
+                methods.add(secMethod);
+            }
+        }
+        for (SecMethod secMethod : methods) {
+            secMethod.loadTrigger();
         }
         return true;
     }
 
     @Override
     protected ClassInstance @Nullable [] get(Event event) {
-        SkriptClass parent = skriptClass;
-        ClassInstance newInstance = parent.createInstance();
+        ClassInstance newInstance;
+        if (anonymous == null) {
+            newInstance = skriptClass.createInstance();
+        } else {
+            newInstance = new AnonymousInstance(name, anonymous, event);
+            anonymous.setupInstance(newInstance);
+        }
 
         for (Entry<String, Expression<?>> entry : fields.entrySet()) {
             String fieldName = entry.getKey();

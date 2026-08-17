@@ -71,6 +71,23 @@ public class MethodRegistry {
         return registry.putIfAbsent(MethodIdentifier.from(method.signature), method) == null;
     }
 
+    public static boolean validateOverride(MethodSignature signature, MethodSignature overridden) {
+        if (overridden == null) {
+            Skript.error("Method '%s' does not override any method from it's extending class.", signature.name());
+            return false;
+        } else if (overridden.hasModifier(Modifier.FINAL)) {
+            Skript.error("Method '%s' would override a method that is final.", signature.name());
+            return false;
+        } else if (signature.accessType().ordinal() > overridden.accessType().ordinal()) {
+            Skript.error("Method '%s' cannot have a lower access-type than the target method.", signature.name());
+            return false;
+        } else if (signature.type() != overridden.type()) {
+            Skript.error("Method '%s' does not match the return-type of the target method.", signature.name());
+            return false;
+        }
+        return true;
+    }
+
     public boolean validateOverrides(@Nullable SkriptClass extendsClass) {
         for (var entry : registry.entrySet()) {
             MethodSignature signature = entry.getValue().signature;
@@ -91,19 +108,9 @@ public class MethodRegistry {
                     return false;
                 }
                 return true;
-            } else if (overridden == null) {
-                Skript.error("Method '%s' does not override any method from it's extending class.", signature.name());
-                return false;
-            } else if (overridden.signature.hasModifier(Modifier.FINAL)) {
-                Skript.error("Method '%s' would override a method that is final.", signature.name());
-                return false;
-            } else if (signature.accessType().ordinal() > overridden.signature.accessType().ordinal()) {
-                Skript.error("Method '%s' cannot have a lower access-type than the target method.", signature.name());
-                return false;
-            } else if (signature.type() != overridden.signature.type()) {
-                Skript.error("Method '%s' does not match the return-type of the target method.", signature.name());
-                return false;
             }
+
+            return validateOverride(signature, overridden.signature);
         }
         return true;
     }

@@ -5,6 +5,7 @@ import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.variables.Variables;
 import com.novystxr.classysk.api.AccessModifiable;
 import com.novystxr.classysk.api.Modifier;
+import com.novystxr.classysk.api.classes.AnonymousInstance;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.event.MethodRunEvent;
@@ -38,6 +39,11 @@ public class SkriptMethod {
                 && type == signature.type
                 && Arrays.equals(modifiers, signature.modifiers);
         }
+
+        public MethodSignature withModifiers(Modifier... modifiers) {
+            modifiers = Modifier.collect(modifiers);
+            return new MethodSignature(name, arguments, modifiers, type, isPlural);
+        }
     }
 
     public SkriptMethod(MethodSignature signature) {
@@ -54,6 +60,9 @@ public class SkriptMethod {
     public Object @Nullable [] run(Event event, @Nullable ClassInstance instance, @NotNull Map<String, Expression<?>> args) {
         if (trigger == null) return null;
         MethodRunEvent runEvent = new MethodRunEvent(instance);
+        if (instance instanceof AnonymousInstance anon) { // set local variables from creation site
+            anon.setLocalVariables(runEvent);
+        }
         for (var entry : args.entrySet()) {
             Expression<?> expr = entry.getValue();
             String key = entry.getKey();

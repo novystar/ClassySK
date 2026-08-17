@@ -112,7 +112,7 @@ public class StructClass extends Structure {
     public boolean preLoad() {
         SkriptClass extendsClass = newClass.getExtends();
         if (extendsName != null) {
-            if (!checkFieldOverrides(extendsClass)) {
+            if (checkFieldOverrides(extendsClass)) {
                 Skript.error("Field names must be unique to their inheritors");
                 unregisterClass();
                 return false;
