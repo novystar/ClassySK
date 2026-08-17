@@ -100,6 +100,11 @@ public class StructClass extends Structure {
                 return false;
             }
         }
+
+        if (isFinal && newClass.methodRegistry.hasAbstract()) {
+            Skript.error("A final class cannot have abstract methods.");
+            return false;
+        }
         ClassManager.registerClass(newClass);
 
         if (cyclic()) {

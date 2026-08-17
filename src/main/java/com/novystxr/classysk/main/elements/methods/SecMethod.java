@@ -52,7 +52,7 @@ import java.util.*;
     set {_player} to {_myClass}::getPlayer()
     """)
 @Since("1.0.0")
-public class SecMethod extends Section implements ReturnHandler<Object> {
+public class SecMethod extends EffectSection implements ReturnHandler<Object> {
 
     public static void register(SyntaxRegistry registry) {
         //noinspection ThrowableInstanceNeverThrown
@@ -67,7 +67,7 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
         .build();
 
     public static SyntaxInfo<SecMethod> INFO = SyntaxInfo.builder(SecMethod.class)
-        .addPattern("(:public|:protected|:private) [:final] [:static|:override] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [(\\:\\:|returns|->) %-*classinfo%]")
+        .addPattern("(:public|:protected|:private) [:final] [:static|:abstract|:override] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [(\\:\\:|returns|->) %-*classinfo%]")
         .supplier(SecMethod::new)
         .build();
 
@@ -79,6 +79,28 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
 
     @Override
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result, SectionNode sectionNode, List<TriggerItem> triggerItems) {
+        Modifier[] modifiers = Modifier.collect(result.tags);
+
+        if (modifiers[2] == Modifier.FINAL && modifiers[1] != null && modifiers[1] != Modifier.OVERRIDE) {
+            Skript.error("Modifier 'final' cannot be combined with '%s'.", modifiers[1].name().toLowerCase(Locale.ENGLISH));
+            return false;
+        }
+        if (modifiers[1] == Modifier.ABSTRACT && sectionNode != null) {
+            Skript.error("Abstract methods cannot have a body.");
+            return false;
+        }
+        if (modifiers[1] != Modifier.ABSTRACT && sectionNode == null) {
+            Skript.error("This method has no body. If you meant to leave it unimplemented, mark it as 'abstract'.");
+            return false;
+        }
+        if (modifiers[1] == Modifier.ABSTRACT && modifiers[0] == Modifier.PRIVATE) {
+            Skript.error("A private method can't be overridden, so it cannot be abstract.");
+            return false;
+        }
+        if (modifiers[0] == Modifier.PRIVATE && modifiers[2] == Modifier.FINAL) {
+            Skript.warning("Modifier 'final' is redundant in private methods.");
+        }
+
         boolean returnPlural = false;
         Class<?> returnType = null;
 
@@ -98,16 +120,7 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
             }
         }
 
-        Modifier[] modifiers = Modifier.collect(result.tags);
-        if (modifiers[2] == Modifier.FINAL && modifiers[1] != null && modifiers[1] != Modifier.OVERRIDE) {
-            Skript.error("Modifier 'final' cannot be combined with '%s'", modifiers[1].name().toLowerCase(Locale.ENGLISH));
-            return false;
-        }
-        if (modifiers[0] == Modifier.PRIVATE && modifiers[2] == Modifier.FINAL) {
-            Skript.warning("Modifier 'final' is redundant in private methods.");
-        }
-
-        this.signature = new MethodSignature(methodName, args, Modifier.collect(result.tags), returnType, returnPlural);
+        this.signature = new MethodSignature(methodName, args, modifiers, returnType, returnPlural);
         this.sectionNode = sectionNode;
         return true;
     }

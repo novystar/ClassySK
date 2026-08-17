@@ -11,6 +11,7 @@ public enum Modifier {
 
     STATIC(1),
     OVERRIDE(1),
+    ABSTRACT(1),
 
     CONST(2),
     FINAL(2);

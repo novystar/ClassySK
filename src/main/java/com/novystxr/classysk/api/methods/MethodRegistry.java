@@ -6,6 +6,7 @@ import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodSignature;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -71,9 +72,17 @@ public class MethodRegistry {
         return registry.putIfAbsent(MethodIdentifier.from(method.signature), method) == null;
     }
 
-    public static boolean validateOverride(MethodSignature signature, MethodSignature overridden) {
-        if (overridden == null) {
-            Skript.error("Method '%s' does not override any method from it's extending class.", signature.name());
+    public boolean hasAbstract() {
+        return registry.values().stream()
+            .anyMatch(method -> method.signature.hasModifier(Modifier.ABSTRACT));
+    }
+
+    public static boolean validateOverride(@NotNull MethodSignature signature, @NotNull MethodSignature overridden) {
+        if (!signature.hasModifier(Modifier.OVERRIDE) && !signature.hasModifier(Modifier.ABSTRACT)) {
+            Skript.error("Method '%s' would override a method from it's extending class. Mark it with 'override' or rename it.", signature.name());
+            return false;
+        } else if (signature.hasModifier(Modifier.ABSTRACT) && !overridden.hasModifier(Modifier.ABSTRACT)) {
+            Skript.error("Method '%s' already exists as a concrete method, so it cannot be re-declared as 'abstract'.", overridden.name());
             return false;
         } else if (overridden.hasAnyModifier(Modifier.FINAL, Modifier.PRIVATE)) {
             Skript.error("Method '%s' would override a method that is final.", signature.name());
@@ -89,6 +98,11 @@ public class MethodRegistry {
     }
 
     public boolean validateOverrides(@Nullable SkriptClass extendsClass) {
+
+        List<SkriptMethod> abstractMethods = extendsClass != null ? extendsClass.methodRegistry.registry.values().stream()
+            .filter(method -> method.signature.hasModifier(Modifier.ABSTRACT))
+            .collect(Collectors.toList()) : new ArrayList<>();
+
         for (var entry : registry.entrySet()) {
             MethodSignature signature = entry.getValue().signature;
             MethodIdentifier identifier = entry.getKey();
@@ -98,20 +112,23 @@ public class MethodRegistry {
                     Skript.error("This class does not extend any other");
                     return false;
                 }
-                continue;
-            }
-            SkriptMethod overridden = extendsClass.getExactMethod(identifier, false);
+            } else {
+                SkriptMethod overridden = extendsClass.getExactMethod(identifier, false);
+                abstractMethods.remove(overridden);
 
-            if (!signature.hasModifier(Modifier.OVERRIDE)) {
-                if (overridden != null) {
-                    Skript.error("Method '%s' would override a method from it's extending class. Mark it with 'override' or rename it.", signature.name());
+                if (signature.hasModifier(Modifier.OVERRIDE) && overridden == null) {
+                    Skript.error("Method '%s' does not override any method from it's extending class.", signature.name());
+                    return false;
+                } else if (overridden != null && !validateOverride(signature, overridden.signature)) {
                     return false;
                 }
-                return true;
             }
-
-            return validateOverride(signature, overridden.signature);
         }
+        if (!abstractMethods.isEmpty()) {
+            Skript.error("The target class contains abstract methods that have not been implemented by this subclass. Implement them or re-declare them as 'abstract' on this class.");
+            return false;
+        }
+
         return true;
     }
 

@@ -15,7 +15,6 @@ import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
-import com.novystxr.classysk.api.methods.MethodRegistry;
 import com.novystxr.classysk.api.methods.MethodRegistry.MethodIdentifier;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodSignature;
@@ -77,61 +76,65 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
         skriptClass = ClassManager.getClass(name);
         boolean inParent = SkriptMethod.getContextClass(getParser()) == skriptClass;
 
-        if (sectionNode == null) {
-            return true;
-        }
-        for (Node node : sectionNode) {
-            String key = node.getKey();
-            if (key == null) throw new IllegalStateException("Got node with null key");
+        if (sectionNode != null) {
+            for (Node node : sectionNode) {
+                String key = node.getKey();
+                if (key == null) throw new IllegalStateException("Got node with null key");
 
-            Matcher matcher = VALID_NODE_PATTERN.matcher(key);
-            if (matcher.matches()) {
-                String fieldName = StringUtils.getConfigLowerCase(matcher.group(1));
-                String unparsedValue = matcher.group(2);
+                Matcher matcher = VALID_NODE_PATTERN.matcher(key);
+                if (matcher.matches()) {
+                    String fieldName = StringUtils.getConfigLowerCase(matcher.group(1));
+                    String unparsedValue = matcher.group(2);
 
-                FieldSignature signature = skriptClass.getFieldSignature(fieldName);
-                if (signature == null) {
-                    Skript.error("Could not find field from class: " + skriptClass.getEffectiveName());
-                    return false;
+                    FieldSignature signature = skriptClass.getFieldSignature(fieldName);
+                    if (signature == null) {
+                        Skript.error("Could not find field from class: " + skriptClass.getEffectiveName());
+                        return false;
+                    }
+                    if (signature.isStatic()) {
+                        Skript.error("Static field cannot be set on an instance");
+                        return false;
+                    }
+                    if (signature.accessType() == Modifier.PRIVATE && !inParent) {
+                        Skript.error("Private fields can't be accessed here");
+                        return false;
+                    }
+                    Expression<?> valueExpr = ParserUtils.parseExprNode(unparsedValue, node, signature.type());
+                    if (valueExpr == null) return false;
+
+                    fields.put(fieldName, valueExpr);
+                } else {
+                    SecMethod secMethod = ParserUtils.parseNodeAsInfos(node, "Invalid field name: " + key, SecMethod.ANONYMOUS_INFO);
+                    if (secMethod == null) return false;
+
+                    SkriptMethod target = skriptClass.getExactMethod(MethodIdentifier.from(secMethod.signature), false);
+                    if (target == null) {
+                        Skript.error("This method does not implement any from the target class.");
+                        return false;
+                    }
+                    MethodSignature overridden = target.signature;
+                    MethodSignature signature = secMethod.signature.withModifiers(overridden.accessType(), Modifier.OVERRIDE);
+
+                    if (!overridden.hasModifier(Modifier.ABSTRACT)) {
+                        Skript.error("Only abstract methods can be implemented here");
+                        return false;
+                    }
+                    if (anonymous == null) {
+                        anonymous = new SkriptClass(name, name, true);
+                    }
+                    secMethod.registerMethod(anonymous, signature);
+                    methods.add(secMethod);
                 }
-                if (signature.isStatic()) {
-                    Skript.error("Static field cannot be set on an instance");
-                    return false;
-                }
-                if (signature.accessType() == Modifier.PRIVATE && !inParent) {
-                    Skript.error("Private fields can't be accessed here");
-                    return false;
-                }
-                Expression<?> valueExpr = ParserUtils.parseExprNode(unparsedValue, node, signature.type());
-                if (valueExpr == null) return false;
-
-                fields.put(fieldName, valueExpr);
-            } else {
-                SecMethod secMethod = ParserUtils.parseNodeAsInfos(node, "Invalid field name: "+ key, SecMethod.ANONYMOUS_INFO);
-                if (secMethod == null) return false;
-
-                if (anonymous == null) {
-                    anonymous = new SkriptClass(name, name, true);
-                }
-
-                SkriptMethod target = skriptClass.getExactMethod(MethodIdentifier.from(secMethod.signature), false);
-                if (target == null) {
-                    Skript.error("This would not override any method from it's extending class");
-                    return false;
-                }
-                MethodSignature overridden = target.signature;
-                MethodSignature signature = secMethod.signature.withModifiers(overridden.accessType(), Modifier.OVERRIDE);
-
-                if (!MethodRegistry.validateOverride(signature, overridden)) {
-                    return false;
-                }
-
-                secMethod.registerMethod(anonymous, signature);
-                methods.add(secMethod);
             }
         }
-        for (SecMethod secMethod : methods) {
-            secMethod.loadTrigger();
+        if (anonymous != null) {
+            anonymous.methodRegistry.validateOverrides(skriptClass);
+            for (SecMethod secMethod : methods) {
+                secMethod.loadTrigger();
+            }
+        } else if (skriptClass.methodRegistry.hasAbstract()) {
+            Skript.error("This class contains unimplemented methods so it cannot be instantiated directly. Implement it here or in a separate subclass.");
+            return false;
         }
         return true;
     }
