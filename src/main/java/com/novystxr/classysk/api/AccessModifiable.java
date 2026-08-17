@@ -14,9 +14,14 @@ public interface AccessModifiable {
         return modifiers()[modifier.index] == modifier;
     }
 
-    default boolean hasModifiers(Modifier[] modifiers) {
+    default boolean hasModifiers(Modifier... modifiers) {
         return Arrays.stream(modifiers)
             .allMatch(this::hasModifier);
+    }
+
+    default boolean hasAnyModifier(Modifier... modifiers) {
+        return Arrays.stream(modifiers)
+            .anyMatch(this::hasModifier);
     }
 
     default boolean isStatic() {

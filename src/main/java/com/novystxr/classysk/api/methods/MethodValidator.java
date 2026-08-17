@@ -20,6 +20,7 @@ import org.skriptlang.skript.log.runtime.ErrorSource;
 import java.util.*;
 
 import static com.novystxr.classysk.api.Modifier.PRIVATE;
+import static com.novystxr.classysk.api.Modifier.PROTECTED;
 
 public class MethodValidator extends Validator<ValidReference> {
 
@@ -75,6 +76,10 @@ public class MethodValidator extends Validator<ValidReference> {
         }
         if (reference.accessType() == PRIVATE && target != contextClass) {
             Skript.error("Private methods can only be accessed from within their own class");
+            return false;
+        }
+        if (reference.hasModifier(PROTECTED) && !target.inherits(contextClass)) {
+            Skript.error("Protected fields can only be accessed from inheritors");
             return false;
         }
         if (reference.isStatic() && !isStatic) {
