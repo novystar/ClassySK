@@ -46,7 +46,8 @@ public class SkriptClass implements FieldHolder, MethodHolder {
         return extendsName != null ? ClassManager.getClass(extendsName) : null;
     }
 
-    public boolean inherits(SkriptClass otherClass) {
+    public boolean inherits(@Nullable SkriptClass otherClass) {
+        if (otherClass == null) return false;
         return inheritanceStream()
             .anyMatch(target -> target == otherClass);
     }
