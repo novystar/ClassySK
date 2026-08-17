@@ -118,7 +118,7 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
 
     public boolean registerMethod(SkriptClass contextClass, MethodSignature signature) {
         this.contextClass = contextClass;
-        skriptMethod = new SkriptMethod(signature);
+        skriptMethod = new SkriptMethod(signature, contextClass.name);
 
         return contextClass.methodRegistry.registerMethod(skriptMethod);
     }

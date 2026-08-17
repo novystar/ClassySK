@@ -6,6 +6,7 @@ import ch.njol.skript.variables.Variables;
 import com.novystxr.classysk.api.AccessModifiable;
 import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.classes.AnonymousInstance;
+import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.event.MethodRunEvent;
@@ -46,12 +47,18 @@ public class SkriptMethod {
         }
     }
 
-    public SkriptMethod(MethodSignature signature) {
+    public SkriptMethod(MethodSignature signature, String origin) {
         this.signature = signature;
+        this.origin = origin;
     }
 
+    private final String origin;
     private Trigger trigger;
     public final MethodSignature signature;
+
+    public SkriptClass getOrigin() {
+        return ClassManager.getClass(origin);
+    }
 
     public void setTrigger(Trigger trigger) {
         this.trigger = trigger;

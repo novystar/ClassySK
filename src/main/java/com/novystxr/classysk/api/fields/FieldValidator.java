@@ -21,12 +21,14 @@ public class FieldValidator extends Validator<FieldSignature> {
     }
 
     @Override
-    protected boolean validate(FieldSignature signature, boolean isStatic, SkriptClass target) {
-        if (signature.hasModifier(PRIVATE) && target != contextClass) {
+    protected boolean validate(FieldSignature signature, boolean isStatic) {
+        SkriptClass origin = signature.getOrigin();
+
+        if (signature.hasModifier(PRIVATE) && origin != contextClass) {
             Skript.error("Private fields can only be accessed from within their own class");
             return false;
         }
-        if (signature.hasModifier(PROTECTED) && !target.inherits(contextClass)) {
+        if (signature.hasModifier(PROTECTED) && !contextClass.inherits(origin)) {
             Skript.error("Protected fields can only be accessed from inheritors");
             return false;
         }

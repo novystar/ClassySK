@@ -10,6 +10,7 @@ import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.util.StringUtils;
 import com.novystxr.classysk.api.util.ExprUtils;
+import com.novystxr.classysk.main.elements.classes.StructClass;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.SyntaxInfo;
@@ -43,6 +44,9 @@ public class EffField extends Effect {
         Class<?> type = reference.getClassInfo().getC();
 
         Expression<?> defaultExpr = null;
+        var structClass = (StructClass) getParser().getCurrentStructure();
+        if (structClass == null)
+            throw new IllegalStateException();
 
         if (exprs[1] != null) {
             defaultExpr = exprs[1].getConvertedExpression(type);
@@ -56,7 +60,7 @@ public class EffField extends Effect {
                 return false;
             }
         }
-        signature = new FieldSignature(fieldName, type, defaultExpr, Modifier.collect(result.tags), isPlural);
+        signature = new FieldSignature(fieldName, type, defaultExpr, Modifier.collect(result.tags), isPlural, structClass.getName());
         return true;
     }
 

@@ -38,7 +38,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
         this.contextClass = contextClass;
     }
 
-    protected abstract boolean validate(T product, boolean isStatic, SkriptClass targetClass);
+    protected abstract boolean validate(T product, boolean isStatic);
 
     protected abstract @Nullable T getProductFromClass(SkriptClass skriptClass);
     protected abstract @Nullable T getProductFromInstance(ClassInstance instance);
@@ -150,7 +150,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
             for (SkriptClass skriptClass : check) {
 
                 T product = getProductFromClass(skriptClass);
-                if (product == null || !validate(product, false, skriptClass))
+                if (product == null || !validate(product, false))
                     continue;
 
                 guesses.add(product);
@@ -178,7 +178,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
         this.product = getProductFromClass(skriptClass);
         if (product == null) return false;
 
-        return validate(product, true, skriptClass);
+        return validate(product, true);
     }
 
     /**
@@ -193,7 +193,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
         try (var handler = new SimpleErrorHandler().start()) {
             this.product = getProductFromInstance(newInstance);
             if (product != null) {
-                if (validate(product, false, parent)) {
+                if (validate(product, false)) {
                     this.instance = newInstance;
                     return true;
                 }

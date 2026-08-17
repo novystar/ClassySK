@@ -69,16 +69,18 @@ public class MethodValidator extends Validator<ValidReference> {
     }
 
     @Override
-    protected boolean validate(ValidReference reference, boolean isStatic, SkriptClass target) {
+    protected boolean validate(ValidReference reference, boolean isStatic) {
+        SkriptClass origin = reference.getOrigin();
+
         if (expectsReturn && reference.type() == null) {
             Skript.error("This method can't return anything");
             return false;
         }
-        if (reference.accessType() == PRIVATE && target != contextClass) {
+        if (reference.accessType() == PRIVATE && origin != contextClass) {
             Skript.error("Private methods can only be accessed from within their own class");
             return false;
         }
-        if (reference.hasModifier(PROTECTED) && !target.inherits(contextClass)) {
+        if (reference.hasModifier(PROTECTED) && !contextClass.inherits(origin)) {
             Skript.error("Protected fields can only be accessed from inheritors");
             return false;
         }
@@ -193,6 +195,10 @@ public class MethodValidator extends Validator<ValidReference> {
         @Override
         public Class<?> type() {
             return method.signature.type();
+        }
+
+        public SkriptClass getOrigin() {
+            return method.getOrigin();
         }
 
         public ValidReference copy(SkriptMethod method) {

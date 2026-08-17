@@ -95,7 +95,7 @@ public class ClassManager {
                 FieldSignature targetSignature = instance.getFieldSignature(fieldName);
 
                 if (targetSignature == null) {
-                    FieldSignature newSignature = FieldSignature.fromSerializableField(fieldName, sField);
+                    FieldSignature newSignature = FieldSignature.fromSerializableField(fieldName, sField, parent.name);
                     instance.createField(newSignature).value = value;
 
                 } else if (targetSignature.canConvert(value)) {

@@ -78,6 +78,8 @@ public class StructClass extends Structure {
         }
         newClass = new SkriptClass(name, extendsName, isFinal);
 
+        getParser().setCurrentStructure(this);
+
         for (Node node : entryContainer.getUnhandledNodes()) {
             var element = ParserUtils.parseNodeAsInfos(node, "Could not recognize entry: "+node.getKey(), EffField.INFO, SecMethod.INFO);
 

@@ -63,6 +63,6 @@ public class SerializableField implements YggdrasilExtendedSerializable {
 
     public FieldSignature mergeSignature(FieldSignature signature) {
         Modifier[] modifiers = Modifier.without(signature.modifiers(), Modifier.STATIC);
-        return new FieldSignature(signature.name(), signatureType, null, modifiers, isPlural);
+        return new FieldSignature(signature.name(), signatureType, null, modifiers, isPlural, signature.origin());
     }
 }
