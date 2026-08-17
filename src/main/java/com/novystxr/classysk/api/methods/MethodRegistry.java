@@ -75,7 +75,7 @@ public class MethodRegistry {
         if (overridden == null) {
             Skript.error("Method '%s' does not override any method from it's extending class.", signature.name());
             return false;
-        } else if (overridden.hasModifier(Modifier.FINAL)) {
+        } else if (overridden.hasAnyModifier(Modifier.FINAL, Modifier.PRIVATE)) {
             Skript.error("Method '%s' would override a method that is final.", signature.name());
             return false;
         } else if (signature.accessType().ordinal() > overridden.accessType().ordinal()) {

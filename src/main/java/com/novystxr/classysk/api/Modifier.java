@@ -6,13 +6,14 @@ import java.util.Locale;
 
 public enum Modifier {
     PUBLIC(0),
+    PROTECTED(0),
     PRIVATE(0),
 
     STATIC(1),
     OVERRIDE(1),
 
-    FINAL(2),
-    CONST(2);
+    CONST(2),
+    FINAL(2);
 
     public final int index;
 
