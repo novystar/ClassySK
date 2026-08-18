@@ -26,7 +26,6 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
 
     private final ErrorSource errorSource;
 
-    private SkriptClass parent;
     public final T product() {
         return product;
     }
@@ -125,12 +124,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
             return null;
         }
 
-        if (this.parent == parent) {
-            if (this.instance == newInstance) return newInstance;
-        } else {
-            this.parent = parent;
-            this.product = null;
-        }
+        if (this.instance == newInstance) return newInstance;
 
         if (hintClass != null && !hintClass.inherits(parent)) {
             error("Given instance does not match '"+ hintClass.getEffectiveName() +"'");
