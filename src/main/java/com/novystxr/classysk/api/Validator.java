@@ -26,6 +26,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
 
     private final ErrorSource errorSource;
 
+    private SkriptClass parent;
     public final T product() {
         return product;
     }
@@ -124,13 +125,18 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
             return null;
         }
 
-        if (this.instance == newInstance) return newInstance;
+        if (this.parent == parent) {
+            if (this.instance == newInstance) return newInstance;
+        } else {
+            this.parent = parent;
+            this.product = null;
+        }
 
         if (hintClass != null && !hintClass.inherits(parent)) {
             error("Given instance does not match '"+ hintClass.getEffectiveName() +"'");
             return null;
         }
-        if (validateInstance(newInstance, parent)) {
+        if (validateInstance(newInstance)) {
             return newInstance;
         }
         return null;
@@ -189,7 +195,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
      * @return true if the instance was valid, false if it was not
      *
      */
-    public final boolean validateInstance(@NotNull ClassInstance newInstance, SkriptClass parent) {
+    public final boolean validateInstance(@NotNull ClassInstance newInstance) {
         LogEntry error;
         try (var handler = new SimpleErrorHandler().start()) {
             this.product = getProductFromInstance(newInstance);
