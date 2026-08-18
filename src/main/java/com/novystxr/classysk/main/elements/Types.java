@@ -99,9 +99,9 @@ public class Types {
                         FieldSignature signature = skriptField.signature;
                         SerializableField sField = new SerializableField(skriptField.value, signature.type(), signature.isPlural());
 
-                        if (!sField.canBeSaved()) continue;
-
-                        fields.putObject("field:"+signature.name(), sField);
+                        if (sField.canBeSaved()) {
+                            fields.putObject("field:" + signature.name(), sField);
+                        }
                     }
                     return fields;
                 }
