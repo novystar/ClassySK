@@ -21,7 +21,7 @@ public class FieldValidator extends Validator<FieldSignature> {
     }
 
     @Override
-    protected boolean validate(FieldSignature signature, boolean isStatic) {
+    protected boolean validate(FieldSignature signature, SkriptClass contextClass, boolean isStatic) {
         SkriptClass origin = signature.getOrigin();
 
         if (signature.hasModifier(PRIVATE) && origin != contextClass) {

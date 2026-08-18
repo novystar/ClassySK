@@ -69,7 +69,7 @@ public class MethodValidator extends Validator<ValidReference> {
     }
 
     @Override
-    protected boolean validate(ValidReference reference, boolean isStatic) {
+    protected boolean validate(ValidReference reference, SkriptClass contextClass, boolean isStatic) {
         SkriptClass origin = reference.getOrigin();
 
         if (expectsReturn && reference.type() == null) {

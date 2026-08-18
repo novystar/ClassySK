@@ -10,10 +10,7 @@ import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.Modifier;
-import com.novystxr.classysk.api.classes.AnonymousInstance;
-import com.novystxr.classysk.api.classes.SkriptClass;
-import com.novystxr.classysk.api.classes.ClassManager;
-import com.novystxr.classysk.api.classes.ClassInstance;
+import com.novystxr.classysk.api.classes.*;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.methods.MethodRegistry.MethodIdentifier;
 import com.novystxr.classysk.api.methods.SkriptMethod;
@@ -61,7 +58,7 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
     private SkriptClass skriptClass;
     private final Map<String, Expression<?>> fields = new HashMap<>();
 
-    private SkriptClass anonymous = null;
+    private AnonymousClass anonymous = null;
     private final List<SecMethod> methods = new ArrayList<>();
 
     private String name;
@@ -120,7 +117,7 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
                         return false;
                     }
                     if (anonymous == null) {
-                        anonymous = new SkriptClass(name, name, true);
+                        anonymous = new AnonymousClass(name);
                     }
                     secMethod.registerMethod(anonymous, signature);
                     methods.add(secMethod);

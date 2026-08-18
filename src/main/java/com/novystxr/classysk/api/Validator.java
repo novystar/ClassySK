@@ -5,6 +5,7 @@ import ch.njol.skript.lang.Expression;
 import ch.njol.skript.log.LogEntry;
 import ch.njol.skript.util.Utils;
 import ch.njol.util.Kleenean;
+import com.novystxr.classysk.api.classes.AnonymousClass;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
@@ -19,7 +20,7 @@ import java.util.*;
 
 public abstract class Validator<T extends AccessModifiable> implements RuntimeErrorProducer {
     private ClassInstance instance;
-    protected final SkriptClass contextClass;
+    private final SkriptClass contextClass;
 
     private T product = null;
     private final List<T> guesses = new ArrayList<>();
@@ -38,10 +39,15 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
         this.contextClass = contextClass;
     }
 
-    protected abstract boolean validate(T product, boolean isStatic);
+    protected abstract boolean validate(T product, SkriptClass contextClass, boolean isStatic);
 
     protected abstract @Nullable T getProductFromClass(SkriptClass skriptClass);
     protected abstract @Nullable T getProductFromInstance(ClassInstance instance);
+
+    protected SkriptClass contextClass() {
+        return contextClass instanceof AnonymousClass ? contextClass
+            : contextClass == null ? null : ClassManager.getClass(contextClass.name);
+    }
 
     /**
      * A helper method to get all possible return types based off of previous guesses from {@link Validator#validateUnknown(SkriptClass)}
@@ -151,7 +157,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
             for (SkriptClass skriptClass : check) {
 
                 T product = getProductFromClass(skriptClass);
-                if (product == null || !validate(product, false))
+                if (product == null || !validate(product, contextClass(), false))
                     continue;
 
                 guesses.add(product);
@@ -179,7 +185,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
         this.product = getProductFromClass(skriptClass);
         if (product == null) return false;
 
-        return validate(product, true);
+        return validate(product, contextClass(), true);
     }
 
     /**
@@ -194,7 +200,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
         try (var handler = new SimpleErrorHandler().start()) {
             this.product = getProductFromInstance(newInstance);
             if (product != null) {
-                if (validate(product, false)) {
+                if (validate(product, contextClass(), false)) {
                     this.instance = newInstance;
                     return true;
                 }
