@@ -80,7 +80,7 @@ public class MethodValidator extends Validator<ValidReference> {
             Skript.error("Private methods can only be accessed from within their own class");
             return false;
         }
-        if (reference.hasModifier(PROTECTED) && !contextClass.inherits(origin)) {
+        if (reference.hasModifier(PROTECTED) && (contextClass == null || !contextClass.inherits(origin))) {
             Skript.error("Protected fields can only be accessed from inheritors");
             return false;
         }

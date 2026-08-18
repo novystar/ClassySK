@@ -28,7 +28,7 @@ public class FieldValidator extends Validator<FieldSignature> {
             Skript.error("Private fields can only be accessed from within their own class");
             return false;
         }
-        if (signature.hasModifier(PROTECTED) && !contextClass.inherits(origin)) {
+        if (signature.hasModifier(PROTECTED) && (contextClass == null || !contextClass.inherits(origin))) {
             Skript.error("Protected fields can only be accessed from inheritors");
             return false;
         }
