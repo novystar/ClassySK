@@ -10,7 +10,6 @@ import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.util.StringUtils;
 import com.novystxr.classysk.api.util.ExprUtils;
-import com.novystxr.classysk.main.elements.classes.StructClass;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.SyntaxInfo;
@@ -31,22 +30,22 @@ public class EffField extends Effect {
         .build();
 
 
-    public String fieldName;
-    public FieldSignature signature;
+    public String name;
+
+    private boolean isPlural;
+    private Class<?> type;
+    private Expression<?> defaultExpr = null;
+    private Modifier[] modifiers;
+
 
     @SuppressWarnings("unchecked")
     @Override
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result) {
-        fieldName = StringUtils.getConfigLowerCase(result.regexes.getFirst());
+        name = StringUtils.getConfigLowerCase(result.regexes.getFirst());
 
         ClassInfoReference reference = ExprUtils.getClassRef(exprs[0]);
-        boolean isPlural = reference.isPlural().isTrue();
-        Class<?> type = reference.getClassInfo().getC();
-
-        Expression<?> defaultExpr = null;
-        var structClass = (StructClass) getParser().getCurrentStructure();
-        if (structClass == null)
-            throw new IllegalStateException();
+        isPlural = reference.isPlural().isTrue();
+        type = reference.getClassInfo().getC();
 
         if (exprs[1] != null) {
             defaultExpr = exprs[1].getConvertedExpression(type);
@@ -60,8 +59,12 @@ public class EffField extends Effect {
                 return false;
             }
         }
-        signature = new FieldSignature(fieldName, type, defaultExpr, Modifier.collect(result.tags), isPlural, structClass.getName());
+        modifiers = Modifier.collect(result.tags);
         return true;
+    }
+
+    public FieldSignature getSignature(String origin) {
+        return new FieldSignature(name, type, defaultExpr, modifiers, isPlural, origin);
     }
 
     @Override
