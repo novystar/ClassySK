@@ -112,6 +112,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
      */
     public final @Nullable ClassInstance getValidInstance(Event event, Expression<ClassInstance> instanceExpr, @Nullable SkriptClass hintClass) {
         ClassInstance newInstance = instanceExpr.getSingle(event);
+        if (hintClass == contextClass) hintClass = null;
 
         if (newInstance == null) {
             error("Target instance was not set");
@@ -125,7 +126,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
 
         if (this.instance == newInstance) return newInstance;
 
-        if (hintClass != null && hintClass != parent) {
+        if (hintClass != null && !hintClass.inherits(parent)) {
             error("Given instance does not match '"+ hintClass.getEffectiveName() +"'");
             return null;
         }
