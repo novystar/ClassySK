@@ -125,6 +125,12 @@ public class SecMethod extends EffectSection implements ReturnHandler<Object> {
         return true;
     }
 
+    public boolean registerMethod(SkriptClass contextClass, SkriptMethod method) {
+        this.skriptMethod = method;
+        this.contextClass = contextClass;
+        return contextClass.methodRegistry.registerMethod(method);
+    }
+
     public boolean registerMethod(SkriptClass contextClass) {
         return registerMethod(contextClass, signature);
     }

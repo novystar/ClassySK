@@ -12,6 +12,7 @@ import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.classes.*;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
+import com.novystxr.classysk.api.methods.AnonymousMethod;
 import com.novystxr.classysk.api.methods.MethodRegistry.MethodIdentifier;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodSignature;
@@ -119,7 +120,10 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
                     if (anonymous == null) {
                         anonymous = new AnonymousClass(name);
                     }
-                    secMethod.registerMethod(anonymous, signature);
+                    if (!secMethod.registerMethod(anonymous, new AnonymousMethod(signature, anonymous))) {
+                        Skript.error("Method with that signature already exists");
+                        return false;
+                    }
                     methods.add(secMethod);
                 }
             }
