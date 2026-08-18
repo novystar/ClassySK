@@ -45,8 +45,8 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
     protected abstract @Nullable T getProductFromInstance(ClassInstance instance);
 
     protected SkriptClass contextClass() {
-        return contextClass instanceof AnonymousClass ? contextClass
-            : contextClass == null ? null : ClassManager.getClass(contextClass.name);
+        if (contextClass == null) return null;
+        return contextClass instanceof AnonymousClass ? contextClass : ClassManager.getClass(contextClass.name);
     }
 
     /**
