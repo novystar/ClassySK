@@ -45,12 +45,16 @@ public class SkriptMethod {
         }
     }
 
+    public SkriptMethod(MethodSignature signature) {
+        this.signature = signature;
+    }
+
     public SkriptMethod(MethodSignature signature, String origin) {
         this.signature = signature;
         this.origin = origin;
     }
 
-    private final String origin;
+    public String origin;
     private Trigger trigger;
     public final MethodSignature signature;
 

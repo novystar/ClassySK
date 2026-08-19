@@ -77,7 +77,19 @@ public class MethodRegistry {
             .anyMatch(method -> method.signature.hasModifier(Modifier.ABSTRACT));
     }
 
-    public static boolean validateOverride(@NotNull MethodSignature signature, @NotNull MethodSignature overridden) {
+    public static boolean validateOverride(@NotNull SkriptMethod method, @Nullable SkriptMethod target) {
+        MethodSignature signature = method.signature;
+
+        if (target == null) {
+            if (signature.hasModifier(Modifier.OVERRIDE)) {
+                Skript.error("Method '%s' does not override any method from it's extending class.", signature.name());
+                return false;
+            }
+            return true;
+        }
+        MethodSignature overridden = target.signature;
+        method.origin = target.origin; // inherit origin from original method
+
         if (!signature.hasModifier(Modifier.OVERRIDE) && !signature.hasModifier(Modifier.ABSTRACT)) {
             Skript.error("Method '%s' would override a method from it's extending class. Mark it with 'override' or rename it.", signature.name());
             return false;
@@ -104,11 +116,11 @@ public class MethodRegistry {
             .collect(Collectors.toList()) : new ArrayList<>();
 
         for (var entry : registry.entrySet()) {
-            MethodSignature signature = entry.getValue().signature;
+            SkriptMethod method = entry.getValue();
             MethodIdentifier identifier = entry.getKey();
 
             if (extendsClass == null) {
-                if (signature.hasModifier(Modifier.OVERRIDE)) {
+                if (method.signature.hasModifier(Modifier.OVERRIDE)) {
                     Skript.error("This class does not extend any other");
                     return false;
                 }
@@ -116,10 +128,7 @@ public class MethodRegistry {
                 SkriptMethod overridden = extendsClass.getExactMethod(identifier, false);
                 abstractMethods.remove(overridden);
 
-                if (signature.hasModifier(Modifier.OVERRIDE) && overridden == null) {
-                    Skript.error("Method '%s' does not override any method from it's extending class.", signature.name());
-                    return false;
-                } else if (overridden != null && !validateOverride(signature, overridden.signature)) {
+                if (!validateOverride(method, overridden)) {
                     return false;
                 }
             }

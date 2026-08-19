@@ -119,7 +119,7 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
                     if (anonymous == null) {
                         anonymous = new AnonymousClass(name);
                     }
-                    if (!secMethod.registerMethod(anonymous, new AnonymousMethod(signature, anonymous))) {
+                    if (!secMethod.registerMethod(anonymous, new AnonymousMethod(signature))) {
                         Skript.error("Method with that signature already exists");
                         return false;
                     }
