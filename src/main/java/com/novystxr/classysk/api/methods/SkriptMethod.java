@@ -92,13 +92,6 @@ public class SkriptMethod {
         return trigger.execute(runEvent) ? runEvent.returnObject : null;
     }
 
-    public static boolean isMethodBody(ParserInstance parser) {
-        if (parser.getCurrentStructure() instanceof SectionSkriptEvent secSkriptEvent) {
-            return secSkriptEvent.getSection() instanceof SecMethod;
-        }
-        return false;
-    }
-
     public static SkriptClass getContextClass(ParserInstance parser) {
         if (parser.getCurrentStructure() instanceof SectionSkriptEvent secSkriptEvent) {
             if (secSkriptEvent.getSection() instanceof SecMethod secMethod) {

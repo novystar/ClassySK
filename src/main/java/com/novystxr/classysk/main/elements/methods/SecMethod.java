@@ -131,17 +131,6 @@ public class SecMethod extends EffectSection implements ReturnHandler<Object> {
         return contextClass.methodRegistry.registerMethod(method);
     }
 
-    public boolean registerMethod(SkriptClass contextClass) {
-        return registerMethod(contextClass, signature);
-    }
-
-    public boolean registerMethod(SkriptClass contextClass, MethodSignature signature) {
-        this.contextClass = contextClass;
-        skriptMethod = new SkriptMethod(signature, contextClass.name);
-
-        return contextClass.methodRegistry.registerMethod(skriptMethod);
-    }
-
     @SuppressWarnings("unchecked")
     public void loadTrigger() {
         if (sectionNode == null) return;
