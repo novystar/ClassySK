@@ -30,8 +30,8 @@ public interface FieldHolder {
         return fieldMap().get(fieldName);
     }
 
-    default void removeField(String name) {
-        fieldMap().remove(name);
+    default void removeField(String fieldName) {
+        fieldMap().remove(fieldName);
     }
 
     default void resetField(String fieldName) {
@@ -75,8 +75,8 @@ public interface FieldHolder {
         return true;
     }
 
-    default @NotNull Object[] getFieldValue(String name) {
-        SkriptField field = getField(name);
+    default @NotNull Object[] getFieldValue(String fieldName) {
+        SkriptField field = getField(fieldName);
         if (field == null) return new Object[0];
 
         Object[] value = field.value;
