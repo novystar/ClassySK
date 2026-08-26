@@ -62,7 +62,7 @@ public class SecMethod extends EffectSection implements ReturnHandler<Object> {
     }
 
     public static SyntaxInfo<SecMethod> ANONYMOUS_INFO = SyntaxInfo.builder(SecMethod.class)
-        .addPattern("[override] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [(\\:\\:|returns|->) %-*classinfo%]")
+        .addPattern("[:public|:protected|:private] [override] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [(\\:\\:|returns|->) %-*classinfo%]")
         .supplier(SecMethod::new)
         .build();
 

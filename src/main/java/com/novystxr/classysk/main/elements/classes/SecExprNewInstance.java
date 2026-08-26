@@ -115,7 +115,14 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
                         Skript.error("Only abstract methods can be overridden here");
                         return false;
                     }
-                    MethodSignature signature = secMethod.signature.withModifiers(target.signature.accessType(), Modifier.OVERRIDE);
+                    MethodSignature signature = secMethod.signature;
+
+                    if (signature.accessType() != null && overridden.accessType() != signature.accessType()) {
+                        Skript.error("Access type cannot be changed on an anonymous class");
+                        return false;
+                    }
+                    signature = signature.withModifiers(signature.accessType(), Modifier.OVERRIDE);
+
                     if (anonymous == null) {
                         anonymous = new AnonymousClass(name);
                     }
