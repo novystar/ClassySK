@@ -87,12 +87,6 @@ public class SkriptMethod implements AccessModifiable {
         return MethodIdentifier.from(this);
     }
 
-    public boolean matches(SkriptMethod method) {
-        return isPlural == method.isPlural
-            && type == method.type
-            && Arrays.equals(modifiers, method.modifiers);
-    }
-
     @Override
     public Modifier[] modifiers() { return modifiers; }
     @Override
