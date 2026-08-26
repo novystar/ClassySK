@@ -10,7 +10,6 @@ import ch.njol.skript.lang.*;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassManager;
-import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.api.util.ParserUtils;
 import com.novystxr.classysk.api.util.StringUtils;
 import com.novystxr.classysk.main.elements.fields.EffField;
@@ -89,7 +88,7 @@ public class StructClass extends Structure {
                     return false;
                 }
             } else if (element instanceof SecMethod secMethod) {
-                if (secMethod.registerMethod(newClass, new SkriptMethod(secMethod.signature, name))) {
+                if (secMethod.register(newClass)) {
                     methodSections.add(secMethod);
                 } else {
                     Skript.error("Method with that signature already exists in this class");

@@ -8,6 +8,7 @@ import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.classes.AnonymousInstance;
 import com.novystxr.classysk.api.classes.*;
 import com.novystxr.classysk.api.event.MethodRunEvent;
+import com.novystxr.classysk.api.methods.MethodRegistry.MethodIdentifier;
 import com.novystxr.classysk.main.elements.methods.SecMethod;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.NotNull;
@@ -15,7 +16,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-public class SkriptMethod {
+public class SkriptMethod implements AccessModifiable {
 
     public record MethodArgument(
         Class<?> type,
@@ -24,52 +25,32 @@ public class SkriptMethod {
         boolean isPlural
     ) {}
 
-    public record MethodSignature(
-        String name,
-        SequencedMap<String, MethodArgument> arguments,
-        Modifier[] modifiers,
+    public final String name;
+    public Modifier[] modifiers;
+    public final SequencedMap<String, MethodArgument> arguments;
+    public final Class<?> type;
+    public final boolean isPlural;
 
-        @Nullable Class<?> type,
-        boolean isPlural
+    public Trigger trigger;
+    public String origin;
+    public final int minArgCount;
 
-    ) implements AccessModifiable {
-        public boolean matches(MethodSignature signature) {
-            return isPlural == signature.isPlural
-                && type == signature.type
-                && Arrays.equals(modifiers, signature.modifiers);
-        }
-
-        public MethodSignature withModifiers(Modifier... modifiers) {
-            modifiers = Modifier.collect(modifiers);
-            return new MethodSignature(name, arguments, modifiers, type, isPlural);
-        }
-    }
-
-    public SkriptMethod(MethodSignature signature, String origin) {
-        this(signature);
+    public SkriptMethod(String name, SequencedMap<String, MethodArgument> arguments, Modifier[] modifiers, Class<?> type, boolean isPlural, String origin) {
+        this(name, arguments, modifiers, type, isPlural);
         this.origin = origin;
-    }
 
-    public SkriptMethod(MethodSignature signature) {
-        this.signature = signature;
-        this.minArgCount = signature.arguments.values().stream()
+    }
+    public SkriptMethod(String name, SequencedMap<String, MethodArgument> arguments, Modifier[] modifiers, Class<?> type, boolean isPlural) {
+        this.name = name;
+        this.arguments = arguments;
+        this.modifiers = modifiers;
+        this.type = type;
+        this.isPlural = isPlural;
+
+        this.minArgCount = arguments.values().stream()
             .filter(arg -> arg.defaultValue() == null)
             .mapToInt(arg -> 1).sum();
 
-    }
-    private Trigger trigger;
-
-    public final MethodSignature signature;
-    public final int minArgCount;
-
-    public String origin;
-
-    public SkriptClass getOrigin() {
-        return ClassManager.getClass(origin);
-    }
-
-    public void setTrigger(Trigger trigger) {
-        this.trigger = trigger;
     }
 
     public Object @Nullable [] run(Event event, @Nullable ClassInstance instance, @NotNull Map<String, Expression<?>> args) {
@@ -82,7 +63,7 @@ public class SkriptMethod {
             Expression<?> expr = entry.getValue();
             String key = entry.getKey();
 
-            if (signature.arguments.get(key).isPlural()) {
+            if (arguments.get(key).isPlural()) {
                 Object[] values = expr.getArray(event);
                 String[] keys = KeyProviderExpression.areKeysRecommended(expr) ?
                     ((KeyProviderExpression<?>) expr).getArrayKeys(event) : null;
@@ -97,6 +78,28 @@ public class SkriptMethod {
         }
         return trigger.execute(runEvent) ? runEvent.returnObject : null;
     }
+
+    public SkriptClass getOrigin() {
+        return ClassManager.getClass(origin);
+    }
+
+    public MethodIdentifier getIdentifier() {
+        return MethodIdentifier.from(this);
+    }
+
+    public boolean matches(SkriptMethod method) {
+        return isPlural == method.isPlural
+            && type == method.type
+            && Arrays.equals(modifiers, method.modifiers);
+    }
+
+    @Override
+    public Modifier[] modifiers() { return modifiers; }
+    @Override
+    public boolean isPlural() { return isPlural; }
+    @Override
+    public Class<?> type() { return type; }
+
 
     public static SkriptClass getContextClass(ParserInstance parser) {
         if (parser.getCurrentStructure() instanceof SectionSkriptEvent secSkriptEvent) {

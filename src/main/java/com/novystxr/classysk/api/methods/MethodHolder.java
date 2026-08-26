@@ -2,8 +2,6 @@ package com.novystxr.classysk.api.methods;
 
 import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.MethodRegistry.MethodIdentifier;
-import com.novystxr.classysk.api.methods.SkriptMethod.MethodSignature;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
@@ -14,12 +12,5 @@ public interface MethodHolder {
     SkriptMethod getExactMethod(MethodIdentifier identifier, boolean isSuper);
 
     List<SkriptMethod> getCandidates(MethodReference reference);
-
-    default @Nullable SkriptMethod getExactMethod(MethodSignature signature, boolean isSuper) {
-        if (signature == null) return null;
-        SkriptMethod method = getExactMethod(MethodIdentifier.from(signature), isSuper);
-        if (method == null) return null;
-        return method.signature.matches(signature) ? method : null;
-    }
 
 }

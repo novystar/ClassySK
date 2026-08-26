@@ -5,7 +5,6 @@ import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
-import com.novystxr.classysk.api.methods.SkriptMethod.MethodSignature;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -29,14 +28,12 @@ public class MethodRegistry {
             return Objects.hash(name, Arrays.hashCode(argTypes));
         }
 
-        public static MethodIdentifier from(MethodSignature signature) {
-            String name = signature.name();
-
-            Class<?>[] argTypes = signature.arguments().sequencedValues().stream()
+        public static MethodIdentifier from(SkriptMethod method) {
+            Class<?>[] argTypes = method.arguments.sequencedValues().stream()
                 .map(MethodArgument::type)
                 .toArray(Class[]::new);
 
-            return new MethodIdentifier(name, argTypes);
+            return new MethodIdentifier(method.name, argTypes);
         }
     }
 
@@ -60,7 +57,7 @@ public class MethodRegistry {
                 continue;
             if (refArgs > key.argTypes.length)
                 continue;
-            if (isStatic != method.signature.isStatic())
+            if (isStatic != method.isStatic())
                 continue;
 
             result.put(key, method);
@@ -73,41 +70,38 @@ public class MethodRegistry {
     }
 
     public boolean registerMethod(SkriptMethod method) {
-        return registry.putIfAbsent(MethodIdentifier.from(method.signature), method) == null;
+        return registry.putIfAbsent(MethodIdentifier.from(method), method) == null;
     }
 
     public boolean hasAbstract() {
         return registry.values().stream()
-            .anyMatch(method -> method.signature.hasModifier(Modifier.ABSTRACT));
+            .anyMatch(method -> method.hasModifier(Modifier.ABSTRACT));
     }
 
     public static boolean validateOverride(@NotNull SkriptMethod method, @Nullable SkriptMethod target) {
-        MethodSignature signature = method.signature;
-
         if (target == null) {
-            if (signature.hasModifier(Modifier.OVERRIDE)) {
-                Skript.error("Method '%s' does not override any method from it's extending class.", signature.name());
+            if (method.hasModifier(Modifier.OVERRIDE)) {
+                Skript.error("Method '%s' does not override any method from it's extending class.", method.name);
                 return false;
             }
             return true;
         }
-        MethodSignature overridden = target.signature;
         method.origin = target.origin; // inherit origin from original method
 
-        if (!signature.hasModifier(Modifier.OVERRIDE) && !signature.hasModifier(Modifier.ABSTRACT)) {
-            Skript.error("Method '%s' would override a method from it's extending class. Mark it with 'override' or rename it.", signature.name());
+        if (!method.hasModifier(Modifier.OVERRIDE) && !method.hasModifier(Modifier.ABSTRACT)) {
+            Skript.error("Method '%s' would override a method from it's extending class. Mark it with 'override' or rename it.", method.name);
             return false;
-        } else if (signature.hasModifier(Modifier.ABSTRACT) && !overridden.hasModifier(Modifier.ABSTRACT)) {
-            Skript.error("Method '%s' already exists as a concrete method, so it cannot be re-declared as 'abstract'.", overridden.name());
+        } else if (method.hasModifier(Modifier.ABSTRACT) && !target.hasModifier(Modifier.ABSTRACT)) {
+            Skript.error("Method '%s' already exists as a concrete method, so it cannot be re-declared as 'abstract'.", target.name);
             return false;
-        } else if (overridden.hasAnyModifier(Modifier.FINAL, Modifier.PRIVATE)) {
-            Skript.error("Method '%s' would override a method that is final.", signature.name());
+        } else if (target.hasAnyModifier(Modifier.FINAL, Modifier.PRIVATE)) {
+            Skript.error("Method '%s' would override a method that is final.", method.name);
             return false;
-        } else if (signature.accessType().ordinal() > overridden.accessType().ordinal()) {
-            Skript.error("Method '%s' cannot have a lower access-type than the target method.", signature.name());
+        } else if (method.accessType().ordinal() > target.accessType().ordinal()) {
+            Skript.error("Method '%s' cannot have a lower access-type than the target method.", method.name);
             return false;
-        } else if (signature.type() != overridden.type()) {
-            Skript.error("Method '%s' does not match the return-type of the target method.", signature.name());
+        } else if (method.type() != target.type()) {
+            Skript.error("Method '%s' does not match the return-type of the target method.", method.name);
             return false;
         }
         return true;
@@ -116,7 +110,7 @@ public class MethodRegistry {
     public boolean validateOverrides(@Nullable SkriptClass extendsClass) {
 
         List<SkriptMethod> abstractMethods = extendsClass != null ? extendsClass.methodRegistry.registry.values().stream()
-            .filter(method -> method.signature.hasModifier(Modifier.ABSTRACT))
+            .filter(method -> method.hasModifier(Modifier.ABSTRACT))
             .collect(Collectors.toList()) : new ArrayList<>();
 
         for (var entry : registry.entrySet()) {
@@ -124,7 +118,7 @@ public class MethodRegistry {
             MethodIdentifier identifier = entry.getKey();
 
             if (extendsClass == null) {
-                if (method.signature.hasModifier(Modifier.OVERRIDE)) {
+                if (method.hasModifier(Modifier.OVERRIDE)) {
                     Skript.error("This class does not extend any other");
                     return false;
                 }

@@ -15,7 +15,6 @@ import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.methods.AnonymousMethod;
 import com.novystxr.classysk.api.methods.MethodRegistry.MethodIdentifier;
 import com.novystxr.classysk.api.methods.SkriptMethod;
-import com.novystxr.classysk.api.methods.SkriptMethod.MethodSignature;
 import com.novystxr.classysk.api.util.ParserUtils;
 import com.novystxr.classysk.api.util.StringUtils;
 import com.novystxr.classysk.main.elements.methods.SecMethod;
@@ -105,28 +104,28 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
                     SecMethod secMethod = ParserUtils.parseNodeAsInfos(node, "Invalid field name: " + key, SecMethod.ANONYMOUS_INFO);
                     if (secMethod == null) return false;
 
-                    SkriptMethod target = skriptClass.getExactMethod(MethodIdentifier.from(secMethod.signature), false);
+                    SkriptMethod target = skriptClass.getExactMethod(MethodIdentifier.from(secMethod.result), false);
                     if (target == null) {
                         Skript.error("This method does not implement any from the target class.");
                         return false;
                     }
-                    MethodSignature overridden = target.signature;
-                    if (!overridden.hasModifier(Modifier.ABSTRACT)) {
+                    if (!target.hasModifier(Modifier.ABSTRACT)) {
                         Skript.error("Only abstract methods can be overridden here");
                         return false;
                     }
-                    MethodSignature signature = secMethod.signature;
+                    SkriptMethod method = secMethod.result;
 
-                    if (signature.accessType() != null && overridden.accessType() != signature.accessType()) {
+                    if (method.accessType() != null && target.accessType() != method.accessType()) {
                         Skript.error("Access type cannot be changed on an anonymous class");
                         return false;
                     }
-                    signature = signature.withModifiers(signature.accessType(), Modifier.OVERRIDE);
+                    method.modifiers = Modifier.collect(target.accessType(), Modifier.OVERRIDE);
+                    secMethod.result = new AnonymousMethod(method);
 
                     if (anonymous == null) {
                         anonymous = new AnonymousClass(name);
                     }
-                    if (!secMethod.registerMethod(anonymous, new AnonymousMethod(signature))) {
+                    if (!secMethod.register(anonymous)) {
                         Skript.error("Method with that signature already exists");
                         return false;
                     }

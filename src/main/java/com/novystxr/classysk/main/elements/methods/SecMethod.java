@@ -12,7 +12,6 @@ import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.methods.MethodParser;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
-import com.novystxr.classysk.api.methods.SkriptMethod.MethodSignature;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.event.MethodRunEvent;
 import com.novystxr.classysk.api.util.StringUtils;
@@ -72,9 +71,8 @@ public class SecMethod extends EffectSection implements ReturnHandler<Object> {
         .build();
 
     private SectionNode sectionNode;
-    public MethodSignature signature;
+    public SkriptMethod result;
 
-    private SkriptMethod skriptMethod;
     public SkriptClass contextClass;
 
     @Override
@@ -120,28 +118,27 @@ public class SecMethod extends EffectSection implements ReturnHandler<Object> {
             }
         }
 
-        this.signature = new MethodSignature(methodName, args, modifiers, returnType, returnPlural);
+        this.result = new SkriptMethod(methodName, args, modifiers, returnType, returnPlural);
         this.sectionNode = sectionNode;
         return true;
     }
 
-    public boolean registerMethod(SkriptClass contextClass, SkriptMethod method) {
-        this.skriptMethod = method;
+    public boolean register(SkriptClass contextClass) {
         this.contextClass = contextClass;
-        return contextClass.methodRegistry.registerMethod(method);
+        return contextClass.methodRegistry.registerMethod(result);
+    }
+
+    public boolean register(SkriptClass contextClass, String origin) {
+        result.origin = origin;
+        return register(contextClass);
     }
 
     @SuppressWarnings("unchecked")
     public void loadTrigger() {
         if (sectionNode == null) return;
-        Trigger trigger;
 
-        if (signature.type() != null) {
-            trigger = loadReturnableSectionCode(sectionNode, "method body", new Class[]{MethodRunEvent.class});
-        } else {
-            trigger = loadCode(sectionNode, "method body", MethodRunEvent.class);
-        }
-        skriptMethod.setTrigger(trigger);
+        result.trigger = result.type() == null ? loadCode(sectionNode, "method body", MethodRunEvent.class)
+            : loadReturnableSectionCode(sectionNode, "method body", new Class[]{MethodRunEvent.class});
     }
 
     @Override
@@ -158,12 +155,12 @@ public class SecMethod extends EffectSection implements ReturnHandler<Object> {
 
     @Override
     public boolean isSingleReturnValue() {
-        return !signature.isPlural();
+        return !result.isPlural();
     }
 
     @Override
     public @Nullable Class<?> returnValueType() {
-        return signature.type();
+        return result.type();
         }
 
     @Override
