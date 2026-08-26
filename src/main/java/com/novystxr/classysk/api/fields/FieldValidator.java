@@ -1,11 +1,13 @@
 package com.novystxr.classysk.api.fields;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.lang.Expression;
 import com.novystxr.classysk.api.Validator;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
-import org.jspecify.annotations.Nullable;
+import org.bukkit.event.Event;
+import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.log.runtime.ErrorSource;
 
 import static com.novystxr.classysk.api.Modifier.PRIVATE;
@@ -14,14 +16,21 @@ import static com.novystxr.classysk.api.Modifier.PROTECTED;
 public class FieldValidator extends Validator<FieldSignature> {
 
     private final String fieldName;
+    private final boolean isStatic;
 
-    public FieldValidator(ErrorSource errorSource, SkriptClass contextClass, String fieldName) {
+    public FieldValidator(ErrorSource errorSource, SkriptClass contextClass, boolean isStatic, String fieldName) {
         super(errorSource, contextClass);
+        this.isStatic = isStatic;
         this.fieldName = fieldName;
     }
 
+    public FieldHolder getValidHolder(Event event, Expression<ClassInstance> instanceExpr, SkriptClass skriptClass) {
+        if (isStatic) return skriptClass;
+        return getValidInstance(event, instanceExpr, skriptClass);
+    }
+
     @Override
-    protected boolean validate(FieldSignature signature, SkriptClass contextClass, boolean isStatic) {
+    protected boolean validate(FieldSignature signature, SkriptClass contextClass) {
         SkriptClass origin = signature.getOrigin();
 
         if (signature.hasModifier(PRIVATE) && origin != contextClass) {
@@ -56,7 +65,7 @@ public class FieldValidator extends Validator<FieldSignature> {
     private @Nullable FieldSignature getProductFromHolder(FieldHolder holder) {
         FieldSignature signature = holder.getFieldSignature(fieldName);
         if (signature == null) {
-            Skript.error("Could not resolve field signature");
+            Skript.error("Could not resolve field named %s", fieldName);
         }
         return signature;
     }

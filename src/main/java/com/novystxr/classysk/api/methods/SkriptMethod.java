@@ -45,18 +45,24 @@ public class SkriptMethod {
         }
     }
 
-    public SkriptMethod(MethodSignature signature) {
-        this.signature = signature;
-    }
-
     public SkriptMethod(MethodSignature signature, String origin) {
-        this.signature = signature;
+        this(signature);
         this.origin = origin;
     }
 
-    public String origin;
+    public SkriptMethod(MethodSignature signature) {
+        this.signature = signature;
+        this.minArgCount = signature.arguments.values().stream()
+            .filter(arg -> arg.defaultValue() == null)
+            .mapToInt(arg -> 1).sum();
+
+    }
     private Trigger trigger;
+
     public final MethodSignature signature;
+    public final int minArgCount;
+
+    public String origin;
 
     public SkriptClass getOrigin() {
         return ClassManager.getClass(origin);

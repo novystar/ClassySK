@@ -1,7 +1,5 @@
 package com.novystxr.classysk.api;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.Arrays;
 
 public interface AccessModifiable {
@@ -28,7 +26,7 @@ public interface AccessModifiable {
         return hasModifier(Modifier.STATIC);
     }
 
-    default @NotNull Modifier accessType() {
+    default Modifier accessType() {
         return modifiers()[0];
     }
 }

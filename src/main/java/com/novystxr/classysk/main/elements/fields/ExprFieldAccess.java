@@ -69,7 +69,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
         fieldName = getConfigLowerCase(regex.group(2));
 
         instanceExpr = isStatic ? null : (Expression<ClassInstance>) exprs[0];
-        validator = new FieldValidator(getErrorSource(), contextClass, fieldName);
+        validator = new FieldValidator(getErrorSource(), contextClass, isStatic, fieldName);
         if (className != null) {
             if (className.isEmpty()) return postInit();
 

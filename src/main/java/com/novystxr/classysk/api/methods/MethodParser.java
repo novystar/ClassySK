@@ -13,6 +13,7 @@ import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.util.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 import org.skriptlang.skript.lang.converter.Converters;
 
 import java.util.ArrayList;
@@ -44,14 +45,34 @@ public class MethodParser {
 
     public record MethodReference(
         String name,
-        List<ReferenceArgument> args
-    ) {}
+        List<ReferenceArgument> args,
+        boolean isStatic
+    ) {
 
-    public static @Nullable MethodReference parseReference(String name, @NotNull String args) {
+        @Override
+        public @NonNull String toString() {
+            StringBuilder builder = new StringBuilder(name+"(");
+
+            int i = 0;
+            for (ReferenceArgument arg : args) {
+                i++;
+                if (arg.name != null) {
+                    builder.append(arg.name).append(": ");
+                }
+                builder.append(Classes.getExactClassInfo(arg.expr.getReturnType()));
+                if (i != args.size()) {
+                    builder.append(", ");
+                }
+            }
+            return builder.append(")").toString();
+        }
+    }
+
+    public static @Nullable MethodReference parseReference(String name, @NotNull String args, boolean isStatic) {
         List<ReferenceArgument> referenceArguments = new ArrayList<>();
 
         if (args.isEmpty()) {
-            return new MethodReference(name, new ArrayList<>());
+            return new MethodReference(name, new ArrayList<>(), isStatic);
         }
 
         List<String> rawArgs = splitArgs(args);
@@ -80,7 +101,7 @@ public class MethodParser {
             referenceArguments.add(new ReferenceArgument(argName, expr));
         }
 
-        return new MethodReference(name, referenceArguments);
+        return new MethodReference(name, referenceArguments, isStatic);
     }
 
     public static @Nullable SequencedMap<String, MethodArgument> parseArguments(String argsString) {

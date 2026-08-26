@@ -10,14 +10,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 public class MethodRegistry {
 
     public record MethodIdentifier(
         String name,
-        int minArgCount,
         Class<?>[] argTypes
     ) {
         @Override
@@ -33,17 +31,12 @@ public class MethodRegistry {
 
         public static MethodIdentifier from(MethodSignature signature) {
             String name = signature.name();
-            Collection<MethodArgument> args = signature.arguments().sequencedValues();
 
-            Class<?>[] argTypes = args.stream()
+            Class<?>[] argTypes = signature.arguments().sequencedValues().stream()
                 .map(MethodArgument::type)
                 .toArray(Class[]::new);
 
-            int minArgCount = args.stream()
-                .filter(arg -> arg.defaultValue() == null)
-                .mapToInt(arg -> 1).sum();
-
-            return new MethodIdentifier(name, minArgCount, argTypes);
+            return new MethodIdentifier(name, argTypes);
         }
     }
 
@@ -53,15 +46,26 @@ public class MethodRegistry {
         return registry.get(identifier);
     }
 
-    public Map<MethodIdentifier, SkriptMethod> candidates(MethodReference reference) {
-        final String refName = reference.name();
-        final int refArgs = reference.args().size();
+    public Map<MethodIdentifier, SkriptMethod> candidates(MethodReference reference, boolean isStatic) {
+        int refArgs = reference.args().size();
 
-        return registry.entrySet().stream()
-            .filter(entry -> entry.getKey().name.equals(refName))
-            .filter(entry ->
-                refArgs >= entry.getKey().minArgCount && refArgs <= entry.getKey().argTypes.length)
-            .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+        Map<MethodIdentifier, SkriptMethod> result = new HashMap<>();
+        for (var entry : registry.entrySet()) {
+            MethodIdentifier key = entry.getKey();
+            SkriptMethod method = entry.getValue();
+
+            if (!key.name.equals(reference.name()))
+                continue;
+            if (refArgs < method.minArgCount)
+                continue;
+            if (refArgs > key.argTypes.length)
+                continue;
+            if (isStatic != method.signature.isStatic())
+                continue;
+
+            result.put(key, method);
+        }
+        return result;
     }
 
     public void init() {

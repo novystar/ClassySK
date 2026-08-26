@@ -59,9 +59,11 @@ public class SkriptClass implements FieldHolder, MethodHolder {
 
     @Override
     public FieldSignature getFieldSignature(String key) {
-        return inheritanceStream()
+        FieldSignature firstSignature = fieldSignatures.get(key);
+        return (firstSignature != null) ? firstSignature : inheritanceStream().skip(1)
             .map(target -> target.fieldSignatures.get(key))
             .filter(Objects::nonNull)
+            .filter(signature -> !signature.isStatic())
             .findFirst().orElse(null);
     }
 
@@ -113,9 +115,11 @@ public class SkriptClass implements FieldHolder, MethodHolder {
 
     @Override
     public List<SkriptMethod> getCandidates(MethodReference reference) {
+        if (reference.isStatic()) return methodRegistry.candidates(reference, true).values().stream().toList();
+
         Map<MethodIdentifier, SkriptMethod> result = new HashMap<>();
         for (SkriptClass target : inheritanceStream().toList().reversed()) {
-            result.putAll(target.methodRegistry.candidates(reference));
+            result.putAll(target.methodRegistry.candidates(reference, false));
         }
         return result.values().stream().toList();
     }

@@ -30,6 +30,7 @@ public class MethodValidator extends Validator<ValidReference> {
 
     public MethodValidator(ErrorSource errorSource, SkriptClass contextClass, @NotNull MethodReference reference, boolean expectsReturn, boolean isSuper) {
         super(errorSource, contextClass);
+
         this.reference = reference;
         this.expectsReturn = expectsReturn;
         this.isSuper = isSuper;
@@ -43,7 +44,7 @@ public class MethodValidator extends Validator<ValidReference> {
         List<SkriptMethod> candidates = skriptClass.getCandidates(reference);
 
         if (candidates.isEmpty()) {
-            Skript.error("Could not identify method signature from reference: "+reference.name());
+            Skript.error("Could not identify method %s", reference);
             return null;
         }
         if (candidates.size() == 1) {
@@ -51,7 +52,7 @@ public class MethodValidator extends Validator<ValidReference> {
         } else {
             ValidReference reference = validateFromCandidates(candidates);
             if (reference == null) {
-                Skript.error("Could not identify method out of %s overloads", candidates.size());
+                Skript.error("Could not identify method %s out of %s overloads", this.reference, candidates.size());
                 return null;
             }
             return reference;
@@ -69,7 +70,7 @@ public class MethodValidator extends Validator<ValidReference> {
     }
 
     @Override
-    protected boolean validate(ValidReference reference, SkriptClass contextClass, boolean isStatic) {
+    protected boolean validate(ValidReference reference, SkriptClass contextClass) {
         SkriptClass origin = reference.getOrigin();
 
         if (expectsReturn && reference.type() == null) {
@@ -82,14 +83,6 @@ public class MethodValidator extends Validator<ValidReference> {
         }
         if (reference.hasModifier(PROTECTED) && (contextClass == null || !contextClass.inherits(origin))) {
             Skript.error("Protected fields can only be accessed from inheritors");
-            return false;
-        }
-        if (reference.isStatic() && !isStatic) {
-            Skript.error("Static methods do not belong to any instance");
-            return false;
-        }
-        if (!reference.isStatic() && isStatic) {
-            Skript.error("This method is only accessible from instances");
             return false;
         }
         return true;
