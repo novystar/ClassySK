@@ -34,6 +34,7 @@ public class EffField extends Effect {
     private SkriptField field;
 
     private String unparsedDefault = null;
+    private ClassInfoReference reference;
 
     @Override
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result) {
@@ -42,7 +43,7 @@ public class EffField extends Effect {
             unparsedDefault = result.regexes.get(1).group().trim();
         }
 
-        ClassInfoReference reference = ExprUtils.getClassRef(exprs[0]);
+        reference = ExprUtils.getClassRef(exprs[0]);
         boolean isPlural = reference.isPlural().isTrue();
 
         Class<?> type = reference.getClassInfo().getC();
@@ -62,6 +63,7 @@ public class EffField extends Effect {
 
         Expression<?> defaultExpr = ParserUtils.parseExprNode(unparsedDefault, getNode(), field.type());
         if (defaultExpr == null) {
+            Skript.error("Default value is not of required type: %s", reference.getClassInfo());
             return false;
         }
         if (!defaultExpr.isSingle() && !field.isPlural) {
