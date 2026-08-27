@@ -31,8 +31,9 @@ public class SkriptClass implements FieldHolder, MethodHolder {
         this.isFinal = isFinal;
     }
 
-    public @Nullable Set<ClassInstance> instances() {
-        return ClassManager.instances.get(name);
+    public Set<ClassInstance> instances() {
+        return ClassManager.instances.computeIfAbsent(name, key ->
+            Collections.newSetFromMap(new WeakHashMap<>()));
     }
 
     public Stream<SkriptClass> inheritanceStream() {
@@ -75,10 +76,7 @@ public class SkriptClass implements FieldHolder, MethodHolder {
     }
 
     public void setupInstance(ClassInstance instance) {
-        ClassManager.instances.computeIfAbsent(name, key ->
-                Collections.newSetFromMap(new WeakHashMap<>()))
-            .add(instance);
-
+        instances().add(instance);
         instance.setDefaults();
     }
 

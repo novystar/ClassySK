@@ -43,7 +43,7 @@ public class ParserUtils {
         expr = LiteralUtils.defendExpression(expr);
         if (expr == null) return null;
 
-        if (!context.claimed()) {
+        if (secNode != null && !context.claimed()) {
             Skript.error("This expression can't be used as a section");
             return null;
         }

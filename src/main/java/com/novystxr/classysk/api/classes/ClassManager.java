@@ -57,12 +57,8 @@ public class ClassManager {
         });
         skriptClass.setDefaults();
 
-        Set<ClassInstance> instances = skriptClass.instances();
-        if (instances == null)
-            return;
-
         // attempt to convert non-static fields to the new structure
-        for (ClassInstance instance : instances) {
+        for (ClassInstance instance : skriptClass.instances()) {
             for (var entry : instance.fieldValueMap.entrySet()) {
                 SkriptField field = skriptClass.getField(entry.getKey());
 
@@ -82,7 +78,7 @@ public class ClassManager {
     public static void checkAwaitingParent(SkriptClass parent) {
         Set<ClassInstance> awaiting = awaitingParent.get(parent.name);
         if (awaiting == null) return;
-        instances.get(parent.name).addAll(awaiting);
+        parent.instances().addAll(awaiting);
 
         awaitingParent.remove(parent.name);
     }
