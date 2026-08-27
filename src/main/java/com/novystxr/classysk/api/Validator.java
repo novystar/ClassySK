@@ -13,6 +13,7 @@ import com.novystxr.classysk.api.util.SimpleErrorHandler;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.lang.converter.Converters;
 import org.skriptlang.skript.log.runtime.ErrorSource;
 import org.skriptlang.skript.log.runtime.RuntimeErrorProducer;
 
@@ -50,6 +51,30 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
     }
 
     /**
+     *
+     * Assures that the resulting array matches the required type, converting it if needed.
+     * This returns null if the conversion failed or found mismatched plurality.
+     *
+     * @param value The value array to check
+     * @param targetType The type to match and convert against
+     * @param plural Whether the resulting array may contain more than 1 element
+     * @return The safe converted array
+     */
+    public static Object @Nullable [] getSafeConverted(Object[] value, Class<?> targetType, boolean plural) {
+        if (!Arrays.stream(value).allMatch(targetType::isInstance)) {
+            value = Converters.convert(value, targetType);
+
+            if (value.length == 0) {
+                return null;
+            }
+        }
+        if (plural && value.length > 1) {
+            return null;
+        }
+        return value;
+    }
+
+    /**
      * A helper method to get all possible return types based off of previous guesses from {@link Validator#validateUnknown(SkriptClass)}
      * @return The {@link Validator#product} return type, OR all return types of {@link Validator#guesses}
      */
@@ -72,7 +97,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
     /**
      * Tries to find the best possible return type for that pattern to report
      *
-     * @param possibleTypes Must contain atleast one class, see {@link Validator#possibleTypes()}
+     * @param possibleTypes Must contain at least one class, see {@link Validator#possibleTypes()}
      *
      * @return The highest denominator of possible return types
      */
