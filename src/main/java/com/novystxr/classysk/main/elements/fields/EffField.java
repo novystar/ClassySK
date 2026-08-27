@@ -8,7 +8,6 @@ import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.fields.SkriptField;
-import com.novystxr.classysk.api.util.Logger;
 import com.novystxr.classysk.api.util.ParserUtils;
 import com.novystxr.classysk.api.util.StringUtils;
 import com.novystxr.classysk.api.util.ExprUtils;
@@ -61,10 +60,7 @@ public class EffField extends Effect {
     public boolean parseDefault() {
         if (unparsedDefault == null) return true;
 
-        Logger.log(getNode(), getNode().getKey());
-
         Expression<?> defaultExpr = ParserUtils.parseExprNode(unparsedDefault, getNode(), field.type());
-
         if (defaultExpr == null) {
             return false;
         }
