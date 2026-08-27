@@ -94,7 +94,6 @@ public class SkriptMethod implements AccessModifiable {
     @Override
     public Class<?> type() { return type; }
 
-
     public static SkriptClass getContextClass(ParserInstance parser) {
         if (parser.getCurrentStructure() instanceof SectionSkriptEvent secSkriptEvent) {
             if (secSkriptEvent.getSection() instanceof SecMethod secMethod) {
@@ -102,6 +101,12 @@ public class SkriptMethod implements AccessModifiable {
             }
         }
         return null;
+    }
+
+    public static class AnonymousMethod extends SkriptMethod {
+        public AnonymousMethod(SkriptMethod method) {
+            super(method.name, method.arguments, method.modifiers, method.type, method.isPlural, method.origin);
+        }
     }
 
 }

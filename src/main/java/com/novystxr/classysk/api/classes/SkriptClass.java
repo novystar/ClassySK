@@ -113,4 +113,11 @@ public class SkriptClass implements FieldHolder, MethodHolder {
         }
         return result.values().stream().toList();
     }
+
+    public static class AnonymousClass extends SkriptClass {
+        public AnonymousClass(String name) {
+            super(name, name, true);
+        }
+    }
+
 }
