@@ -81,7 +81,7 @@ public class MethodRegistry {
     public static boolean validateOverride(@NotNull SkriptMethod method, @Nullable SkriptMethod target) {
         if (target == null) {
             if (method.hasModifier(Modifier.OVERRIDE)) {
-                Skript.error("Method '%s' does not override any method from it's extending class.", method.name);
+                Skript.error("Method '%s' does not override any method from its extending class.", method.name);
                 return false;
             }
             return true;
@@ -89,7 +89,7 @@ public class MethodRegistry {
         method.origin = target.origin; // inherit origin from original method
 
         if (!method.hasModifier(Modifier.OVERRIDE) && !method.hasModifier(Modifier.ABSTRACT)) {
-            Skript.error("Method '%s' would override a method from it's extending class. Mark it with 'override' or rename it.", method.name);
+            Skript.error("Method '%s' would override a method from its extending class. Mark it with 'override' or rename it.", method.name);
             return false;
         } else if (method.hasModifier(Modifier.ABSTRACT) && !target.hasModifier(Modifier.ABSTRACT)) {
             Skript.error("Method '%s' already exists as a concrete method, so it cannot be re-declared as 'abstract'.", target.name);
