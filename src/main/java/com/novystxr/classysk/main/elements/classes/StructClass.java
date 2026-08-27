@@ -61,6 +61,8 @@ public class StructClass extends Structure {
     }
 
     private final List<SecMethod> methodSections = new ArrayList<>();
+    private final List<EffField> fieldEffects = new ArrayList<>();
+
     private SkriptClass newClass;
 
     private String name;
@@ -83,7 +85,9 @@ public class StructClass extends Structure {
 
             if (element instanceof EffField effField) {
                 String fieldName = effField.name;
-                if (newClass.fieldSignatures.putIfAbsent(fieldName, effField.getSignature(name)) != null) {
+                if (newClass.fields.putIfAbsent(fieldName, effField.withOrigin(name)) == null) {
+                    fieldEffects.add(effField);
+                } else {
                     Skript.error("Field named '"+fieldName+"' already exists in this class");
                     return false;
                 }
@@ -115,6 +119,12 @@ public class StructClass extends Structure {
 
     @Override
     public boolean preLoad() {
+        for (EffField effField : fieldEffects) {
+            if (!effField.parseDefault()) {
+                unregisterClass();
+                return false;
+            }
+        }
         SkriptClass extendsClass = newClass.getExtends();
         if (extendsName != null) {
             if (checkFieldOverrides(extendsClass)) {
@@ -153,6 +163,7 @@ public class StructClass extends Structure {
             secMethod.loadTrigger();
         }
         methodSections.clear();
+        fieldEffects.clear();
         return true;
     }
 
@@ -166,8 +177,8 @@ public class StructClass extends Structure {
     }
 
     private boolean checkFieldOverrides(SkriptClass extendsClass) {
-        return newClass.fieldSignatures.keySet().stream()
-            .anyMatch(name -> extendsClass.getFieldSignature(name) != null);
+        return newClass.fields.keySet().stream()
+            .anyMatch(name -> extendsClass.getField(name) != null);
     }
 
     private boolean cyclic() {

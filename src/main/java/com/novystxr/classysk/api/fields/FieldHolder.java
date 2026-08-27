@@ -2,7 +2,6 @@ package com.novystxr.classysk.api.fields;
 
 import ch.njol.skript.lang.Expression;
 import com.novystxr.classysk.api.event.FieldEvalEvent;
-import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.converter.Converters;
@@ -12,74 +11,54 @@ import java.util.Map;
 
 public interface FieldHolder {
 
-    Map<String, SkriptField> fieldMap();
+    Map<String, Object[]> fieldValueMap();
 
-    @Nullable FieldSignature getFieldSignature(String fieldName);
+    void setDefaults();
 
-    default SkriptField createField(FieldSignature signature) {
-        SkriptField field = new SkriptField(signature);
-        fieldMap().put(signature.name(), field);
-        return field;
+    @Nullable SkriptField getField(String fieldName);
+
+    default void removeField(String fieldName) {
+        fieldValueMap().remove(fieldName);
     }
 
     default boolean fieldExists(String fieldName) {
-        return fieldMap().containsKey(fieldName);
-    }
-
-    default @Nullable SkriptField getField(String fieldName) {
-        return fieldMap().get(fieldName);
-    }
-
-    default void removeField(String fieldName) {
-        fieldMap().remove(fieldName);
+        return fieldValueMap().containsKey(fieldName);
     }
 
     default void resetField(String fieldName) {
         removeField(fieldName);
 
-        FieldSignature signature = getFieldSignature(fieldName);
-        if (signature == null) return;
+        SkriptField field = getField(fieldName);
+        if (field == null) return;
 
-        Expression<?> defaultExpr = signature.defaultExpr();
+        Expression<?> defaultExpr = field.defaultExpr;
         if (defaultExpr != null) {
-
-            Object[] convertedValue = Converters.convert(defaultExpr.getArray(new FieldEvalEvent()), signature.type());
+            Object[] convertedValue = Converters.convert(defaultExpr.getArray(new FieldEvalEvent()), field.type());
             if (convertedValue.length == 0) return;
 
-            createField(signature).value = convertedValue;
+            fieldValueMap().put(fieldName, convertedValue);
         }
     }
 
-    // lazy initialization
     default boolean setFieldValue(String fieldName, @Nullable Object[] value) {
-        if (value == null) value = new Object[0];
-
-        FieldSignature signature = getFieldSignature(fieldName);
-        if (signature == null) return false;
-
         SkriptField field = getField(fieldName);
-        if (field == null) {
-            if (value.length == 0) {
-                return false; // nothing would have changed so we don't initialize the field
-            }
-            field = createField(signature);
-        } else if (value.length == 0) {
-            field.value = new Object[0]; // field was intentionally set to null
+        if (field == null) return false;
+
+        if (value == null || value.length == 0) {
+            removeField(fieldName); // field was set to null
             return true;
         }
+        Object[] convertedValue = Converters.convert(value, field.type());
+        if (convertedValue.length == 0) {
+            return false;
+        }
 
-        Object[] convertedValue = Converters.convert(value, signature.type());
-        if (convertedValue.length == 0) return false; // could not convert
-
-        field.value = convertedValue;
+        fieldValueMap().put(fieldName, value);
         return true;
     }
 
     default @NotNull Object[] getFieldValue(String fieldName) {
-        SkriptField field = getField(fieldName);
-        if (field == null) return new Object[0];
-
-        Object[] value = field.value;
-        return Arrays.copyOf(value, value.length);
+        Object[] value = fieldValueMap().get(fieldName);
+        return value == null ? new Object[0] : Arrays.copyOf(value, value.length);
     }
 }

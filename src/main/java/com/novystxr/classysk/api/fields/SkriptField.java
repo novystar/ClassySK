@@ -5,50 +5,35 @@ import com.novystxr.classysk.api.AccessModifiable;
 import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.skriptlang.skript.lang.converter.Converters;
 
-import java.util.Arrays;
+public class SkriptField implements AccessModifiable {
 
-public class SkriptField {
-    public record FieldSignature (
-        String name,
-        Class<?> type,
-        @Nullable Expression<?> defaultExpr,
+    public static SkriptField UNKNOWN = new SkriptField("$unknown", Object.class, Modifier.PUBLIC.array(), true);
 
-        Modifier[] modifiers,
-        boolean isPlural,
-        String origin
+    public final String name;
+    public final Class<?> type;
+    public final Modifier[] modifiers;
+    public final boolean isPlural;
 
-    ) implements AccessModifiable {
+    public String origin = null;
+    public Expression<?> defaultExpr = null;
 
-        /**
-         * Creates a field signature with sensible defaults that should be able to hold the target data -
-         * should only be used as a last resort to preserve data if the field no longer exists on deserialization.
-         */
-        public static FieldSignature fromSerializableField(String fieldName, SerializableField sField, String origin) {
-
-            return new FieldSignature(fieldName, sField.signatureType, null,
-                Modifier.PUBLIC.array(), sField.isPlural, origin);
-        }
-        public boolean canConvert(@NotNull Object[] values) {
-            if (values.length > 1 && !isPlural) return false;
-
-            return Arrays.stream(values)
-                .allMatch(value -> Converters.converterExists(value.getClass(), type));
-        }
-
-        public SkriptClass getOrigin() {
-            return ClassManager.getClass(origin);
-        }
+    public SkriptField(String name, Class<?> type, Modifier[] modifiers, boolean isPlural) {
+        this.name = name;
+        this.type = type;
+        this.modifiers = modifiers;
+        this.isPlural = isPlural;
     }
 
-    public FieldSignature signature;
-    public Object[] value = new Object[0];
-
-    public SkriptField(FieldSignature signature) {
-        this.signature = signature;
+    public SkriptClass getOrigin() {
+        return origin == null ? null : ClassManager.getClass(origin);
     }
+
+    @Override
+    public Modifier[] modifiers() { return modifiers; }
+    @Override
+    public boolean isPlural() { return isPlural; }
+    @Override
+    public Class<?> type() { return type; }
 
 }

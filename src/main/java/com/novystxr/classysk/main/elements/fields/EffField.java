@@ -7,7 +7,8 @@ import ch.njol.skript.util.ClassInfoReference;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.Modifier;
-import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
+import com.novystxr.classysk.api.fields.SkriptField;
+import com.novystxr.classysk.api.util.ParserUtils;
 import com.novystxr.classysk.api.util.StringUtils;
 import com.novystxr.classysk.api.util.ExprUtils;
 import org.bukkit.event.Event;
@@ -25,46 +26,52 @@ public class EffField extends Effect {
     }
 
     public static SyntaxInfo<EffField> INFO = SyntaxInfo.builder(EffField.class)
-        .addPattern("(:public|:protected|:private) [:static] [:const] <"+ Classysk.NAME_PATTERN +">\\: %*classinfo% [= %-objects%]")
+        .addPattern("(:public|:protected|:private) [:static] [:const] <"+ Classysk.NAME_PATTERN +">\\: %*classinfo% [= <.+>]")
         .supplier(EffField::new)
         .build();
 
-
     public String name;
+    private SkriptField field;
 
-    private boolean isPlural;
-    private Class<?> type;
-    private Expression<?> defaultExpr = null;
-    private Modifier[] modifiers;
+    private String unparsedDefault = null;
 
-
-    @SuppressWarnings("unchecked")
     @Override
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result) {
         name = StringUtils.getConfigLowerCase(result.regexes.getFirst());
+        if (result.regexes.size() == 2) {
+            unparsedDefault = result.regexes.get(1).group().trim();
+        }
 
         ClassInfoReference reference = ExprUtils.getClassRef(exprs[0]);
-        isPlural = reference.isPlural().isTrue();
-        type = reference.getClassInfo().getC();
+        boolean isPlural = reference.isPlural().isTrue();
 
-        if (exprs[1] != null) {
-            defaultExpr = exprs[1].getConvertedExpression(type);
-            if (defaultExpr == null) {
-                Skript.error("Default value can't convert to type: "+reference.getClassInfo());
-                return false;
-            }
+        Class<?> type = reference.getClassInfo().getC();
+        Modifier[] modifiers = Modifier.collect(result.tags);
 
-            if (!defaultExpr.isSingle() && !isPlural) {
-                Skript.error("Default value is plural but field only accept single values");
-                return false;
-            }
-        }
-        modifiers = Modifier.collect(result.tags);
+        this.field = new SkriptField(name, type, modifiers, isPlural);
         return true;
     }
 
-    public FieldSignature getSignature(String origin) {
-        return new FieldSignature(name, type, defaultExpr, modifiers, isPlural, origin);
+    public SkriptField withOrigin(String origin) {
+        field.origin = origin;
+        return field;
+    }
+
+    public boolean parseDefault() {
+        if (unparsedDefault == null) return true;
+
+        Expression<?> defaultExpr = ParserUtils.parseExprNode(unparsedDefault, getNode(), field.type());
+
+        if (defaultExpr == null) {
+            return false;
+        }
+        if (!defaultExpr.isSingle() && !field.isPlural) {
+            Skript.error("Default value is plural but field only accept single values");
+            return false;
+        }
+
+        field.defaultExpr = defaultExpr;
+        return true;
     }
 
     @Override

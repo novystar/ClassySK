@@ -11,7 +11,7 @@ import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.classes.*;
-import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
+import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.methods.AnonymousMethod;
 import com.novystxr.classysk.api.methods.MethodRegistry.MethodIdentifier;
 import com.novystxr.classysk.api.methods.SkriptMethod;
@@ -83,25 +83,25 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
                     String fieldName = StringUtils.getConfigLowerCase(matcher.group(1));
                     String unparsedValue = matcher.group(2);
 
-                    FieldSignature signature = skriptClass.getFieldSignature(fieldName);
-                    if (signature == null) {
+                    SkriptField field = skriptClass.getField(fieldName);
+                    if (field == null) {
                         Skript.error("Could not find field from class: " + skriptClass.getEffectiveName());
                         return false;
                     }
-                    if (signature.isStatic()) {
+                    if (field.isStatic()) {
                         Skript.error("Static field cannot be set on an instance");
                         return false;
                     }
-                    if (signature.accessType() == Modifier.PRIVATE && !inParent) {
+                    if (field.accessType() == Modifier.PRIVATE && !inParent) {
                         Skript.error("Private fields can't be accessed here");
                         return false;
                     }
-                    Expression<?> valueExpr = ParserUtils.parseExprNode(unparsedValue, node, signature.type());
+                    Expression<?> valueExpr = ParserUtils.parseExprNode(unparsedValue, node, field.type());
                     if (valueExpr == null) return false;
 
                     fields.put(fieldName, valueExpr);
                 } else {
-                    SecMethod secMethod = ParserUtils.parseNodeAsInfos(node, "Invalid field name: " + key, SecMethod.ANONYMOUS_INFO);
+                    SecMethod secMethod = ParserUtils.parseNodeAsInfos(node, "Invalid entry: " + key, SecMethod.ANONYMOUS_INFO);
                     if (secMethod == null) return false;
 
                     SkriptMethod target = skriptClass.getExactMethod(MethodIdentifier.from(secMethod.result), false);

@@ -10,8 +10,6 @@ import ch.njol.yggdrasil.Fields.FieldContext;
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.classes.*;
 import com.novystxr.classysk.api.fields.SerializableField;
-import com.novystxr.classysk.api.fields.SkriptField;
-import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.util.StringUtils;
 import com.novystxr.classysk.api.util.TypedInstanceParser;
 import org.skriptlang.skript.addon.SkriptAddon;
@@ -95,12 +93,11 @@ public class Types {
                     Fields fields = new Fields();
                     fields.putObject("name", o.name);
 
-                    for (SkriptField skriptField : o.fieldMap.values()) {
-                        FieldSignature signature = skriptField.signature;
-                        SerializableField sField = new SerializableField(skriptField.value, signature.type(), signature.isPlural());
+                    for (var entry : o.fieldValueMap().entrySet()) {
+                        SerializableField sField = new SerializableField(entry.getValue());
 
                         if (sField.canBeSaved()) {
-                            fields.putObject("field:" + signature.name(), sField);
+                            fields.putObject("field:" + entry.getKey(), sField);
                         }
                     }
                     return fields;
@@ -124,8 +121,9 @@ public class Types {
 
                         String fieldName = context.getID().substring("field:".length());
                         SerializableField sField = context.getObject(SerializableField.class);
+                        if (sField == null) throw new StreamCorruptedException();
 
-                        instance.putAwaitingField(fieldName, sField);
+                        instance.fieldValueMap.put(fieldName, sField.value);
                     }
                     return instance;
                 }

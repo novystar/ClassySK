@@ -5,7 +5,6 @@ import ch.njol.skript.lang.Expression;
 import com.novystxr.classysk.api.Validator;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.SkriptClass;
-import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.log.runtime.ErrorSource;
@@ -13,7 +12,7 @@ import org.skriptlang.skript.log.runtime.ErrorSource;
 import static com.novystxr.classysk.api.Modifier.PRIVATE;
 import static com.novystxr.classysk.api.Modifier.PROTECTED;
 
-public class FieldValidator extends Validator<FieldSignature> {
+public class FieldValidator extends Validator<SkriptField> {
 
     private final String fieldName;
     private final boolean isStatic;
@@ -30,22 +29,22 @@ public class FieldValidator extends Validator<FieldSignature> {
     }
 
     @Override
-    protected boolean validate(FieldSignature signature, SkriptClass contextClass) {
-        SkriptClass origin = signature.getOrigin();
+    protected boolean validate(SkriptField field, SkriptClass contextClass) {
+        SkriptClass origin = field.getOrigin();
 
-        if (signature.hasModifier(PRIVATE) && origin != contextClass) {
+        if (field.hasModifier(PRIVATE) && origin != contextClass) {
             Skript.error("Private fields can only be accessed from within their own class");
             return false;
         }
-        if (signature.hasModifier(PROTECTED) && (contextClass == null || !contextClass.inherits(origin))) {
+        if (field.hasModifier(PROTECTED) && (contextClass == null || !contextClass.inherits(origin))) {
             Skript.error("Protected fields can only be accessed from inheritors");
             return false;
         }
-        if (signature.isStatic() && !isStatic) {
+        if (field.isStatic() && !isStatic) {
             Skript.error("Static fields do not belong to any instance");
             return false;
         }
-        if (!signature.isStatic() && isStatic) {
+        if (!field.isStatic() && isStatic) {
             Skript.error("This field is only accessible from instances");
             return false;
         }
@@ -53,20 +52,20 @@ public class FieldValidator extends Validator<FieldSignature> {
     }
 
     @Override
-    protected @Nullable FieldSignature getProductFromClass(SkriptClass skriptClass) {
+    protected @Nullable SkriptField getProductFromClass(SkriptClass skriptClass) {
         return getProductFromHolder(skriptClass);
     }
 
     @Override
-    protected @Nullable FieldSignature getProductFromInstance(ClassInstance instance) {
+    protected @Nullable SkriptField getProductFromInstance(ClassInstance instance) {
         return getProductFromHolder(instance);
     }
 
-    private @Nullable FieldSignature getProductFromHolder(FieldHolder holder) {
-        FieldSignature signature = holder.getFieldSignature(fieldName);
-        if (signature == null) {
+    private @Nullable SkriptField getProductFromHolder(FieldHolder holder) {
+        SkriptField field = holder.getField(fieldName);
+        if (field == null) {
             Skript.error("Could not resolve field named %s", fieldName);
         }
-        return signature;
+        return field;
     }
 }

@@ -100,15 +100,13 @@ public class ExprMethodCall extends SimpleExpression<Object> {
         if (!isStatic && instance == null) return null;
 
         ValidReference reference = validator.product();
-        if (shouldBeSingle.isTrue() && reference.isPlural()) {
-            error("Method returns multiple values while reporting as single. Try reloading the script or using a safe call: %instance%<>::method()");
-            return null;
+        Object[] result = Validator.getSafeConverted(reference.method().run(event, instance, reference.args()),
+            reference.type(), reference.isPlural());
+
+        if (result == null) {
+            error("The result of this method call couldn't convert to its reported type.");
         }
-        if (!reference.type().isAssignableFrom(bestReturnType)) {
-            error("Method doesn't match its reported type. Try reloading the script or using a safe call: %instance%<>::method()");
-            return null;
-        }
-        return reference.method().run(event, instance, reference.args());
+        return result;
     }
 
     @Override

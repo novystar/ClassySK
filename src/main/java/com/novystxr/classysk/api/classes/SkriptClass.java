@@ -3,11 +3,8 @@ package com.novystxr.classysk.api.classes;
 import java.util.*;
 import java.util.stream.Stream;
 
-import ch.njol.skript.lang.Expression;
 import com.novystxr.classysk.api.fields.FieldHolder;
-import com.novystxr.classysk.api.event.FieldEvalEvent;
 import com.novystxr.classysk.api.fields.SkriptField;
-import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.methods.MethodHolder;
 import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.MethodRegistry;
@@ -26,7 +23,7 @@ public class SkriptClass implements FieldHolder, MethodHolder {
     public final boolean isFinal;
 
     public final MethodRegistry methodRegistry = new MethodRegistry();
-    public final Map<String, FieldSignature> fieldSignatures = new HashMap<>();
+    public final Map<String, SkriptField> fields = new HashMap<>();
 
     public SkriptClass(String name, String extendsName, boolean isFinal) {
         this.name = name;
@@ -53,32 +50,27 @@ public class SkriptClass implements FieldHolder, MethodHolder {
     }
 
     @Override
-    public Map<String, SkriptField> fieldMap() {
-        return ClassManager.staticFields.computeIfAbsent(name, key -> new HashMap<>());
+    public Map<String, Object[]> fieldValueMap() {
+        return ClassManager.staticFieldMaps.computeIfAbsent(name, key -> new HashMap<>());
     }
 
     @Override
-    public FieldSignature getFieldSignature(String key) {
-        FieldSignature firstSignature = fieldSignatures.get(key);
-        return (firstSignature != null) ? firstSignature : inheritanceStream().skip(1)
-            .map(target -> target.fieldSignatures.get(key))
+    public SkriptField getField(String key) {
+        SkriptField firstField = fields.get(key);
+        return (firstField != null) ? firstField : inheritanceStream().skip(1)
+            .map(target -> target.fields.get(key))
             .filter(Objects::nonNull)
-            .filter(signature -> !signature.isStatic())
+            .filter(field -> !field.isStatic())
             .findFirst().orElse(null);
     }
 
-    void setDefaults(FieldHolder fieldHolder) {
-        for (FieldSignature signature : fieldSignatures.values()) {
-            if (signature.isStatic() == fieldHolder instanceof ClassInstance) continue;
+    @Override
+    public void setDefaults() {
+        for (SkriptField field : fields.values()) {
+            if (!field.isStatic()) continue;
+            if (fieldExists(field.name)) continue;
 
-            String fieldName = signature.name();
-            if (fieldHolder.fieldExists(fieldName)) continue;
-
-            Expression<?> defaultExpr = signature.defaultExpr();
-            if (defaultExpr == null) continue;
-
-            Object[] value = defaultExpr.getArray(new FieldEvalEvent());
-            fieldHolder.setFieldValue(fieldName, value);
+            resetField(field.name);
         }
     }
 
@@ -87,7 +79,7 @@ public class SkriptClass implements FieldHolder, MethodHolder {
                 Collections.newSetFromMap(new WeakHashMap<>()))
             .add(instance);
 
-        setDefaults(instance);
+        instance.setDefaults();
     }
 
     public ClassInstance createInstance() {
