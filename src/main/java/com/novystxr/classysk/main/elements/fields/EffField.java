@@ -65,7 +65,7 @@ public class EffField extends Effect {
             return false;
         }
         if (!defaultExpr.isSingle() && !field.isPlural) {
-            Skript.error("Default value is plural but field only accept single values");
+            Skript.error("Default value is plural but field only accepts single values");
             return false;
         }
 

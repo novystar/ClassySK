@@ -68,7 +68,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
                 return null;
             }
         }
-        if (plural && value.length > 1) {
+        if (!plural && value.length > 1) {
             return null;
         }
         return value;
