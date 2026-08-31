@@ -9,7 +9,6 @@ import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.SkriptClass.AnonymousClass;
-import com.novystxr.classysk.api.util.Logger;
 import com.novystxr.classysk.api.util.SimpleErrorHandler;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.NotNull;
@@ -59,23 +58,12 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
      * @param plural If the syntax may return plural values
      */
     public static Object @Nullable [] getSafeReturn(Object @Nullable [] value, Class<?> targetType, boolean plural) {
-        Logger.log("debug");
-        Logger.log(1);
         if (value == null) return new Object[0];
         value = Arrays.stream(value).filter(Objects::nonNull).toArray();
-        Logger.log("2");
-        Logger.log(targetType);
-        for (Object val : value) {
-            Logger.log(val);
-            Logger.log(targetType.isInstance(val));
-        }
 
         if (!plural && value.length > 1) {
-            Logger.log(3);
             return null;
         }
-
-        Logger.log(Arrays.stream(value).allMatch(targetType::isInstance));
         return Arrays.stream(value).allMatch(targetType::isInstance) ? value : null;
     }
 

@@ -53,7 +53,7 @@ public interface FieldHolder {
             return false;
         }
 
-        fieldValueMap().put(fieldName, value);
+        fieldValueMap().put(fieldName, convertedValue);
         return true;
     }
 
