@@ -60,7 +60,8 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
      * @param plural Whether the resulting array may contain more than 1 element
      * @return The safe converted array
      */
-    public static Object @Nullable [] getSafeConverted(Object[] value, Class<?> targetType, boolean plural) {
+    public static Object @Nullable [] getSafeConverted(Object @Nullable [] value, Class<?> targetType, boolean plural) {
+        if (value == null) return new Object[0];
         if (!Arrays.stream(value).allMatch(targetType::isInstance)) {
             value = Converters.convert(value, targetType);
 
