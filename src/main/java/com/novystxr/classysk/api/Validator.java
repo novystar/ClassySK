@@ -64,6 +64,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
         if (value == null) return new Object[0];
         value = Arrays.stream(value).filter(Objects::nonNull).toArray();
         Logger.log("2");
+        Logger.log(targetType);
         for (Object val : value) {
             Logger.log(val);
             Logger.log(targetType.isInstance(val));
