@@ -8,6 +8,7 @@ import ch.njol.skript.doc.Name;
 import ch.njol.skript.doc.Since;
 import ch.njol.skript.lang.*;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
+import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.util.ParserUtils;
@@ -72,13 +73,12 @@ public class StructClass extends Structure {
     public boolean init(Literal<?>[] args, int pattern, ParseResult result, @UnknownNullability EntryContainer entryContainer) {
         name = StringUtils.getLowerCase(result.regexes.getFirst());
         extendsName = result.hasTag("extends") ? StringUtils.getLowerCase(result.regexes.get(1)) : null;
-        boolean isFinal = result.hasTag("final");
 
         if (ClassManager.classExists(name)) {
             Skript.error("A class named '%s' already exists", name);
             return false;
         }
-        newClass = new SkriptClass(name, extendsName, isFinal);
+        newClass = new SkriptClass(name, extendsName, Modifier.collect(result.tags));
 
         for (Node node : entryContainer.getUnhandledNodes()) {
             var element = ParserUtils.parseNodeAsInfos(node, "Could not recognize entry: "+node.getKey(), EffField.INFO, SecMethod.INFO);
@@ -102,7 +102,7 @@ public class StructClass extends Structure {
                 return false;
             }
         }
-        if (isFinal && newClass.methodRegistry.hasAbstract()) {
+        if (newClass.hasModifier(Modifier.FINAL) && newClass.methodRegistry.hasAbstract()) {
             Skript.error("A final class cannot have abstract methods.");
             return false;
         }
@@ -136,7 +136,7 @@ public class StructClass extends Structure {
                 unregisterClass();
                 return false;
             }
-            if (extendsClass.isFinal) {
+            if (extendsClass.hasModifier(Modifier.FINAL)) {
                 Skript.error("Can't extend a class that is final");
                 unregisterClass();
                 return false;

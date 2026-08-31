@@ -51,6 +51,10 @@ public enum Modifier {
         return result;
     }
 
+    public static Modifier[] none() {
+        return new Modifier[MAX_SIZE];
+    }
+
     /**
      *
      * Helper method to create a valid array of modifiers, uniquely ordered respectively to their indexes

@@ -3,6 +3,8 @@ package com.novystxr.classysk.api.classes;
 import java.util.*;
 import java.util.stream.Stream;
 
+import com.novystxr.classysk.api.Modifier;
+import com.novystxr.classysk.api.ModifierHolder;
 import com.novystxr.classysk.api.fields.FieldHolder;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.methods.MethodHolder;
@@ -16,19 +18,19 @@ import org.jetbrains.annotations.Nullable;
 /**
  * The single non-instance version of a class
  */
-public class SkriptClass implements FieldHolder, MethodHolder {
+public class SkriptClass implements FieldHolder, MethodHolder, ModifierHolder {
 
     public final String name;
     public final String extendsName;
-    public final boolean isFinal;
+    public final Modifier[] modifiers;
 
     public final MethodRegistry methodRegistry = new MethodRegistry();
     public final Map<String, SkriptField> fields = new HashMap<>();
 
-    public SkriptClass(String name, String extendsName, boolean isFinal) {
+    public SkriptClass(String name, String extendsName, Modifier[] modifiers) {
         this.name = name;
         this.extendsName = extendsName;
-        this.isFinal = isFinal;
+        this.modifiers = modifiers;
     }
 
     public Set<ClassInstance> instances() {
@@ -114,9 +116,14 @@ public class SkriptClass implements FieldHolder, MethodHolder {
         return result.values().stream().toList();
     }
 
+    @Override
+    public Modifier[] modifiers() {
+        return modifiers;
+    }
+
     public static class AnonymousClass extends SkriptClass {
         public AnonymousClass(String name) {
-            super(name, name, true);
+            super(name, name, Modifier.none());
         }
     }
 
