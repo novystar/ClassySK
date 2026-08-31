@@ -75,15 +75,11 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
         if (product != null) return new Class<?>[]{product.type()};
         if (guesses.isEmpty()) return new Class<?>[]{Object.class};
 
-        Class<?>[] possibleTypes = new Class[guesses.size()];
-
-        int i = 0;
+        Set<Class<?>> possibleTypes = new HashSet<>();
         for (T guess : guesses) {
-            Class<?> type = guess.type();
-            if (type != null) possibleTypes[i++] = guess.type();
+            possibleTypes.add(guess.type());
         }
-        if (i == 0) return new Class<?>[]{Object.class};
-        return i == possibleTypes.length ? possibleTypes : Arrays.copyOf(possibleTypes, i);
+        return possibleTypes.toArray(Class[]::new);
     }
 
 
