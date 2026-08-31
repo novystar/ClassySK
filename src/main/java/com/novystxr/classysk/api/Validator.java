@@ -52,26 +52,26 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
 
     /**
      *
-     * Assures that the resulting array can be safely returned from a syntax, given the reported type and plurality.
+     * Assures that the resulting array can be safely returned from a syntax, given the product type and reported plurality.
      * Attempts to convert to the product type if some values within did not match the target type.
      *
      * @param value The array to return
-     * @param targetType The reported type to check against
-     * @param plural If the syntax may return plural values
+     * @param isSingle If this syntax reports to be single or plural
+     * @return null if the conversion/validation failed, otherwise the safe converted array
      */
-    public Object @Nullable [] getSafeConverted(Object @Nullable [] value, Class<?> targetType, boolean plural) {
-        if (value == null) return new Object[0];
-        if (!Arrays.stream(value).allMatch(targetType::isInstance)) {
-            if (product == null) return null;
+    public Object @Nullable [] getSafeConverted(Object[] value, boolean isSingle) {
+        if (value == null) return null;
+        Class<?> convertTo = product.type();
 
-            Class<?> convertTo = product.type();
-            value = Converters.convert(value, convertTo);
+        if (!Arrays.stream(value).allMatch(convertTo::isInstance)) {
+            value = Converters.convert(value, product.type());
 
-            if (value.length == 0) {
+            if (value.length == 0) { // failed to convert any values, error
                 return null;
             }
         }
-        if (!plural && value.length > 1) {
+
+        if (isSingle && value.length > 1) {
             return null;
         }
         return value;

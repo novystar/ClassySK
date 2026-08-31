@@ -100,7 +100,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
         FieldHolder holder = validator.getValidHolder(event, instanceExpr, skriptClass);
         if (holder == null) return null;
 
-        Object[] value = validator.getSafeConverted(holder.getFieldValue(fieldName), bestReturnType, !shouldBeSingle.isTrue());
+        Object[] value = validator.getSafeConverted(holder.getFieldValue(fieldName), shouldBeSingle.isTrue());
         if (value == null) {
             error("The result of this field call couldn't convert to its reported type.");
         }
