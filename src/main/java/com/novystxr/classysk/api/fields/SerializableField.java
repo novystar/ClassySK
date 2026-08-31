@@ -33,19 +33,20 @@ public class SerializableField implements YggdrasilExtendedSerializable {
     }
 
     public boolean canBeSaved() {
-        for (Object val : value) {
-            ClassInfo<?> classInfo = Classes.getSuperClassInfo(val.getClass());
+        Object[] newValue = new Object[value.length];
+        for (int i = 0; i < value.length; i++) {
+            ClassInfo<?> classInfo = Classes.getSuperClassInfo(value[i].getClass());
             Class<?> serializeAs = classInfo.getSerializeAs();
             if (serializeAs != null) {
                 classInfo = Classes.getExactClassInfo(serializeAs);
                 if (classInfo == null) return false;
-                value = Converters.convert(value, serializeAs);
+                newValue[i] = Converters.convert(value[i], serializeAs);
             }
             if (classInfo.getSerializer() == null) {
                 return false;
             }
         }
-
+        value = newValue;
         return true;
     }
 }
