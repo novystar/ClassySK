@@ -92,7 +92,7 @@ public class StructClass extends Structure {
                     return false;
                 }
             } else if (element instanceof SecMethod secMethod) {
-                if (secMethod.register(newClass)) {
+                if (secMethod.register(newClass, name)) {
                     methodSections.add(secMethod);
                 } else {
                     Skript.error("Method with that signature already exists in this class");
