@@ -101,7 +101,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
 
         ValidReference reference = validator.product();
         Object[] result = Validator.getSafeReturn(reference.method().run(event, instance, reference.args()),
-            reference.type(), reference.isPlural());
+            bestReturnType, !shouldBeSingle.isTrue());
 
         if (result == null) {
             error("The result of this method call couldn't convert to its reported type.");
