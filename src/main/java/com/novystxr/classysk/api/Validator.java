@@ -59,8 +59,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
      * @param isSingle If this syntax reports to be single or plural
      * @return null if the conversion/validation failed, otherwise the safe converted array
      */
-    public Object @Nullable [] getSafeConverted(Object[] value, boolean isSingle) {
-        if (value == null) return null;
+    public Object @Nullable [] getSafeConverted(Object @NotNull [] value, boolean isSingle) {
         Class<?> convertTo = product.type();
 
         if (!Arrays.stream(value).allMatch(convertTo::isInstance)) {
