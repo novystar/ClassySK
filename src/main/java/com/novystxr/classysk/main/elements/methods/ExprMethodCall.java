@@ -100,7 +100,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
         if (!isStatic && instance == null) return null;
 
         ValidReference reference = validator.product();
-        Object[] result = Validator.getSafeReturn(reference.method().run(event, instance, reference.args()),
+        Object[] result = validator.getSafeConverted(reference.method().run(event, instance, reference.args()),
             bestReturnType, !shouldBeSingle.isTrue());
 
         if (result == null) {

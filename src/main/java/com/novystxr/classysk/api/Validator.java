@@ -13,6 +13,7 @@ import com.novystxr.classysk.api.util.SimpleErrorHandler;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.lang.converter.Converters;
 import org.skriptlang.skript.log.runtime.ErrorSource;
 import org.skriptlang.skript.log.runtime.RuntimeErrorProducer;
 
@@ -52,19 +53,28 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
     /**
      *
      * Assures that the resulting array can be safely returned from a syntax, given the reported type and plurality.
+     * Attempts to convert to the product type if some values within did not match the target type.
      *
      * @param value The array to return
      * @param targetType The reported type to check against
      * @param plural If the syntax may return plural values
      */
-    public static Object @Nullable [] getSafeReturn(Object @Nullable [] value, Class<?> targetType, boolean plural) {
+    public Object @Nullable [] getSafeConverted(Object @Nullable [] value, Class<?> targetType, boolean plural) {
         if (value == null) return new Object[0];
-        value = Arrays.stream(value).filter(Objects::nonNull).toArray();
+        if (!Arrays.stream(value).allMatch(targetType::isInstance)) {
+            if (product == null) return null;
 
+            Class<?> convertTo = product.type();
+            value = Converters.convert(value, convertTo);
+
+            if (value.length == 0) {
+                return null;
+            }
+        }
         if (!plural && value.length > 1) {
             return null;
         }
-        return Arrays.stream(value).allMatch(targetType::isInstance) ? value : null;
+        return value;
     }
 
     /**
