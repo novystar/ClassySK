@@ -35,6 +35,9 @@ public class SerializableField implements YggdrasilExtendedSerializable {
     public boolean canBeSaved() {
         Object[] newValue = new Object[value.length];
         for (int i = 0; i < value.length; i++) {
+            if (value[i] == null) {
+                continue;
+            }
             ClassInfo<?> classInfo = Classes.getSuperClassInfo(value[i].getClass());
             Class<?> serializeAs = classInfo.getSerializeAs();
             if (serializeAs != null) {
