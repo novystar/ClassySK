@@ -5,6 +5,7 @@ import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.doc.*;
 import ch.njol.skript.lang.*;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
+import ch.njol.skript.log.SkriptLogger;
 import ch.njol.skript.util.ClassInfoReference;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
@@ -14,6 +15,7 @@ import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.event.MethodRunEvent;
+import com.novystxr.classysk.api.util.DefaultValue;
 import com.novystxr.classysk.api.util.StringUtils;
 import com.novystxr.classysk.api.util.ExprUtils;
 import org.bukkit.event.Event;
@@ -120,6 +122,17 @@ public class SecMethod extends EffectSection implements ReturnHandler<Object> {
 
         this.result = new SkriptMethod(methodName, args, modifiers, returnType, returnPlural);
         this.sectionNode = sectionNode;
+        return true;
+    }
+
+    public boolean parseDefaults() {
+        SkriptLogger.setNode(getNode());
+        for (MethodArgument arg : result.arguments.values()) {
+            DefaultValue<?> defaultValue = arg.defaultValue();
+            if (defaultValue != null && !defaultValue.parse()) {
+                return false;
+            }
+        }
         return true;
     }
 

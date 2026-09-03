@@ -8,6 +8,7 @@ import ch.njol.skript.doc.Name;
 import ch.njol.skript.doc.Since;
 import ch.njol.skript.lang.*;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
+import ch.njol.skript.log.SkriptLogger;
 import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassManager;
@@ -68,6 +69,7 @@ public class StructClass extends Structure {
 
     private String name;
     private String extendsName;
+    private Node node;
 
     @Override
     public boolean init(Literal<?>[] args, int pattern, ParseResult result, @UnknownNullability EntryContainer entryContainer) {
@@ -113,16 +115,15 @@ public class StructClass extends Structure {
             unregisterClass();
             return false;
         }
+        this.node = getParser().getNode();
         return true;
     }
 
     @Override
     public boolean preLoad() {
-        for (EffField effField : fieldEffects) {
-            if (!effField.parseDefault()) {
-                unregisterClass();
-                return false;
-            }
+        if (!parseDefaults()) {
+            unregisterClass();
+            return false;
         }
         SkriptClass extendsClass = newClass.getExtends();
         if (extendsName != null) {
@@ -184,6 +185,21 @@ public class StructClass extends Structure {
         Set<SkriptClass> matches = new HashSet<>();
         return newClass.inheritanceStream()
             .anyMatch(target -> !matches.add(target));
+    }
+
+    private boolean parseDefaults() {
+        for (EffField effField : fieldEffects) {
+            if (!effField.parseDefault()) {
+                return false;
+            }
+        }
+        for (SecMethod secMethod : methodSections) {
+            if (!secMethod.parseDefaults()) {
+                return false;
+            }
+        }
+        SkriptLogger.setNode(node);
+        return true;
     }
 
     public String getName() {

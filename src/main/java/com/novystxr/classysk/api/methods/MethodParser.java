@@ -10,11 +10,11 @@ import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.util.LiteralUtils;
 import ch.njol.skript.util.Utils;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
+import com.novystxr.classysk.api.util.DefaultValue;
 import com.novystxr.classysk.api.util.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NonNull;
-import org.skriptlang.skript.lang.converter.Converters;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -140,28 +140,14 @@ public class MethodParser {
                 return null;
             }
             Class<?> type = Utils.getComponentType(classInfo.getC());
-            Expression<?> defaultValue = null;
+            DefaultValue<?> defaultValue = null;
 
             if (unparsedDefault != null) {
-                SkriptParser parser = new SkriptParser(unparsedDefault, SkriptParser.ALL_FLAGS, ParseContext.DEFAULT);
-
-                defaultValue = LiteralUtils.defendExpression(parser.parseExpression(type));
+                defaultValue = new DefaultValue.Dynamic<>(unparsedDefault, type, isPlural);
                 String variableName = unparsedDefault.endsWith("*") ? unparsedDefault.substring(0, unparsedDefault.length() - 3) + (!isPlural ? "::1" : "") : unparsedDefault;
 
                 if (!Variable.isValidVariableName(variableName, true, false)) {
                     Skript.error("Invalid argument name: %s", variableName);
-                    return null;
-                }
-                if (defaultValue == null || !LiteralUtils.canInitSafely(defaultValue)) {
-                    Skript.error("Can't understand this expression: " + unparsedDefault);
-                    return null;
-                }
-                if (!defaultValue.isSingle() && !isPlural) {
-                    Skript.error("Cannot pass plural default value into single method argument");
-                    return null;
-                }
-                if (!Converters.converterExists(type, defaultValue.getReturnType())) {
-                    Skript.error("Default value does not match the specified type");
                     return null;
                 }
             }

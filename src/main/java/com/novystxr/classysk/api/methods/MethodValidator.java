@@ -12,6 +12,7 @@ import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.MethodParser.ReferenceArgument;
 import com.novystxr.classysk.api.methods.MethodValidator.ValidReference;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
+import com.novystxr.classysk.api.util.DefaultValue;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
 import org.skriptlang.skript.log.runtime.ErrorSource;
@@ -149,7 +150,7 @@ public class MethodValidator extends Validator<ValidReference> {
             String name = entry.getKey();
             if (referenceArgNames.contains(name)) continue;
 
-            Expression<?> defaultValue = entry.getValue().defaultValue();
+            DefaultValue<?> defaultValue = entry.getValue().defaultValue();
             if (defaultValue == null) {
                 Skript.error("Could not resolve some argument(s) for this method call");
                 return null;

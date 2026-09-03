@@ -3,6 +3,7 @@ package com.novystxr.classysk.main.elements.fields;
 import ch.njol.skript.Skript;
 import ch.njol.skript.lang.*;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
+import ch.njol.skript.log.SkriptLogger;
 import ch.njol.skript.util.ClassInfoReference;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
@@ -59,6 +60,7 @@ public class EffField extends Effect {
     }
 
     public boolean parseDefault() {
+        SkriptLogger.setNode(getNode());
         if (unparsedDefault == null) return true;
 
         Expression<?> defaultExpr = ParserUtils.parseExprNode(unparsedDefault, getNode(), field.type());
