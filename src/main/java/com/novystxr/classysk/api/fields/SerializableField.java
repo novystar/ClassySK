@@ -39,9 +39,6 @@ public class SerializableField implements YggdrasilExtendedSerializable {
                 continue;
             }
             ClassInfo<?> classInfo = Classes.getSuperClassInfo(value[i].getClass());
-            if (classInfo.getSerializer() == null) {
-                return false;
-            }
             Class<?> serializeAs = classInfo.getSerializeAs();
             if (serializeAs != null) {
                 classInfo = Classes.getExactClassInfo(serializeAs);
@@ -49,6 +46,9 @@ public class SerializableField implements YggdrasilExtendedSerializable {
                 newValue[i] = Converters.convert(value[i], serializeAs);
             } else {
                 newValue[i] = value[i];
+            }
+            if (classInfo.getSerializer() == null) {
+                return false;
             }
         }
         value = newValue;
