@@ -96,8 +96,8 @@ public class MethodParser {
                 return null;
             }
 
-            String unparsedExpr = matcher.group("value");
-            String argName = matcher.group("name").trim();
+            String unparsedExpr = matcher.group("value").trim();
+            String argName = matcher.group("name");
 
             SkriptParser parser = new SkriptParser(unparsedExpr, SkriptParser.ALL_FLAGS, ParseContext.DEFAULT);
             Expression<?> expr = LiteralUtils.defendExpression(parser.parseExpression(Object.class));
