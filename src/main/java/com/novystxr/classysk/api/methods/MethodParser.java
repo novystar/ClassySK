@@ -96,8 +96,8 @@ public class MethodParser {
                 return null;
             }
 
-            String unparsedExpr = matcher.group("value");
-            String argName = matcher.group("name");
+            String unparsedExpr = matcher.group("value").trim();
+            String argName = matcher.group("name").trim();
 
             SkriptParser parser = new SkriptParser(unparsedExpr, SkriptParser.ALL_FLAGS, ParseContext.DEFAULT);
             Expression<?> expr = LiteralUtils.defendExpression(parser.parseExpression(Object.class));
@@ -125,8 +125,8 @@ public class MethodParser {
                 Skript.error("Invalid method argument(s)");
                 return null;
             }
-            String name = matcher.group("name");
-            String unparsedType = matcher.group("type");
+            String name = matcher.group("name").trim();
+            String unparsedType = matcher.group("type").trim();
             String unparsedDefault = matcher.group("value");
 
             if (arguments.containsKey(name)) {
