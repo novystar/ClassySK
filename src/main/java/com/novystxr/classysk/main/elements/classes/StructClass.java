@@ -62,8 +62,8 @@ public class StructClass extends Structure {
         );
     }
 
-    private final List<SecMethod> methodSections = new ArrayList<>();
-    private final List<EffField> fieldEffects = new ArrayList<>();
+    private final List<SecMethod> methodSyntaxes = new ArrayList<>();
+    private final List<EffField> fieldSyntaxes = new ArrayList<>();
 
     private SkriptClass newClass;
 
@@ -88,14 +88,14 @@ public class StructClass extends Structure {
             if (element instanceof EffField effField) {
                 String fieldName = effField.name;
                 if (newClass.fields.putIfAbsent(fieldName, effField.withOrigin(name)) == null) {
-                    fieldEffects.add(effField);
+                    fieldSyntaxes.add(effField);
                 } else {
                     Skript.error("Field named '"+fieldName+"' already exists in this class");
                     return false;
                 }
             } else if (element instanceof SecMethod secMethod) {
                 if (secMethod.register(newClass, name)) {
-                    methodSections.add(secMethod);
+                    methodSyntaxes.add(secMethod);
                 } else {
                     Skript.error("Method with that signature already exists in this class");
                     return false;
@@ -159,11 +159,11 @@ public class StructClass extends Structure {
 
     @Override
     public boolean load() {
-        for (SecMethod secMethod : methodSections) {
-            secMethod.loadTrigger();
+        for (SecMethod method : methodSyntaxes) {
+            method.loadTrigger();
         }
-        methodSections.clear();
-        fieldEffects.clear();
+        methodSyntaxes.clear();
+        fieldSyntaxes.clear();
         return true;
     }
 
@@ -188,15 +188,13 @@ public class StructClass extends Structure {
     }
 
     private boolean parseDefaults() {
-        for (EffField effField : fieldEffects) {
-            if (!effField.parseDefault()) {
+        for (EffField field : fieldSyntaxes) {
+            if (!field.parseDefault())
                 return false;
-            }
         }
-        for (SecMethod secMethod : methodSections) {
-            if (!secMethod.parseDefaults()) {
+        for (SecMethod method : methodSyntaxes) {
+            if (!method.parseDefaults())
                 return false;
-            }
         }
         SkriptLogger.setNode(node);
         return true;

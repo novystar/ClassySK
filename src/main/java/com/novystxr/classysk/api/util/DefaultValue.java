@@ -7,6 +7,7 @@ import ch.njol.skript.lang.Literal;
 import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
+import ch.njol.skript.lang.util.ContextlessEvent;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.skript.lang.util.SimpleLiteral;
 import ch.njol.skript.util.LiteralUtils;
@@ -19,6 +20,10 @@ public abstract class DefaultValue<T> extends SimpleExpression<T> {
     public abstract boolean parse();
 
     protected abstract Expression<? extends T> getExpr();
+
+    public T[] getArray() {
+        return getArray(ContextlessEvent.get());
+    }
 
     @Override
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean delayed, ParseResult result) {

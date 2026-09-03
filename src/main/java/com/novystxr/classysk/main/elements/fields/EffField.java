@@ -9,7 +9,7 @@ import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.fields.SkriptField;
-import com.novystxr.classysk.api.util.ParserUtils;
+import com.novystxr.classysk.api.util.DefaultValue;
 import com.novystxr.classysk.api.util.StringUtils;
 import com.novystxr.classysk.api.util.ExprUtils;
 import org.bukkit.event.Event;
@@ -34,23 +34,23 @@ public class EffField extends Effect {
     public String name;
     private SkriptField field;
 
-    private String unparsedDefault = null;
-    private ClassInfoReference reference;
-
     @Override
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result) {
         name = StringUtils.getConfigLowerCase(result.regexes.getFirst());
-        if (result.regexes.size() == 2) {
-            unparsedDefault = result.regexes.get(1).group().trim();
-        }
 
-        reference = ExprUtils.getClassRef(exprs[0]);
+        ClassInfoReference reference = ExprUtils.getClassRef(exprs[0]);
         boolean isPlural = reference.isPlural().isTrue();
 
         Class<?> type = reference.getClassInfo().getC();
         Modifier[] modifiers = Modifier.collect(result.tags);
 
-        this.field = new SkriptField(name, type, modifiers, isPlural);
+        DefaultValue<?> defaultValue = null;
+        if (result.regexes.size() == 2) {
+            String rawExpr = result.regexes.get(1).group().trim();
+            defaultValue = new DefaultValue.Dynamic<>(rawExpr, type, isPlural);
+        }
+
+        this.field = new SkriptField(name, type, modifiers, isPlural, defaultValue);
         return true;
     }
 
@@ -61,19 +61,8 @@ public class EffField extends Effect {
 
     public boolean parseDefault() {
         SkriptLogger.setNode(getNode());
-        if (unparsedDefault == null) return true;
-
-        Expression<?> defaultExpr = ParserUtils.parseExprNode(unparsedDefault, getNode(), field.type());
-        if (defaultExpr == null) {
-            Skript.error("Default value is not of required type: %s", reference.getClassInfo());
-            return false;
-        }
-        if (!defaultExpr.isSingle() && !field.isPlural) {
-            Skript.error("Default value is plural but field only accepts single values");
-            return false;
-        }
-
-        field.defaultExpr = defaultExpr;
+        if (field.defaultValue != null)
+            return field.defaultValue.parse();
         return true;
     }
 
