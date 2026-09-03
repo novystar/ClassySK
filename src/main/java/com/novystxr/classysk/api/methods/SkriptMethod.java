@@ -1,5 +1,6 @@
 package com.novystxr.classysk.api.methods;
 
+import ch.njol.skript.Skript;
 import ch.njol.skript.lang.*;
 import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.variables.Variables;
@@ -86,6 +87,31 @@ public class SkriptMethod implements AccessModifiable {
 
     public MethodIdentifier getIdentifier() {
         return MethodIdentifier.from(this);
+    }
+
+    public boolean validateOverride(@NotNull SkriptMethod target) {
+        origin = target.origin;
+        if (hasModifier(Modifier.ABSTRACT) && !target.hasModifier(Modifier.ABSTRACT)) {
+            Skript.error("The method this would re-declare is concrete.");
+            return false;
+        }
+        if (!hasModifier(Modifier.OVERRIDE)) {
+            Skript.error("This would override a method from a super class. Mark it with 'override'.");
+            return false;
+        }
+        if (target.hasAnyModifier(Modifier.FINAL, Modifier.PRIVATE)) {
+            Skript.error("This method cannot be overridden");
+            return false;
+        }
+        if (accessType().ordinal() > target.accessType().ordinal()) {
+            Skript.error("This override declared a lower access-type than the target.");
+            return false;
+        }
+        if (type() != target.type()) {
+            Skript.error("The return type of this override does not match the target.");
+            return false;
+        }
+        return true;
     }
 
     @Override

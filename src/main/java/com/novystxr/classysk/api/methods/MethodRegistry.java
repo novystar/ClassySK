@@ -1,15 +1,11 @@
 package com.novystxr.classysk.api.methods;
 
-import ch.njol.skript.Skript;
 import com.novystxr.classysk.api.Modifier;
-import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class MethodRegistry {
 
@@ -78,65 +74,10 @@ public class MethodRegistry {
             .anyMatch(method -> method.hasModifier(Modifier.ABSTRACT));
     }
 
-    public static boolean validateOverride(@NotNull SkriptMethod method, @Nullable SkriptMethod target) {
-        if (target == null) {
-            if (method.hasModifier(Modifier.OVERRIDE)) {
-                Skript.error("Method '%s' does not override any method from its extending class.", method.name);
-                return false;
-            }
-            return true;
-        }
-        method.origin = target.origin; // inherit origin from original method
-
-        if (!method.hasModifier(Modifier.OVERRIDE) && !method.hasModifier(Modifier.ABSTRACT)) {
-            Skript.error("Method '%s' would override a method from its extending class. Mark it with 'override' or rename it.", method.name);
-            return false;
-        } else if (method.hasModifier(Modifier.ABSTRACT) && !target.hasModifier(Modifier.ABSTRACT)) {
-            Skript.error("Method '%s' already exists as a concrete method, so it cannot be re-declared as 'abstract'.", target.name);
-            return false;
-        } else if (target.hasAnyModifier(Modifier.FINAL, Modifier.PRIVATE)) {
-            Skript.error("Method '%s' would override a method that is final.", method.name);
-            return false;
-        } else if (method.accessType().ordinal() > target.accessType().ordinal()) {
-            Skript.error("Method '%s' cannot have a lower access-type than the target method.", method.name);
-            return false;
-        } else if (method.type() != target.type()) {
-            Skript.error("Method '%s' does not match the return-type of the target method.", method.name);
-            return false;
-        }
-        return true;
-    }
-
-    public boolean validateOverrides(@Nullable SkriptClass extendsClass) {
-
-        List<SkriptMethod> abstractMethods = extendsClass != null ? extendsClass.methodRegistry.registry.values().stream()
+    public List<SkriptMethod> getAbstract() {
+        return registry.values().stream()
             .filter(method -> method.hasModifier(Modifier.ABSTRACT))
-            .collect(Collectors.toList()) : new ArrayList<>();
-
-        for (var entry : registry.entrySet()) {
-            SkriptMethod method = entry.getValue();
-            MethodIdentifier identifier = entry.getKey();
-
-            if (extendsClass == null) {
-                if (method.hasModifier(Modifier.OVERRIDE)) {
-                    Skript.error("This class does not extend any other");
-                    return false;
-                }
-            } else {
-                SkriptMethod overridden = extendsClass.getExactMethod(identifier, false);
-                abstractMethods.remove(overridden);
-
-                if (!validateOverride(method, overridden)) {
-                    return false;
-                }
-            }
-        }
-        if (!abstractMethods.isEmpty()) {
-            Skript.error("The target class contains abstract methods that have not been implemented by this subclass. Implement them or re-declare them as 'abstract' on this class.");
-            return false;
-        }
-
-        return true;
+            .toList();
     }
 
 }

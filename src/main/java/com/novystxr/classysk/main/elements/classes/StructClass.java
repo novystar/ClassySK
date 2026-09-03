@@ -12,11 +12,14 @@ import ch.njol.skript.log.SkriptLogger;
 import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassManager;
+import com.novystxr.classysk.api.methods.MethodRegistry.MethodIdentifier;
+import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.api.util.ParserUtils;
 import com.novystxr.classysk.api.util.StringUtils;
 import com.novystxr.classysk.main.elements.fields.EffField;
 import com.novystxr.classysk.main.elements.methods.SecMethod;
 import org.bukkit.event.Event;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnknownNullability;
 import org.skriptlang.skript.lang.entry.EntryContainer;
 import org.skriptlang.skript.lang.structure.Structure;
@@ -55,7 +58,7 @@ public class StructClass extends Structure {
         registry.register(
             SyntaxRegistry.STRUCTURE,
             SyntaxInfo.Structure.builder(StructClass.class)
-                .addPattern("[:final] class <"+ CLASSNAME_PATTERN +"> [:extends <" + CLASSNAME_PATTERN + ">]")
+                .addPattern("[:final|:abstract] class <"+ CLASSNAME_PATTERN +"> [:extends <" + CLASSNAME_PATTERN + ">]")
                 .nodeType(NodeType.BOTH)
                 .supplier(StructClass::new)
                 .build()
@@ -94,6 +97,14 @@ public class StructClass extends Structure {
                     return false;
                 }
             } else if (element instanceof SecMethod secMethod) {
+                if (secMethod.result.hasModifier(Modifier.ABSTRACT) && !newClass.hasModifier(Modifier.ABSTRACT)) {
+                    Skript.error("Abstract methods can't be used here");
+                    return false;
+                }
+                if (secMethod.result.hasModifier(Modifier.OVERRIDE) && extendsName == null) {
+                    Skript.error("This class does not extend any other");
+                    return false;
+                }
                 if (secMethod.register(newClass, name)) {
                     methodSyntaxes.add(secMethod);
                 } else {
@@ -125,33 +136,28 @@ public class StructClass extends Structure {
             unregisterClass();
             return false;
         }
-        SkriptClass extendsClass = newClass.getExtends();
-        if (extendsName != null) {
-            if (checkFieldOverrides(extendsClass)) {
-                Skript.error("Field names must be unique to their inheritors");
-                unregisterClass();
-                return false;
-            }
-            if (extendsClass == null) {
-                Skript.error("Class named '%s' does not exist", StringUtils.titleCase(newClass.extendsName));
-                unregisterClass();
-                return false;
-            }
-            if (extendsClass.hasModifier(Modifier.FINAL)) {
+        SkriptClass target = newClass.getExtends();
+        if (target != null) {
+            if (target.hasModifier(Modifier.FINAL)) {
                 Skript.error("Can't extend a class that is final");
                 unregisterClass();
                 return false;
             }
-            if (extendsClass == newClass) {
+            if (target == newClass) {
                 Skript.error("A class cannot extend itself");
                 unregisterClass();
                 return false;
             }
-        }
-        if (!newClass.getRegistry().validateOverrides(extendsClass)) {
+            if (!validateOverrides(target)) {
+                unregisterClass();
+                return false;
+            }
+        } else if (extendsName != null) {
+            Skript.error("Class named '%s' does not exist", StringUtils.titleCase(newClass.extendsName));
             unregisterClass();
             return false;
         }
+        fieldSyntaxes.clear();
         ClassManager.checkAwaitingParent(newClass);
         ClassManager.revalidateFields(newClass);
         return true;
@@ -163,7 +169,6 @@ public class StructClass extends Structure {
             method.loadTrigger();
         }
         methodSyntaxes.clear();
-        fieldSyntaxes.clear();
         return true;
     }
 
@@ -174,11 +179,6 @@ public class StructClass extends Structure {
 
     private void unregisterClass() {
         ClassManager.removeClass(name);
-    }
-
-    private boolean checkFieldOverrides(SkriptClass extendsClass) {
-        return newClass.fields.keySet().stream()
-            .anyMatch(name -> extendsClass.getField(name) != null);
     }
 
     private boolean cyclic() {
@@ -197,6 +197,43 @@ public class StructClass extends Structure {
                 return false;
         }
         SkriptLogger.setNode(node);
+        return true;
+    }
+
+    private boolean validateOverrides(@NotNull SkriptClass target) {
+        for (EffField field : fieldSyntaxes) {
+            SkriptLogger.setNode(field.getNode());
+
+            if (target.fieldExists(field.name)) {
+                Skript.error("Field names must be unique to any super classes.");
+                return false;
+            }
+        }
+        List<SkriptMethod> abstractMethods = target.methodRegistry.getAbstract();
+        for (SecMethod methodSyntax : methodSyntaxes) {
+            SkriptLogger.setNode(methodSyntax.getNode());
+
+            SkriptMethod method = methodSyntax.result;
+            SkriptMethod overridden = target.getExactMethod(MethodIdentifier.from(method), false);
+
+            if (overridden == null) {
+                if (method.hasModifier(Modifier.OVERRIDE)) {
+                    Skript.error("This method does not override any from it's extending class");
+                    return false;
+                }
+                continue;
+            }
+            abstractMethods.remove(overridden);
+
+            if (!method.validateOverride(overridden)) {
+                return false;
+            }
+        }
+        SkriptLogger.setNode(node);
+        if (!abstractMethods.isEmpty()) {
+            Skript.error("%s abstract method(s) from the super class were not implemented.", abstractMethods.size());
+            return false;
+        }
         return true;
     }
 

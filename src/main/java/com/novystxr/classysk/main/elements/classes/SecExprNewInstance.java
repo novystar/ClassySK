@@ -60,7 +60,6 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
     private final Map<String, Expression<?>> fields = new HashMap<>();
 
     private AnonymousClass anonymous = null;
-    private final List<SecMethod> methods = new ArrayList<>();
 
     private String name;
 
@@ -74,6 +73,8 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
         skriptClass = ClassManager.getClass(name);
         boolean inParent = SkriptMethod.getContextClass(getParser()) == skriptClass;
 
+        List<SecMethod> methods = new ArrayList<>();
+        List<SkriptMethod> abstractMethods = skriptClass.methodRegistry.getAbstract();
         if (sectionNode != null) {
             for (Node node : sectionNode) {
                 String key = node.getKey();
@@ -105,19 +106,22 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
                     SecMethod secMethod = ParserUtils.parseNodeAsInfos(node, "Invalid entry: " + key, SecMethod.ANONYMOUS_INFO);
                     if (secMethod == null) return false;
 
+                    if (!skriptClass.hasModifier(Modifier.ABSTRACT)) {
+                        Skript.error("Only abstract classes can be implemented anonymously");
+                        return false;
+                    }
                     SkriptMethod target = skriptClass.getExactMethod(MethodIdentifier.from(secMethod.result), false);
-                    if (target == null) {
-                        Skript.error("This method does not implement any from the target class.");
-                        return false;
-                    }
-                    if (!target.hasModifier(Modifier.ABSTRACT)) {
-                        Skript.error("Only abstract methods can be overridden here");
-                        return false;
-                    }
                     SkriptMethod method = secMethod.result;
 
+                    if (method == null) {
+                        Skript.error("Anonymous methods must override an existing method");
+                        return false;
+                    }
                     if (method.accessType() != null && target.accessType() != method.accessType()) {
-                        Skript.error("Access type cannot be changed on an anonymous class");
+                        Skript.error("Access type cannot be changed on an anonymous override.");
+                        return false;
+                    }
+                    if (!method.validateOverride(target)) {
                         return false;
                     }
                     method.modifiers = Modifier.collect(target.accessType(), Modifier.OVERRIDE);
@@ -134,15 +138,14 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
                 }
             }
         }
-        if (anonymous != null) {
-            anonymous.methodRegistry.validateOverrides(skriptClass);
-            for (SecMethod secMethod : methods) {
-                secMethod.loadTrigger();
-            }
-        } else if (skriptClass.methodRegistry.hasAbstract()) {
-            Skript.error("This class contains unimplemented methods so it cannot be instantiated directly. Implement it here or in a separate subclass.");
+        for (SecMethod secMethod : methods) {
+            secMethod.loadTrigger();
+        }
+        if (!abstractMethods.isEmpty()) {
+            Skript.error("To create an instance of '%s', %s abstract methods need to be implemented.", StringUtils.titleCase(name), methods.size());
             return false;
         }
+
         return true;
     }
 
