@@ -1,6 +1,7 @@
 package com.novystxr.classysk.main.elements.fields;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.config.Node;
 import ch.njol.skript.lang.*;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.log.SkriptLogger;
@@ -60,9 +61,10 @@ public class EffField extends Effect {
     }
 
     public boolean parseDefault() {
-        SkriptLogger.setNode(getNode());
+        Node node = getNode();
+        SkriptLogger.setNode(node);
         if (field.defaultValue != null)
-            return field.defaultValue.parse();
+            return field.defaultValue.parse(node);
         return true;
     }
 

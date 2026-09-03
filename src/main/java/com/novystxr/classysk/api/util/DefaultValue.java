@@ -18,6 +18,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class DefaultValue<T> extends SimpleExpression<T> {
 
     public abstract boolean parse();
+    public abstract boolean parse(Node node);
 
     protected abstract Expression<? extends T> getExpr();
 
@@ -67,6 +68,11 @@ public abstract class DefaultValue<T> extends SimpleExpression<T> {
         }
 
         @Override
+        public boolean parse(Node node) {
+            return true;
+        }
+
+        @Override
         protected Expression<? extends T> getExpr() {
             return literal;
         }
@@ -95,26 +101,27 @@ public abstract class DefaultValue<T> extends SimpleExpression<T> {
                 Skript.error("Can't understand this expression: " + rawExpr);
                 return false;
             }
-            return DefaultValue.checkPlural(parsedExpr, isPlural);
+            return checkPlural();
+        }
+
+        @Override
+        public boolean parse(Node node) {
+            parsedExpr = ParserUtils.parseExprNode(rawExpr, node, parseAs);
+            return parsedExpr != null
+                && checkPlural();
+        }
+
+        private boolean checkPlural() {
+            if (!parsedExpr.isSingle() && !isPlural) {
+                Skript.error("This expression cannot be plural");
+                return false;
+            }
+            return true;
         }
 
         @Override
         protected Expression<? extends T> getExpr() {
             return parsedExpr;
         }
-
-        public boolean parse(Node node) {
-            parsedExpr = ParserUtils.parseExprNode(rawExpr, node, parseAs);
-            return parsedExpr != null
-                && DefaultValue.checkPlural(parsedExpr, isPlural);
-        }
-    }
-
-    private static boolean checkPlural(Expression<?> expr, boolean isPlural) {
-        if (!expr.isSingle() && !isPlural) {
-            Skript.error("This expression cannot be plural");
-            return false;
-        }
-        return true;
     }
 }
