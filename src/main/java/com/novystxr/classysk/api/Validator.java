@@ -60,10 +60,10 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
      * @return null if the conversion/validation failed, otherwise the safe converted array
      */
     public Object @Nullable [] getSafeConverted(Object @NotNull [] value, boolean isSingle) {
-        Class<?> convertTo = product.type();
+        Class<?> convertTo = product().type();
 
         if (!Arrays.stream(value).allMatch(convertTo::isInstance)) {
-            value = Converters.convert(value, product.type());
+            value = Converters.convert(value, product().type());
 
             if (value.length == 0) { // failed to convert any values, error
                 return null;
@@ -81,7 +81,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
      * @return The {@link Validator#product} return type, OR all return types of {@link Validator#guesses}
      */
     public final Class<?>[] possibleTypes() {
-        if (product != null) return new Class<?>[]{product.type()};
+        if (product != null) return new Class<?>[]{product().type()};
         if (guesses.isEmpty()) return new Class<?>[]{Object.class};
 
         Set<Class<?>> possibleTypes = new HashSet<>();
@@ -108,7 +108,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
 
     public final Class<?> exactTypeOr(@Nullable Class<?> type) {
         if (product == null) return type;
-        return product.type();
+        return product().type();
     }
 
     /**
@@ -118,7 +118,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
      * UNKNOWN if the correct class could not be determined at parse time
      */
     public final Kleenean shouldBeSingle() {
-        if (product != null) return Kleenean.get(!product.isPlural());
+        if (product != null) return Kleenean.get(!product().isPlural());
         if (guesses.isEmpty()) return Kleenean.UNKNOWN;
 
         boolean hasSingle = false;
