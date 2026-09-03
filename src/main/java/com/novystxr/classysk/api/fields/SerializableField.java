@@ -39,14 +39,16 @@ public class SerializableField implements YggdrasilExtendedSerializable {
                 continue;
             }
             ClassInfo<?> classInfo = Classes.getSuperClassInfo(value[i].getClass());
+            if (classInfo.getSerializer() == null) {
+                return false;
+            }
             Class<?> serializeAs = classInfo.getSerializeAs();
             if (serializeAs != null) {
                 classInfo = Classes.getExactClassInfo(serializeAs);
                 if (classInfo == null) return false;
                 newValue[i] = Converters.convert(value[i], serializeAs);
-            }
-            if (classInfo.getSerializer() == null) {
-                return false;
+            } else {
+                newValue[i] = value[i];
             }
         }
         value = newValue;
