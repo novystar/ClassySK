@@ -39,10 +39,8 @@ public class MethodValidator extends Validator<ValidReference> {
     @Override
     protected @Nullable ValidReference getProductFromClass(SkriptClass skriptClass) {
         if (isSuper) skriptClass = skriptClass.getExtends();
-        if (skriptClass == null) return null;
 
         List<SkriptMethod> candidates = skriptClass.getCandidates(reference);
-
         if (candidates.isEmpty()) {
             Skript.error("Could not identify method %s", reference);
             return null;
