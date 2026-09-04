@@ -112,6 +112,7 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
                     }
                     SkriptMethod target = skriptClass.getExactMethod(MethodIdentifier.from(secMethod.result), false);
                     SkriptMethod method = secMethod.result;
+                    abstractMethods.remove(target);
 
                     if (method == null) {
                         Skript.error("Anonymous methods must override an existing method");
@@ -121,6 +122,7 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
                         Skript.error("Access type cannot be changed on an anonymous override.");
                         return false;
                     }
+                    method.modifiers = Modifier.collect(target.accessType(), Modifier.OVERRIDE);
                     if (!method.validateOverride(target)) {
                         return false;
                     }
@@ -142,7 +144,7 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
             secMethod.loadTrigger();
         }
         if (!abstractMethods.isEmpty()) {
-            Skript.error("To create an instance of '%s', %s abstract methods need to be implemented.", StringUtils.titleCase(name), methods.size());
+            Skript.error("%s abstract method(s) need to be implemented anonymously to create an instance of '%s'", abstractMethods.size(), StringUtils.titleCase(name));
             return false;
         }
 
