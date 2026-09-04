@@ -70,11 +70,6 @@ public class MethodRegistry {
         return registry.putIfAbsent(MethodIdentifier.from(method), method) == null;
     }
 
-    public boolean hasAbstract() {
-        return registry.values().stream()
-            .anyMatch(method -> method.hasModifier(Modifier.ABSTRACT));
-    }
-
     public List<SkriptMethod> getAbstract() {
         return registry.values().stream()
             .filter(method -> method.hasModifier(Modifier.ABSTRACT))
