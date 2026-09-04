@@ -75,7 +75,7 @@ public class MethodValidator extends Validator<ValidReference> {
             Skript.error("This method can't return anything");
             return false;
         }
-        if (reference.accessType() == PRIVATE && origin != contextClass) {
+        if (reference.hasModifier(PRIVATE) && origin != contextClass) {
             Skript.error("Private methods can only be accessed from within their own class");
             return false;
         }
