@@ -6,6 +6,7 @@ import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class MethodRegistry {
 
@@ -77,7 +78,7 @@ public class MethodRegistry {
     public List<SkriptMethod> getAbstract() {
         return registry.values().stream()
             .filter(method -> method.hasModifier(Modifier.ABSTRACT))
-            .toList();
+            .collect(Collectors.toList());
     }
 
 }
