@@ -9,13 +9,13 @@ import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import ch.njol.util.coll.CollectionUtils;
 import com.novystxr.classysk.Classysk;
-import com.novystxr.classysk.api.AccessValidator;
-import com.novystxr.classysk.api.FieldHolder;
+import com.novystxr.classysk.api.Validator;
+import com.novystxr.classysk.api.fields.FieldHolder;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.fields.FieldValidator;
-import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
+import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.api.util.ExprUtils;
 import com.novystxr.classysk.main.elements.classes.ExprSelf;
@@ -69,7 +69,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
         fieldName = getConfigLowerCase(regex.group(2));
 
         instanceExpr = isStatic ? null : (Expression<ClassInstance>) exprs[0];
-        validator = new FieldValidator(getErrorSource(), contextClass, fieldName);
+        validator = new FieldValidator(getErrorSource(), contextClass, isStatic, fieldName);
         if (className != null) {
             if (className.isEmpty()) return postInit();
 
@@ -90,33 +90,27 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
 
     private boolean postInit() {
         possibleTypes = validator.possibleTypes();
-        bestReturnType = AccessValidator.bestReturnType(possibleTypes);
+        bestReturnType = Validator.bestReturnType(possibleTypes);
         shouldBeSingle = validator.shouldBeSingle();
         return true;
     }
 
     @Override
     protected Object @Nullable [] get(Event event) {
-        FieldHolder holder = getValidHolder(event);
+        FieldHolder holder = validator.getValidHolder(event, instanceExpr, skriptClass);
         if (holder == null) return null;
 
-        FieldSignature signature = validator.product();
-
-        if (shouldBeSingle.isTrue() && signature.isPlural()) {
-            error("Field returns multiple values while reporting as single. Try reloading the script or using a safe call: %instance%<>::field");
-            return null;
+        Object[] value = validator.getSafeConverted(holder.getFieldValue(fieldName), shouldBeSingle.isTrue());
+        if (value == null) {
+            error("The result of this field call couldn't convert to its reported type.");
         }
-        if (!bestReturnType.isAssignableFrom(signature.type())) {
-            error("Field doesn't match its reported type. Try reloading the script or using a safe call: %instance%<>::field");
-            return null;
-        }
-        return holder.getFieldValue(fieldName);
+        return value;
     }
 
     @Override
     public Class<?> @Nullable [] acceptChange(ChangeMode mode) {
-        FieldSignature signature = validator.product();
-        if (signature != null && signature.hasModifier(CONST)) {
+        SkriptField field = validator.product();
+        if (field != null && field.hasModifier(CONST)) {
             Skript.error("Constant fields can't be changed after definition");
             return null;
         }
@@ -138,12 +132,16 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
 
     @Override
     public void change(Event event, Object @Nullable [] delta, ChangeMode mode) {
-        FieldHolder fieldHolder = getValidHolder(event);
+        FieldHolder fieldHolder = validator.getValidHolder(event, instanceExpr, skriptClass);
         if (fieldHolder == null) return;
 
-        FieldSignature signature = validator.product();
-        if (signature.hasModifier(CONST)) {
-            error("Constant fields can't be changed after definition");
+        SkriptField field = validator.product();
+        if (field == SkriptField.UNKNOWN && delta != null) {
+            error("This field can't be modified because it's no longer backed by the class.");
+            return;
+        }
+        if (field.hasModifier(CONST)) {
+            error("Constant fields can't be changed after definition.");
             return;
         }
         switch (mode) {
@@ -160,7 +158,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
                 if (delta == null) return;
                 Object[] initialValue = fieldHolder.getFieldValue(fieldName);
 
-                if (signature.isPlural()) {
+                if (field.isPlural()) {
                     ExprUtils.mutatePlural(initialValue, delta, mode, result ->
                         setValueAndSave(result, fieldHolder, event));
                 } else {
@@ -181,14 +179,9 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
     private void save(Event event) {
         if (isStatic) return;
         if (instanceExpr.getSource() instanceof Variable<?> variable) {
-            // set variable to the same value it is to trigger serialization
+            // set variable to the same value it already is to trigger serialization
             variable.changeInPlace(event, value -> value);
         }
-    }
-
-    private @Nullable FieldHolder getValidHolder(Event event) {
-        if (isStatic) return skriptClass;
-        return validator.getValidInstance(event, instanceExpr, skriptClass);
     }
 
     @Override

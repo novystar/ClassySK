@@ -5,6 +5,7 @@ import ch.njol.skript.config.SectionNode;
 import ch.njol.skript.doc.*;
 import ch.njol.skript.lang.*;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
+import ch.njol.skript.log.SkriptLogger;
 import ch.njol.skript.util.ClassInfoReference;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
@@ -12,9 +13,9 @@ import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.methods.MethodParser;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
-import com.novystxr.classysk.api.methods.SkriptMethod.MethodSignature;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.event.MethodRunEvent;
+import com.novystxr.classysk.api.util.DefaultValue;
 import com.novystxr.classysk.api.util.StringUtils;
 import com.novystxr.classysk.api.util.ExprUtils;
 import org.bukkit.event.Event;
@@ -52,7 +53,7 @@ import java.util.*;
     set {_player} to {_myClass}::getPlayer()
     """)
 @Since("1.0.0")
-public class SecMethod extends Section implements ReturnHandler<Object> {
+public class SecMethod extends EffectSection implements ReturnHandler<Object> {
 
     public static void register(SyntaxRegistry registry) {
         //noinspection ThrowableInstanceNeverThrown
@@ -61,19 +62,45 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
         registry.register(SyntaxRegistry.SECTION, INFO);
     }
 
+    public static SyntaxInfo<SecMethod> ANONYMOUS_INFO = SyntaxInfo.builder(SecMethod.class)
+        .addPattern("[:public|:protected|:private] [override] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [(\\:\\:|returns|->) %-*classinfo%]")
+        .supplier(SecMethod::new)
+        .build();
+
     public static SyntaxInfo<SecMethod> INFO = SyntaxInfo.builder(SecMethod.class)
-        .addPattern("(:public|:private) [:static] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [(\\:\\:|returns|->) %-*classinfo%]")
+        .addPattern("(:public|:protected|:private) [:final] [:static|:abstract|:override] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [(\\:\\:|returns|->) %-*classinfo%]")
         .supplier(SecMethod::new)
         .build();
 
     private SectionNode sectionNode;
-    public MethodSignature signature;
+    public SkriptMethod result;
 
-    private SkriptMethod skriptMethod;
     public SkriptClass contextClass;
 
     @Override
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result, SectionNode sectionNode, List<TriggerItem> triggerItems) {
+        Modifier[] modifiers = Modifier.collect(result.tags);
+
+        if (modifiers[2] == Modifier.FINAL && modifiers[1] != null && modifiers[1] != Modifier.OVERRIDE) {
+            Skript.error("Modifier 'final' cannot be combined with '%s'.", modifiers[1].name().toLowerCase(Locale.ENGLISH));
+            return false;
+        }
+        if (modifiers[1] == Modifier.ABSTRACT && sectionNode != null) {
+            Skript.error("Abstract methods cannot have a body.");
+            return false;
+        }
+        if (modifiers[1] != Modifier.ABSTRACT && sectionNode == null) {
+            Skript.error("This method has no body. If you meant to leave it unimplemented, mark it as 'abstract'.");
+            return false;
+        }
+        if (modifiers[1] == Modifier.ABSTRACT && modifiers[0] == Modifier.PRIVATE) {
+            Skript.error("A private method can't be overridden, so it cannot be abstract.");
+            return false;
+        }
+        if (modifiers[0] == Modifier.PRIVATE && modifiers[2] == Modifier.FINAL) {
+            Skript.warning("Modifier 'final' is redundant in private methods.");
+        }
+
         boolean returnPlural = false;
         Class<?> returnType = null;
 
@@ -85,7 +112,6 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
         String methodName = StringUtils.getConfigLowerCase(result.regexes.get(0));
         SequencedMap<String, MethodArgument> args = new LinkedHashMap<>();
 
-        // parse arguments
         if (result.hasTag("args")) {
             String argsString = result.regexes.get(1).group();
             args = MethodParser.parseArguments(argsString);
@@ -94,29 +120,38 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
             }
         }
 
-        this.signature = new MethodSignature(methodName, args, Modifier.collect(result.tags), returnType, returnPlural);
+        this.result = new SkriptMethod(methodName, args, modifiers, returnType, returnPlural);
         this.sectionNode = sectionNode;
         return true;
     }
 
-    public boolean registerMethod(SkriptClass contextClass) {
-        this.contextClass = contextClass;
-        skriptMethod = new SkriptMethod(signature);
+    public boolean parseDefaults() {
+        SkriptLogger.setNode(getNode());
+        for (MethodArgument arg : result.arguments.values()) {
+            DefaultValue<?> defaultValue = arg.defaultValue();
+            if (defaultValue != null && !defaultValue.parse()) {
+                return false;
+            }
+        }
+        return true;
+    }
 
-        return contextClass.methodRegistry.registerMethod(skriptMethod);
+    public boolean register(SkriptClass contextClass) {
+        this.contextClass = contextClass;
+        return contextClass.methodRegistry.registerMethod(result);
+    }
+
+    public boolean register(SkriptClass contextClass, String origin) {
+        result.origin = origin;
+        return register(contextClass);
     }
 
     @SuppressWarnings("unchecked")
     public void loadTrigger() {
         if (sectionNode == null) return;
-        Trigger trigger;
 
-        if (signature.type() != null) {
-            trigger = loadReturnableSectionCode(sectionNode, "method body", new Class[]{MethodRunEvent.class});
-        } else {
-            trigger = loadCode(sectionNode, "method body", MethodRunEvent.class);
-        }
-        skriptMethod.setTrigger(trigger);
+        result.trigger = result.type() == null ? loadCode(sectionNode, "method body", MethodRunEvent.class)
+            : loadReturnableSectionCode(sectionNode, "method body", new Class[]{MethodRunEvent.class});
     }
 
     @Override
@@ -133,12 +168,12 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
 
     @Override
     public boolean isSingleReturnValue() {
-        return !signature.isPlural();
+        return !result.isPlural();
     }
 
     @Override
     public @Nullable Class<?> returnValueType() {
-        return signature.type();
+        return result.type();
         }
 
     @Override

@@ -1,13 +1,16 @@
 package com.novystxr.classysk.api.methods;
 
+import ch.njol.skript.Skript;
 import ch.njol.skript.lang.*;
 import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.variables.Variables;
 import com.novystxr.classysk.api.AccessModifiable;
 import com.novystxr.classysk.api.Modifier;
-import com.novystxr.classysk.api.classes.SkriptClass;
-import com.novystxr.classysk.api.classes.ClassInstance;
+import com.novystxr.classysk.api.classes.AnonymousInstance;
+import com.novystxr.classysk.api.classes.*;
 import com.novystxr.classysk.api.event.MethodRunEvent;
+import com.novystxr.classysk.api.methods.MethodRegistry.MethodIdentifier;
+import com.novystxr.classysk.api.util.DefaultValue;
 import com.novystxr.classysk.main.elements.methods.SecMethod;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.NotNull;
@@ -15,44 +18,54 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-public class SkriptMethod {
+public class SkriptMethod implements AccessModifiable {
 
-    public record MethodArgument(
+    public record MethodArgument (
         Class<?> type,
 
-        @Nullable Expression<?> defaultValue,
+        @Nullable DefaultValue<?> defaultValue,
         boolean isPlural
     ) {}
 
-    public record MethodSignature(
-        String name,
-        SequencedMap<String, MethodArgument> arguments,
-        Modifier[] modifiers,
+    public final String name;
+    public Modifier[] modifiers;
+    public final SequencedMap<String, MethodArgument> arguments;
+    public final Class<?> type;
+    public final boolean isPlural;
 
-        @Nullable Class<?> type,
-        boolean isPlural
+    public Trigger trigger;
+    public String origin;
+    public final int minArgCount;
 
-    ) implements AccessModifiable {}
+    public SkriptMethod(String name, SequencedMap<String, MethodArgument> arguments, Modifier[] modifiers, Class<?> type, boolean isPlural, String origin) {
+        this(name, arguments, modifiers, type, isPlural);
+        this.origin = origin;
 
-    public SkriptMethod(MethodSignature signature) {
-        this.signature = signature;
     }
+    public SkriptMethod(String name, SequencedMap<String, MethodArgument> arguments, Modifier[] modifiers, Class<?> type, boolean isPlural) {
+        this.name = name;
+        this.arguments = arguments;
+        this.modifiers = modifiers;
+        this.type = type;
+        this.isPlural = isPlural;
 
-    private Trigger trigger;
-    public final MethodSignature signature;
+        this.minArgCount = arguments.values().stream()
+            .filter(arg -> arg.defaultValue() == null)
+            .mapToInt(arg -> 1).sum();
 
-    public void setTrigger(Trigger trigger) {
-        this.trigger = trigger;
     }
 
     public Object @Nullable [] run(Event event, @Nullable ClassInstance instance, @NotNull Map<String, Expression<?>> args) {
         if (trigger == null) return null;
         MethodRunEvent runEvent = new MethodRunEvent(instance);
+        if (this instanceof AnonymousMethod && instance != null) {
+            ((AnonymousInstance) instance).setLocalVariables(runEvent);
+        }
         for (var entry : args.entrySet()) {
             Expression<?> expr = entry.getValue();
             String key = entry.getKey();
 
-            if (signature.arguments.get(key).isPlural()) {
+            if (arguments.get(key).isPlural()) {
                 Object[] values = expr.getArray(event);
                 String[] keys = KeyProviderExpression.areKeysRecommended(expr) ?
                     ((KeyProviderExpression<?>) expr).getArrayKeys(event) : null;
@@ -68,20 +81,63 @@ public class SkriptMethod {
         return trigger.execute(runEvent) ? runEvent.returnObject : null;
     }
 
-    public static boolean isMethodBody(ParserInstance parser) {
-        if (parser.getCurrentStructure() instanceof SectionSkriptEvent secSkriptEvent) {
-            return secSkriptEvent.getSection() instanceof SecMethod;
-        }
-        return false;
+    public SkriptClass getOrigin() {
+        return ClassManager.getClass(origin);
     }
 
-    public static @Nullable SkriptClass getContextClass(ParserInstance parser) {
+    public MethodIdentifier getIdentifier() {
+        return MethodIdentifier.from(this);
+    }
+
+    public boolean validateOverride(@NotNull SkriptMethod target) {
+        origin = target.origin;
+        if (hasModifier(Modifier.ABSTRACT) && !target.hasModifier(Modifier.ABSTRACT)) {
+            Skript.error("The method this would re-declare is concrete.");
+            return false;
+        }
+        if (!target.hasModifier(Modifier.ABSTRACT) && !hasModifier(Modifier.OVERRIDE)) {
+            Skript.error("This would override a method from a super class. Mark it with 'override'.");
+            return false;
+        }
+        if (target.hasAnyModifier(Modifier.FINAL, Modifier.PRIVATE)) {
+            Skript.error("This method cannot be overridden");
+            return false;
+        }
+        if (accessType().ordinal() > target.accessType().ordinal()) {
+            Skript.error("This override declared a lower access-type than the target.");
+            return false;
+        }
+        if (type() != target.type()) {
+            Skript.error("The return type of this override does not match the target.");
+            return false;
+        }
+        if (!new ArrayList<>(arguments.sequencedKeySet()).equals(new ArrayList<>(target.arguments.sequencedKeySet()))) {
+            Skript.error("Argument names must match when overriding a method.");
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public Modifier[] modifiers() { return modifiers; }
+    @Override
+    public boolean isPlural() { return isPlural; }
+    @Override
+    public Class<?> type() { return type; }
+
+    public static SkriptClass getContextClass(ParserInstance parser) {
         if (parser.getCurrentStructure() instanceof SectionSkriptEvent secSkriptEvent) {
             if (secSkriptEvent.getSection() instanceof SecMethod secMethod) {
                 return secMethod.contextClass;
             }
         }
         return null;
+    }
+
+    public static class AnonymousMethod extends SkriptMethod {
+        public AnonymousMethod(SkriptMethod method) {
+            super(method.name, method.arguments, method.modifiers, method.type, method.isPlural, method.origin);
+        }
     }
 
 }

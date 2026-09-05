@@ -53,11 +53,13 @@ public class EffMethodCall extends Effect {
         String args = result.regexes.size() == 1
             ? "" : result.regexes.get(1).group().trim();
 
-        MethodReference reference = MethodParser.parseReference(name, args);
+        MethodReference reference = MethodParser.parseReference(name, args, isStatic);
         if (reference == null) return false;
 
+        boolean isSuper = result.hasTag("super");
         instanceExpr = isStatic ? null : (Expression<ClassInstance>) exprs[0];
-        validator = new MethodValidator(getErrorSource(), contextClass, reference, false);
+
+        validator = new MethodValidator(getErrorSource(), contextClass, reference, false, isSuper);
         if (className != null) {
             if (className.isEmpty()) return true;
 
@@ -70,6 +72,12 @@ public class EffMethodCall extends Effect {
         if (isStatic) {
             return validator.validateStatic(skriptClass);
         }
+        if (isSuper) {
+            instanceExpr = new ExprSuper();
+            if (!instanceExpr.init(null, 0, null, null))
+                return false;
+        }
+
         if (instanceExpr.getSource() instanceof ExprSelf) {
             skriptClass = contextClass;
         }
