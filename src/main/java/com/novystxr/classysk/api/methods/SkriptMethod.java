@@ -95,7 +95,7 @@ public class SkriptMethod implements AccessModifiable {
             Skript.error("The method this would re-declare is concrete.");
             return false;
         }
-        if (!hasModifier(Modifier.OVERRIDE)) {
+        if (!target.hasModifier(Modifier.ABSTRACT) && !hasModifier(Modifier.OVERRIDE)) {
             Skript.error("This would override a method from a super class. Mark it with 'override'.");
             return false;
         }
