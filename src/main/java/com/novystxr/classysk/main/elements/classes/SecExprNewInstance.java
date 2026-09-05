@@ -116,7 +116,7 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
                     SkriptMethod method = secMethod.result;
                     abstractMethods.remove(target);
 
-                    if (method == null) {
+                    if (target == null) {
                         Skript.error("Anonymous methods must override an existing method");
                         return false;
                     }
