@@ -1,6 +1,7 @@
 package com.novystxr.classysk.api.classes;
 
 import com.novystxr.classysk.Classysk;
+import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.util.ReflectUtils;
 import net.bytebuddy.ByteBuddy;
@@ -43,8 +44,8 @@ public class ClassManager {
         skriptClass.fieldValueMap().entrySet().removeIf(entry -> {
             SkriptField field = skriptClass.getField(entry.getKey());
 
-            // if field no longer exists, remove it
-            if (field == null || !field.isStatic()) {
+            // if field no longer exists or constant, remove it
+            if (field == null || !field.isStatic() || field.hasModifier(Modifier.CONST)) {
                 return true;
             }
             Object[] converted = Converters.convert(entry.getValue(), field.type());
