@@ -111,6 +111,10 @@ public class SkriptMethod implements AccessModifiable {
             Skript.error("The return type of this override does not match the target.");
             return false;
         }
+        if (!new ArrayList<>(arguments.sequencedKeySet()).equals(new ArrayList<>(target.arguments.sequencedKeySet()))) {
+            Skript.error("Argument names must match when overriding a method.");
+            return false;
+        }
         return true;
     }
 
