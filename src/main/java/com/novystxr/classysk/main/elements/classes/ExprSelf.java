@@ -8,7 +8,7 @@ import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.SkriptClass;
-import com.novystxr.classysk.api.event.MethodRunEvent;
+import com.novystxr.classysk.api.methods.MethodRunEvent;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;

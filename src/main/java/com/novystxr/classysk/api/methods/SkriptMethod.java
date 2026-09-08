@@ -8,7 +8,6 @@ import com.novystxr.classysk.api.AccessModifiable;
 import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.classes.AnonymousInstance;
 import com.novystxr.classysk.api.classes.*;
-import com.novystxr.classysk.api.event.MethodRunEvent;
 import com.novystxr.classysk.api.methods.MethodRegistry.MethodIdentifier;
 import com.novystxr.classysk.api.util.DefaultValue;
 import com.novystxr.classysk.main.elements.methods.SecMethod;

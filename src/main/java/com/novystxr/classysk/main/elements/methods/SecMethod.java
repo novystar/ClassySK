@@ -14,7 +14,7 @@ import com.novystxr.classysk.api.methods.MethodParser;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.classes.SkriptClass;
-import com.novystxr.classysk.api.event.MethodRunEvent;
+import com.novystxr.classysk.api.methods.MethodRunEvent;
 import com.novystxr.classysk.api.util.DefaultValue;
 import com.novystxr.classysk.api.util.StringUtils;
 import com.novystxr.classysk.api.util.ExprUtils;
