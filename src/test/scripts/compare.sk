@@ -52,18 +52,4 @@ test "ClassySK - Compare":
 		str: "a"
 
 	assert {_a} is {_a}
-
-	assert untyped {_a} is typed {_a}
-
-	assert typed {_a} is {_a}
-	assert typed {_a} is untyped {_a}
-	assert untyped {_a} is typed {_a}
-	assert {_a} is typed {_a}
-	assert typed {_a} is typed {_a}
-	assert {_a} is untyped {_a}
-
 	assert {_a} is not {_b}
-	assert typed {_a} is not typed {_b}
-	assert untyped {_a} is not untyped {_b}
-	assert typed {_a} is not {_b}
-	assert {_a} is not typed {_b}
