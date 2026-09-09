@@ -3,45 +3,33 @@ package com.novystxr.classysk.api.fields;
 import ch.njol.skript.lang.Expression;
 import com.novystxr.classysk.api.AccessModifiable;
 import com.novystxr.classysk.api.Modifier;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.skriptlang.skript.lang.converter.Converters;
 
-import java.util.Arrays;
+public class SkriptField implements AccessModifiable {
 
-public class SkriptField {
-    public record FieldSignature (
-        String name,
-        Class<?> type,
-        @Nullable Expression<?> defaultExpr,
+    public static SkriptField UNKNOWN = new SkriptField("$unknown", Object.class, Modifier.PUBLIC.array(), true, null);
 
-        Modifier[] modifiers,
-        boolean isPlural
+    public final String name;
+    public final Class<?> type;
+    public final Modifier[] modifiers;
+    public final boolean isPlural;
+    public final Expression<?> defaultValue;
 
-    ) implements AccessModifiable {
+    public String origin = null;
 
-        /**
-         * Creates a field signature with sensible defaults that should be able to hold the target data -
-         * should only be used as a last resort to preserve data if the field no longer exists on deserialization.
-         */
-        public static FieldSignature fromSerializableField(String fieldName, SerializableField sField) {
-
-            return new FieldSignature(fieldName, Object.class, null,
-                Modifier.PUBLIC.array(), sField.isPlural);
-        }
-        public boolean canConvert(@NotNull Object[] values) {
-            if (values.length > 1 && !isPlural) return false;
-
-            return Arrays.stream(values)
-                .allMatch(value -> Converters.converterExists(value.getClass(), type));
-        }
+    public SkriptField(String name, Class<?> type, Modifier[] modifiers, boolean isPlural, @Nullable Expression<?> defaultValue) {
+        this.name = name;
+        this.type = type;
+        this.modifiers = modifiers;
+        this.isPlural = isPlural;
+        this.defaultValue = defaultValue;
     }
 
-    public FieldSignature signature;
-    public Object[] value = new Object[0];
-
-    public SkriptField(FieldSignature signature) {
-        this.signature = signature;
-    }
+    @Override
+    public Modifier[] modifiers() { return modifiers; }
+    @Override
+    public boolean isPlural() { return isPlural; }
+    @Override
+    public Class<?> type() { return type; }
 
 }

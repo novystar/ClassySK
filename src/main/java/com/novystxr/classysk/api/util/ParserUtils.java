@@ -3,7 +3,6 @@ package com.novystxr.classysk.api.util;
 import ch.njol.skript.Skript;
 import ch.njol.skript.config.Node;
 import ch.njol.skript.config.SectionNode;
-import ch.njol.skript.expressions.base.SectionExpression;
 import ch.njol.skript.lang.*;
 import ch.njol.skript.lang.Section.SectionContext;
 import ch.njol.skript.lang.parser.ParserInstance;
@@ -34,21 +33,25 @@ public class ParserUtils {
      * @see SkriptParser#parseExpression(Class[])
      * @see SectionContext#modify(SectionNode, List, Supplier)
      */
-    public static @Nullable Expression<?> parseExprNode(String rawExpr, Node node, Class<?>... types) {
+    @SafeVarargs
+    public static @Nullable <T> Expression<? extends T> parseExprNode(String rawExpr, Node node, Class<T>... types) {
         SectionContext context = ParserInstance.get().getData(SectionContext.class);
 
         SectionNode secNode = (node instanceof SectionNode) ? (SectionNode) node : null;
         SkriptParser parser = new SkriptParser(rawExpr, SkriptParser.ALL_FLAGS, ParseContext.DEFAULT);
 
-        Expression<?> expr = context.modify(secNode, null, () -> (Expression<?>) parser.parseExpression(types));
+        Expression<? extends T> expr = context.modify(secNode, null, () -> (Expression<? extends T>) parser.parseExpression(types));
         expr = LiteralUtils.defendExpression(expr);
-        if (expr == null) return null;
 
-        if (!(expr.getSource() instanceof SectionExpression<?>) && secNode != null) {
-            Skript.error("This expression is not usable as a section");
+        if (expr == null || !LiteralUtils.canInitSafely(expr)) {
+            Skript.error("Can't understand this expression: " + rawExpr);
             return null;
         }
-        return LiteralUtils.canInitSafely(expr) ? expr : null;
+        if (secNode != null && !context.claimed()) {
+            Skript.error("This expression can't be used as a section");
+            return null;
+        }
+        return expr;
     }
 
     /**

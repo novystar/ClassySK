@@ -7,7 +7,7 @@ import ch.njol.skript.util.ClassInfoReference;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.Modifier;
-import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
+import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.util.StringUtils;
 import com.novystxr.classysk.api.util.ExprUtils;
 import org.bukkit.event.Event;
@@ -30,13 +30,13 @@ public class EffField extends Effect {
         .build();
 
 
-    public String fieldName;
-    public FieldSignature signature;
+    public String name;
+    public SkriptField field;
 
     @SuppressWarnings("unchecked")
     @Override
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result) {
-        fieldName = StringUtils.getConfigLowerCase(result.regexes.getFirst());
+        name = StringUtils.getConfigLowerCase(result.regexes.getFirst());
 
         ClassInfoReference reference = ExprUtils.getClassRef(exprs[0]);
         boolean isPlural = reference.isPlural().isTrue();
@@ -56,7 +56,7 @@ public class EffField extends Effect {
                 return false;
             }
         }
-        signature = new FieldSignature(fieldName, type, defaultExpr, Modifier.collect(result.tags), isPlural);
+        field = new SkriptField(name, type, Modifier.collect(result.tags), isPlural, defaultExpr);
         return true;
     }
 

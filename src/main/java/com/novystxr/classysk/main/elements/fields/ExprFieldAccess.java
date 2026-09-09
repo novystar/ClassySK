@@ -10,12 +10,12 @@ import ch.njol.util.Kleenean;
 import ch.njol.util.coll.CollectionUtils;
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.AccessValidator;
-import com.novystxr.classysk.api.FieldHolder;
+import com.novystxr.classysk.api.fields.FieldHolder;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.fields.FieldValidator;
-import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
+import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.api.util.ExprUtils;
 import com.novystxr.classysk.main.elements.classes.ExprSelf;
@@ -109,8 +109,8 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
 
     @Override
     public Class<?> @Nullable [] acceptChange(ChangeMode mode) {
-        FieldSignature signature = validator.product();
-        if (signature != null && signature.hasModifier(CONST)) {
+        SkriptField field = validator.product();
+        if (field != null && field.hasModifier(CONST)) {
             Skript.error("Constant fields can't be changed after definition");
             return null;
         }
@@ -135,8 +135,8 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
         FieldHolder fieldHolder = getValidHolder(event);
         if (fieldHolder == null) return;
 
-        FieldSignature signature = validator.product();
-        if (signature.hasModifier(CONST)) {
+        SkriptField field = validator.product();
+        if (field.hasModifier(CONST)) {
             error("Constant fields can't be changed after definition");
             return;
         }
@@ -154,7 +154,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
                 if (delta == null) return;
                 Object[] initialValue = fieldHolder.getFieldValue(fieldName);
 
-                if (signature.isPlural()) {
+                if (field.isPlural()) {
                     ExprUtils.mutatePlural(initialValue, delta, mode, result ->
                         setValueAndSave(result, fieldHolder, event));
                 } else {

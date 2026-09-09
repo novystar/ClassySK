@@ -7,16 +7,10 @@ import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.yggdrasil.Fields;
 import ch.njol.yggdrasil.Fields.FieldContext;
-import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.classes.*;
 import com.novystxr.classysk.api.fields.SerializableField;
-import com.novystxr.classysk.api.fields.SkriptField;
-import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.util.StringUtils;
-import com.novystxr.classysk.api.util.TypedInstanceParser;
 import org.skriptlang.skript.addon.SkriptAddon;
-import org.skriptlang.skript.lang.comparator.Comparators;
-import org.skriptlang.skript.lang.comparator.Relation;
 import org.skriptlang.skript.lang.properties.Property;
 import org.skriptlang.skript.lang.properties.handlers.base.ExpressionPropertyHandler;
 
@@ -24,6 +18,24 @@ import java.io.StreamCorruptedException;
 
 @SuppressWarnings("UnstableApiUsage")
 public class Types {
+    public static Parser<? extends ClassInstance> classParser = new Parser<>() {
+
+        @Override
+        public boolean canParse(ParseContext context) {
+            return false;
+        }
+
+        @Override
+        public String toString(ClassInstance o, int flags) {
+            return StringUtils.titleCase(o.name) + " instance";
+        }
+
+        @Override
+        public String toVariableNameString(ClassInstance o) {
+            return StringUtils.titleCase(o.name) + " instance" + " (" + o.hashCode() + ")";
+        }
+    };
+
     public static void register(SkriptAddon addon) {
 
         Classes.registerClass(new ClassInfo<>(ClassReference.class, "classreference")
@@ -52,19 +64,6 @@ public class Types {
             })
         );
 
-        if (Classysk.TYPES_ALLOWED) {
-            Classes.registerClass(new ClassInfo<>(TypedInstanceWrapper.class, "typedinstance")
-                .since("1.1.0")
-                .name("Typed Instance")
-                .description("Transitory wrapper that is used by converters to filter instances based on their type.")
-                .serializeAs(ClassInstance.class)
-                .parser(new TypedInstanceParser<>())
-            );
-
-            Comparators.registerComparator(TypedInstanceWrapper.class, ClassInstance.class,
-                (wrapped, unwrapped) -> Relation.get(wrapped.unwrap() == unwrapped));
-        }
-
         Classes.registerClass(new ClassInfo<>(ClassInstance.class, "classinstance")
             .since("1.0.0")
             .user("class instances?")
@@ -72,36 +71,19 @@ public class Types {
             .property(Property.NAME, "The name of the class this instance belongs to", addon,
                 ExpressionPropertyHandler.of(instance -> instance.name, String.class))
             .description("Instance version of a class, holds non-static methods and fields, representing a created instance of a class.")
-            .parser(new Parser<>() {
-
-                @Override
-                public boolean canParse(ParseContext context) {
-                    return false;
-                }
-
-                @Override
-                public String toString(ClassInstance o, int flags) {
-                    return "Class Instance " + StringUtils.titleCase(o.name);
-                }
-
-                @Override
-                public String toVariableNameString(ClassInstance o) {
-                    return "Class Instance " + o.name + " (" + o.hashCode() + ")";
-                }
-            })
+            .parser(classParser)
             .serializer(new Serializer<>() {
                 @Override
                 public Fields serialize(ClassInstance o) {
                     Fields fields = new Fields();
                     fields.putObject("name", o.name);
 
-                    for (SkriptField skriptField : o.fieldMap.values()) {
-                        FieldSignature signature = skriptField.signature;
-                        SerializableField sField = new SerializableField(skriptField.value, signature.isPlural());
+                    for (var entry : o.fieldValueMap().entrySet()) {
+                        SerializableField sField = new SerializableField(entry.getValue());
 
-                        if (!sField.canBeSaved()) continue;
-
-                        fields.putObject("field:"+signature.name(), sField);
+                        if (sField.canBeSaved()) {
+                            fields.putObject("field:" + entry.getKey(), sField);
+                        }
                     }
                     return fields;
                 }
@@ -110,22 +92,16 @@ public class Types {
                 protected ClassInstance deserialize(Fields fields) throws StreamCorruptedException {
                     String name = fields.getAndRemoveObject("name", String.class);
                     name = StringUtils.getLowerCase(name);
-                    SkriptClass parentClass = ClassManager.getClass(name);
 
-                    ClassInstance instance;
-                    if (parentClass != null) {
-                        instance = parentClass.createInstance();
-                    } else {
-                        instance = new ClassInstance(name);
-                        ClassManager.setAwaitingParent(instance);
-                    }
+                    ClassInstance instance = ClassManager.getNewInstance(name);
                     for (FieldContext context : fields) {
                         if (!context.getID().startsWith("field:")) continue;
 
                         String fieldName = context.getID().substring("field:".length());
                         SerializableField sField = context.getObject(SerializableField.class);
+                        if (sField == null) throw new StreamCorruptedException();
 
-                        instance.putAwaitingField(fieldName, sField);
+                        instance.fieldValueMap.put(fieldName, sField.value);
                     }
                     return instance;
                 }

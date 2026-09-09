@@ -8,12 +8,13 @@ import ch.njol.skript.expressions.base.SectionExpression;
 import ch.njol.skript.lang.*;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.util.Kleenean;
+import ch.njol.util.coll.CollectionUtils;
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.ClassInstance;
-import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
+import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.api.util.ParserUtils;
 import com.novystxr.classysk.api.util.StringUtils;
@@ -39,14 +40,14 @@ import java.util.regex.Pattern;
     \tbalance: 5000
     """)
 @Since("1.0.0")
-public class SecExprNewInstance extends SectionExpression<ClassInstance> {
+public class SecExprNewInstance extends SectionExpression<Object> {
 
     private static final Pattern VALID_NODE_PATTERN = Pattern.compile("("+ Classysk.NAME_PATTERN +"): (.+)");
 
     public static void register(SyntaxRegistry registry) {
         registry.register(
             SyntaxRegistry.EXPRESSION,
-            DefaultSyntaxInfos.Expression.builder(SecExprNewInstance.class, ClassInstance.class)
+            DefaultSyntaxInfos.Expression.builder(SecExprNewInstance.class, Object.class)
                 .addPattern("[a] new [instance of] <"+ Classysk.CLASSNAME_PATTERN +">")
                 .supplier(SecExprNewInstance::new)
                 .build()
@@ -81,20 +82,21 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
             String fieldName = StringUtils.getConfigLowerCase(matcher.group(1));
             String unparsedValue = matcher.group(2);
 
-            FieldSignature signature = skriptClass.getFieldSignature(fieldName);
-            if (signature == null) {
+            SkriptField field = skriptClass.getField(fieldName);
+            if (field == null) {
                 Skript.error("Could not find field from class: " + skriptClass.getEffectiveName());
                 return false;
             }
-            if (signature.isStatic()) {
+            if (field.isStatic()) {
                 Skript.error("Static field cannot be set on an instance");
                 return false;
             }
-            if (signature.accessType() == Modifier.PRIVATE && !inParent) {
+            if (field.accessType() == Modifier.PRIVATE && !inParent) {
                 Skript.error("Private fields can't be accessed here");
                 return false;
             }
-            Expression<?> valueExpr = ParserUtils.parseExprNode(unparsedValue, node, signature.type());
+
+            Expression<?> valueExpr = ParserUtils.parseExprNode(unparsedValue, node, field.type());
             if (valueExpr == null) return false;
 
             fields.put(fieldName, valueExpr);
@@ -114,7 +116,7 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
             Object[] value = valueExpr.getArray(event);
             newInstance.setFieldValue(fieldName, value);
         }
-        return new ClassInstance[]{newInstance};
+        return CollectionUtils.array(newInstance);
     }
 
     @Override
@@ -124,7 +126,7 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> {
 
     @Override
     public Class<? extends ClassInstance> getReturnType() {
-        return ClassInstance.class;
+        return skriptClass.getSubclass();
     }
 
     @Override

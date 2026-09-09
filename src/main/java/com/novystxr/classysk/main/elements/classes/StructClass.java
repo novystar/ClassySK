@@ -79,8 +79,8 @@ public class StructClass extends Structure {
             var element = ParserUtils.parseNodeAsInfos(node, "Could not recognize entry: "+node.getKey(), EffField.INFO, SecMethod.INFO);
 
             if (element instanceof EffField effField) {
-                String fieldName = effField.fieldName;
-                if (newClass.fieldSignatures.putIfAbsent(fieldName, effField.signature) != null) {
+                String fieldName = effField.name;
+                if (newClass.fields.putIfAbsent(fieldName, effField.field) != null) {
                     Skript.error("Field named '"+fieldName+"' already exists in this class");
                     return false;
                 }
@@ -101,7 +101,6 @@ public class StructClass extends Structure {
 
     @Override
     public boolean preLoad() {
-        ClassManager.checkAwaitingParent(newClass);
         ClassManager.revalidateFields(newClass);
         return true;
     }
