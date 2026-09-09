@@ -8,6 +8,7 @@ import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
+import com.novystxr.classysk.api.classes.SkriptClass.AnonymousClass;
 import com.novystxr.classysk.api.util.SimpleErrorHandler;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.NotNull;
@@ -18,9 +19,9 @@ import org.skriptlang.skript.log.runtime.RuntimeErrorProducer;
 
 import java.util.*;
 
-public abstract class AccessValidator<T extends AccessModifiable> implements RuntimeErrorProducer {
+public abstract class Validator<T extends AccessModifiable> implements RuntimeErrorProducer {
     private ClassInstance instance;
-    protected final SkriptClass contextClass;
+    private final SkriptClass contextClass;
 
     private T product = null;
     private final List<T> guesses = new ArrayList<>();
@@ -34,18 +35,20 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
     /**
      * Extend with extra data that is necessary
      */
-    public AccessValidator(ErrorSource errorSource, SkriptClass contextClass) {
+    public Validator(ErrorSource errorSource, SkriptClass contextClass) {
         this.errorSource = errorSource;
         this.contextClass = contextClass;
     }
 
-    /**
-     * Validate your signature and set any extra data
-     */
-    protected abstract boolean validate(T product, boolean isStatic, SkriptClass targetClass);
+    protected abstract boolean validate(T product, SkriptClass contextClass);
 
     protected abstract @Nullable T getProductFromClass(SkriptClass skriptClass);
     protected abstract @Nullable T getProductFromInstance(ClassInstance instance);
+
+    protected SkriptClass contextClass() {
+        if (contextClass == null) return null;
+        return contextClass instanceof AnonymousClass ? contextClass : ClassManager.getClass(contextClass.name);
+    }
 
     /**
      *
@@ -74,8 +77,8 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
     }
 
     /**
-     * A helper method to get all possible return types based off of previous guesses from {@link AccessValidator#validateUnknown(SkriptClass)}
-     * @return The {@link AccessValidator#product} return type, OR all return types of {@link AccessValidator#guesses}
+     * A helper method to get all possible return types based off of previous guesses from {@link Validator#validateUnknown(SkriptClass)}
+     * @return The {@link Validator#product} return type, OR all return types of {@link Validator#guesses}
      */
     public final Class<?>[] possibleTypes() {
         if (product != null) return new Class<?>[]{product().type()};
@@ -92,7 +95,7 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
     /**
      * Tries to find the best possible return type for that pattern to report
      *
-     * @param possibleTypes Must contain atleast one class, see {@link AccessValidator#possibleTypes()}
+     * @param possibleTypes Must contain at least one class, see {@link Validator#possibleTypes()}
      *
      * @return The highest denominator of possible return types
      */
@@ -105,7 +108,7 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
 
     public final Class<?> exactTypeOr(@Nullable Class<?> type) {
         if (product == null) return type;
-        return product.type();
+        return product().type();
     }
 
     /**
@@ -115,7 +118,7 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
      * UNKNOWN if the correct class could not be determined at parse time
      */
     public final Kleenean shouldBeSingle() {
-        if (product != null) return Kleenean.get(!product.isPlural());
+        if (product != null) return Kleenean.get(!product().isPlural());
         if (guesses.isEmpty()) return Kleenean.UNKNOWN;
 
         boolean hasSingle = false;
@@ -138,6 +141,7 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
      */
     public final @Nullable ClassInstance getValidInstance(Event event, Expression<ClassInstance> instanceExpr, @Nullable SkriptClass hintClass) {
         ClassInstance newInstance = instanceExpr.getSingle(event);
+        if (hintClass == contextClass) hintClass = null;
 
         if (newInstance == null) {
             error("Target instance was not set");
@@ -151,20 +155,12 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
 
         if (this.instance == newInstance) return newInstance;
 
-        if (hintClass != null && hintClass != parent) {
+        if (hintClass != null && !hintClass.inherits(parent)) {
             error("Given instance does not match '"+ hintClass.getEffectiveName() +"'");
             return null;
         }
-
-        LogEntry error;
-        try (var handler = new SimpleErrorHandler()) {
-            if (validateInstance(newInstance, parent)) {
-                return newInstance;
-            }
-            error = handler.getLastError();
-        }
-        if (error != null) {
-            error(error.getMessage());
+        if (validateInstance(newInstance)) {
+            return newInstance;
         }
         return null;
     }
@@ -178,24 +174,16 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
      * UNKNOWN if could not find the right class
      */
     public final Kleenean validateUnknown(@Nullable SkriptClass hintClass) {
+        Collection<SkriptClass> check = hintClass == null ? ClassManager.getClasses() : List.of(hintClass);
         LogEntry error;
-        SkriptClass resultClass = null;
-
         try (var handler = new SimpleErrorHandler().start()) {
-            if (hintClass != null) {
-                T product = getProductFromClass(hintClass);
-                if (product != null) {
-                    guesses.add(product);
-                    resultClass = hintClass;
-                }
-            } else {
-                for (SkriptClass skriptClass : ClassManager.getClasses()) {
-                    T product = getProductFromClass(skriptClass);
-                    if (product != null) {
-                        guesses.add(product);
-                        resultClass = skriptClass;
-                    }
-                }
+            for (SkriptClass skriptClass : check) {
+
+                T product = getProductFromClass(skriptClass);
+                if (product == null || !validate(product, contextClass()))
+                    continue;
+
+                guesses.add(product);
             }
             error = handler.getLastError();
         }
@@ -208,15 +196,7 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
             return Kleenean.UNKNOWN;
         }
         this.product = guesses.getFirst();
-
-        try (var handler = new SimpleErrorHandler().start()) {
-            if (validate(product, false, resultClass)) {
-                return Kleenean.TRUE;
-            }
-            error = handler.getLastError();
-        }
-        if (error != null) Skript.error(error.getMessage());
-        return Kleenean.FALSE;
+        return Kleenean.TRUE;
     }
 
     /**
@@ -228,7 +208,7 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
         this.product = getProductFromClass(skriptClass);
         if (product == null) return false;
 
-        return validate(product, true, skriptClass);
+        return validate(product, contextClass());
     }
 
     /**
@@ -238,13 +218,20 @@ public abstract class AccessValidator<T extends AccessModifiable> implements Run
      * @return true if the instance was valid, false if it was not
      *
      */
-    public final boolean validateInstance(@NotNull ClassInstance newInstance, SkriptClass parent) {
-        this.product = getProductFromInstance(newInstance);
-        if (product != null) {
-            if (validate(product, false, parent)) {
-                this.instance = newInstance;
-                return true;
+    public final boolean validateInstance(@NotNull ClassInstance newInstance) {
+        LogEntry error;
+        try (var handler = new SimpleErrorHandler().start()) {
+            this.product = getProductFromInstance(newInstance);
+            if (product != null) {
+                if (validate(product, contextClass())) {
+                    this.instance = newInstance;
+                    return true;
+                }
             }
+            error = handler.getLastError();
+        }
+        if (error != null) {
+            error(error.getMessage());
         }
         return false;
     }

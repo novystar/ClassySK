@@ -5,14 +5,14 @@ import ch.njol.skript.lang.Expression;
 import ch.njol.skript.registrations.Classes;
 import com.novystxr.classysk.api.AccessModifiable;
 import com.novystxr.classysk.api.Modifier;
-import com.novystxr.classysk.api.AccessValidator;
+import com.novystxr.classysk.api.Validator;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.MethodParser.ReferenceArgument;
 import com.novystxr.classysk.api.methods.MethodValidator.ValidReference;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
-import com.novystxr.classysk.api.methods.SkriptMethod.MethodSignature;
+import com.novystxr.classysk.api.util.DefaultValue;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
 import org.skriptlang.skript.log.runtime.ErrorSource;
@@ -20,24 +20,29 @@ import org.skriptlang.skript.log.runtime.ErrorSource;
 import java.util.*;
 
 import static com.novystxr.classysk.api.Modifier.PRIVATE;
+import static com.novystxr.classysk.api.Modifier.PROTECTED;
 
-public class MethodValidator extends AccessValidator<ValidReference> {
+public class MethodValidator extends Validator<ValidReference> {
 
     private final MethodReference reference;
     private final boolean expectsReturn;
+    private final boolean isSuper;
 
-    public MethodValidator(ErrorSource errorSource, SkriptClass contextClass, @NotNull MethodReference reference, boolean expectsReturn) {
+    public MethodValidator(ErrorSource errorSource, SkriptClass contextClass, @NotNull MethodReference reference, boolean expectsReturn, boolean isSuper) {
         super(errorSource, contextClass);
+
         this.reference = reference;
         this.expectsReturn = expectsReturn;
+        this.isSuper = isSuper;
     }
 
     @Override
     protected @Nullable ValidReference getProductFromClass(SkriptClass skriptClass) {
-        List<SkriptMethod> candidates = skriptClass.methodRegistry.candidates(reference).toList();
+        if (isSuper) skriptClass = skriptClass.getExtends();
 
+        List<SkriptMethod> candidates = skriptClass.getCandidates(reference);
         if (candidates.isEmpty()) {
-            Skript.error("Could not identify method signature from reference: "+reference.name());
+            Skript.error("Could not identify method %s", reference);
             return null;
         }
         if (candidates.size() == 1) {
@@ -45,7 +50,7 @@ public class MethodValidator extends AccessValidator<ValidReference> {
         } else {
             ValidReference reference = validateFromCandidates(candidates);
             if (reference == null) {
-                Skript.error("Could not identify method out of %s overloads", candidates.size());
+                Skript.error("Could not identify method %s out of %s overloads", this.reference, candidates.size());
                 return null;
             }
             return reference;
@@ -54,33 +59,35 @@ public class MethodValidator extends AccessValidator<ValidReference> {
 
     @Override
     protected @Nullable ValidReference getProductFromInstance(ClassInstance instance) {
-        return getProductFromClass(instance.getParent());
+        SkriptMethod method = product() == null ? null
+            : instance.getExactMethod(product().method.getIdentifier(), isSuper);
+        if (method == null) {
+            return getProductFromClass(instance.getParent());
+        }
+        return product().copy(method);
     }
 
     @Override
-    protected boolean validate(ValidReference reference, boolean isStatic, SkriptClass target) {
+    protected boolean validate(ValidReference reference, SkriptClass contextClass) {
+        SkriptClass origin = reference.getOrigin();
+
         if (expectsReturn && reference.type() == null) {
             Skript.error("This method can't return anything");
             return false;
         }
-        if (reference.accessType() == PRIVATE && target != contextClass) {
+        if (reference.hasModifier(PRIVATE) && origin != contextClass) {
             Skript.error("Private methods can only be accessed from within their own class");
             return false;
         }
-        if (reference.isStatic() && !isStatic) {
-            Skript.error("Static methods do not belong to any instance");
-            return false;
-        }
-        if (!reference.isStatic() && isStatic) {
-            Skript.error("This method is only accessible from instances");
+        if (reference.hasModifier(PROTECTED) && (contextClass == null || !contextClass.inherits(origin))) {
+            Skript.error("Protected fields can only be accessed from inheritors");
             return false;
         }
         return true;
     }
 
     private @Nullable ValidReference validateReference(SkriptMethod target, boolean printErrors) {
-        MethodSignature signature = target.signature;
-        SequencedMap<String, MethodArgument> arguments = signature.arguments();
+        SequencedMap<String, MethodArgument> arguments = target.arguments;
 
         Map<String, Expression<?>> result = new HashMap<>();
         if (arguments.isEmpty()) {
@@ -141,7 +148,7 @@ public class MethodValidator extends AccessValidator<ValidReference> {
             String name = entry.getKey();
             if (referenceArgNames.contains(name)) continue;
 
-            Expression<?> defaultValue = entry.getValue().defaultValue();
+            DefaultValue<?> defaultValue = entry.getValue().defaultValue();
             if (defaultValue == null) {
                 Skript.error("Could not resolve some argument(s) for this method call");
                 return null;
@@ -169,15 +176,23 @@ public class MethodValidator extends AccessValidator<ValidReference> {
     public record ValidReference(@NotNull SkriptMethod method, @NotNull Map<String, Expression<?>> args) implements AccessModifiable {
         @Override
         public boolean isPlural() {
-            return method.signature.isPlural();
+            return method.isPlural();
         }
         @Override
         public Modifier[] modifiers() {
-            return method.signature.modifiers();
+            return method.modifiers();
         }
         @Override
         public Class<?> type() {
-            return method.signature.type();
+            return method.type();
+        }
+
+        public SkriptClass getOrigin() {
+            return method.getOrigin();
+        }
+
+        public ValidReference copy(SkriptMethod method) {
+            return new ValidReference(method, args);
         }
     }
 }

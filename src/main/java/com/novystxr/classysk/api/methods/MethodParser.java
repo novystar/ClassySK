@@ -10,10 +10,11 @@ import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.util.LiteralUtils;
 import ch.njol.skript.util.Utils;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
+import com.novystxr.classysk.api.util.DefaultValue;
 import com.novystxr.classysk.api.util.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.skriptlang.skript.lang.converter.Converters;
+import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -28,13 +29,21 @@ import static com.novystxr.classysk.Classysk.NAME_PATTERN;
 
 public class MethodParser {
 
-    private static final Pattern FULL_PATTERN =
-        Pattern.compile("^\\s*(?<name>[^:(){}\",]+?)\\s*:\\s*(?<type>[a-zA-Z ]+?)\\s*(?:\\s*=\\s*(?<def>.+))?\\s*$");
-    private static final Pattern ARGUMENT_PATTERN = Pattern.compile("(?:\\s*(?<name>[_a-zA-Z0-9]+):)?(?<value>.+)");
+    // argument components
+    private static final String NAME = "(?<name>[_a-zA-Z0-9]+)";
+    private static final String TYPE = "(?<type>[a-zA-Z ]+)";
+    private static final String VALUE = "(?<value>.+)";
 
+    // compiled argument patterns
+    private static final Pattern DEF_ARG_PATTERN =
+        Pattern.compile("^\\s*"+NAME+"\\s*:\\s*"+TYPE+"(?:\\s*=\\s*"+VALUE+"+)?$");
+
+    private static final Pattern REF_ARG_PATTERN =
+        Pattern.compile("(?:\\s*"+NAME+":\\s)?"+VALUE);
+
+    // syntax patterns
     public static final String HINT_PATTERN = "(?:<("+CLASSNAME_PATTERN+"|)\\u003E)?";
-
-    public static final String METHOD_PATTERN = "%classinstance%<"+HINT_PATTERN+"::("+NAME_PATTERN+")>\\([<.+>]\\)";
+    public static final String METHOD_PATTERN = "(%-classinstance%|:super)<"+HINT_PATTERN+"::("+NAME_PATTERN+")>\\([<.+>]\\)";
     public static final String STATIC_METHOD_PATTERN = "<("+CLASSNAME_PATTERN+")::("+NAME_PATTERN+")>\\([<.+>]\\)";
 
     public record ReferenceArgument(
@@ -44,14 +53,34 @@ public class MethodParser {
 
     public record MethodReference(
         String name,
-        List<ReferenceArgument> args
-    ) {}
+        List<ReferenceArgument> args,
+        boolean isStatic
+    ) {
 
-    public static @Nullable MethodReference parseReference(String name, @NotNull String args) {
+        @Override
+        public @NonNull String toString() {
+            StringBuilder builder = new StringBuilder(name+"(");
+
+            int i = 0;
+            for (ReferenceArgument arg : args) {
+                i++;
+                if (arg.name != null) {
+                    builder.append(arg.name).append(": ");
+                }
+                builder.append(Classes.getExactClassInfo(arg.expr.getReturnType()));
+                if (i != args.size()) {
+                    builder.append(", ");
+                }
+            }
+            return builder.append(")").toString();
+        }
+    }
+
+    public static @Nullable MethodReference parseReference(String name, @NotNull String args, boolean isStatic) {
         List<ReferenceArgument> referenceArguments = new ArrayList<>();
 
         if (args.isEmpty()) {
-            return new MethodReference(name, new ArrayList<>());
+            return new MethodReference(name, new ArrayList<>(), isStatic);
         }
 
         List<String> rawArgs = splitArgs(args);
@@ -61,13 +90,13 @@ public class MethodParser {
         }
 
         for (String arg : rawArgs) {
-            Matcher matcher = ARGUMENT_PATTERN.matcher(arg);
+            Matcher matcher = REF_ARG_PATTERN.matcher(arg);
             if (!matcher.matches()) {
                 Skript.error("Invalid argument pattern: "+ arg);
                 return null;
             }
 
-            String unparsedExpr = matcher.group("value");
+            String unparsedExpr = matcher.group("value").trim();
             String argName = matcher.group("name");
 
             SkriptParser parser = new SkriptParser(unparsedExpr, SkriptParser.ALL_FLAGS, ParseContext.DEFAULT);
@@ -80,7 +109,7 @@ public class MethodParser {
             referenceArguments.add(new ReferenceArgument(argName, expr));
         }
 
-        return new MethodReference(name, referenceArguments);
+        return new MethodReference(name, referenceArguments, isStatic);
     }
 
     public static @Nullable SequencedMap<String, MethodArgument> parseArguments(String argsString) {
@@ -91,14 +120,14 @@ public class MethodParser {
             return null;
         }
         for (String arg : args) {
-            Matcher matcher = FULL_PATTERN.matcher(arg);
+            Matcher matcher = DEF_ARG_PATTERN.matcher(arg);
             if (!matcher.matches()) {
                 Skript.error("Invalid method argument(s)");
                 return null;
             }
-            String name = matcher.group("name");
-            String unparsedType = matcher.group("type");
-            String unparsedDefault = matcher.group("def");
+            String name = matcher.group("name").trim();
+            String unparsedType = matcher.group("type").trim();
+            String unparsedDefault = matcher.group("value");
 
             if (arguments.containsKey(name)) {
                 Skript.error("Duplicate method arguments");
@@ -111,28 +140,14 @@ public class MethodParser {
                 return null;
             }
             Class<?> type = Utils.getComponentType(classInfo.getC());
-            Expression<?> defaultValue = null;
+            DefaultValue<?> defaultValue = null;
 
             if (unparsedDefault != null) {
-                SkriptParser parser = new SkriptParser(unparsedDefault, SkriptParser.ALL_FLAGS, ParseContext.DEFAULT);
-
-                defaultValue = LiteralUtils.defendExpression(parser.parseExpression(type));
+                defaultValue = new DefaultValue.Dynamic<>(unparsedDefault, type, isPlural);
                 String variableName = unparsedDefault.endsWith("*") ? unparsedDefault.substring(0, unparsedDefault.length() - 3) + (!isPlural ? "::1" : "") : unparsedDefault;
 
                 if (!Variable.isValidVariableName(variableName, true, false)) {
                     Skript.error("Invalid argument name: %s", variableName);
-                    return null;
-                }
-                if (defaultValue == null || !LiteralUtils.canInitSafely(defaultValue)) {
-                    Skript.error("Can't understand this expression: " + unparsedDefault);
-                    return null;
-                }
-                if (!defaultValue.isSingle() && !isPlural) {
-                    Skript.error("Cannot pass plural default value into single method argument");
-                    return null;
-                }
-                if (!Converters.converterExists(type, defaultValue.getReturnType())) {
-                    Skript.error("Default value does not match the specified type");
                     return null;
                 }
             }

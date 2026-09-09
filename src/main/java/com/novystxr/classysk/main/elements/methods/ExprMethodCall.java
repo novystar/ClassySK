@@ -6,7 +6,7 @@ import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
-import com.novystxr.classysk.api.AccessValidator;
+import com.novystxr.classysk.api.Validator;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
@@ -57,11 +57,13 @@ public class ExprMethodCall extends SimpleExpression<Object> {
         String args = result.regexes.size() == 1
             ? "" : result.regexes.get(1).group().trim();
 
-        MethodReference reference = MethodParser.parseReference(name, args);
+        MethodReference reference = MethodParser.parseReference(name, args, isStatic);
         if (reference == null) return false;
 
+        boolean isSuper = result.hasTag("super");
         instanceExpr = isStatic ? null : (Expression<ClassInstance>) exprs[0];
-        validator = new MethodValidator(getErrorSource(), contextClass, reference, true);
+
+        validator = new MethodValidator(getErrorSource(), contextClass, reference, true, isSuper);
         if (className != null) {
             if (className.isEmpty()) return postInit();
 
@@ -74,6 +76,11 @@ public class ExprMethodCall extends SimpleExpression<Object> {
         if (isStatic) {
             return validator.validateStatic(skriptClass) && postInit();
         }
+        if (isSuper) {
+            instanceExpr = new ExprSuper();
+            if (!instanceExpr.init(null, 0, null, null))
+                return false;
+        }
         if (instanceExpr.getSource() instanceof ExprSelf) {
             skriptClass = contextClass;
         }
@@ -83,7 +90,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
     private boolean postInit() {
         shouldBeSingle = validator.shouldBeSingle();
         possibleTypes = validator.possibleTypes();
-        bestReturnType = AccessValidator.bestReturnType(possibleTypes);
+        bestReturnType = Validator.bestReturnType(possibleTypes);
         return true;
     }
 
@@ -93,6 +100,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
         if (!isStatic && instance == null) return null;
 
         ValidReference reference = validator.product();
+
         Object[] result = reference.method().run(event, instance, reference.args());
         if (result == null) return null;
 

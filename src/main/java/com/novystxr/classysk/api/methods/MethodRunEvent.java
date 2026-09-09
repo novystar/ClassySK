@@ -1,4 +1,4 @@
-package com.novystxr.classysk.api.event;
+package com.novystxr.classysk.api.methods;
 
 import com.novystxr.classysk.api.classes.ClassInstance;
 import org.bukkit.event.Event;

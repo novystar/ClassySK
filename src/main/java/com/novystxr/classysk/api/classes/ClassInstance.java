@@ -2,52 +2,56 @@ package com.novystxr.classysk.api.classes;
 
 import java.util.*;
 
-import com.novystxr.classysk.api.FieldHolder;
+import com.novystxr.classysk.api.fields.FieldHolder;
 import com.novystxr.classysk.api.TypeWrappable;
-import com.novystxr.classysk.api.fields.SerializableField;
 import com.novystxr.classysk.api.fields.SkriptField;
-import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
+import com.novystxr.classysk.api.methods.MethodHolder;
+import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
+import com.novystxr.classysk.api.methods.MethodRegistry;
+import com.novystxr.classysk.api.methods.MethodRegistry.MethodIdentifier;
+import com.novystxr.classysk.api.methods.SkriptMethod;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.converter.Converters;
 
-public class ClassInstance implements FieldHolder, TypeWrappable<TypedInstanceWrapper, ClassInstance> {
+public class ClassInstance implements FieldHolder, MethodHolder, TypeWrappable<TypedInstanceWrapper, ClassInstance> {
     public final String name;
+    public final Map<String, Object[]> fieldValueMap = new HashMap<>();
 
-    public final Map<String, SkriptField> fieldMap = new HashMap<>();
-
-    // set on deserialization for when parent class becomes known
-    final Map<String, SerializableField> awaitingFields = new HashMap<>();
+    TypedInstanceWrapper wrapper = null;
 
     public ClassInstance(String name) {
         this.name = name;
-    }
-
-    public void putAwaitingField(String name, SerializableField field) {
-        awaitingFields.put(name, field);
-    }
-
-    @Override
-    public Map<String, SkriptField> fieldMap() {
-        return fieldMap;
-    }
-
-    // gets existing signature and falls back to parent
-    @Override
-    public @Nullable FieldSignature getFieldSignature(String name) {
-        SkriptField field = fieldMap.get(name);
-        if (field == null) {
-            SkriptClass parent = getParent();
-            if (parent == null) return null;
-            return parent.getFieldSignature(name);
-        }
-        return field.signature;
     }
 
     public SkriptClass getParent() {
         return ClassManager.getClass(name);
     }
 
-    TypedInstanceWrapper wrapper = null;
+    @Override
+    public Map<String, Object[]> fieldValueMap() {
+        return fieldValueMap;
+    }
+
+    @Override
+    public @Nullable SkriptField getField(String name) {
+        SkriptField result = getParent().getField(name);
+        if (result == null && fieldValueMap.containsKey(name)) {
+            return SkriptField.UNKNOWN;
+        }
+        return result;
+    }
+
+    @Override
+    public void setDefaults() {
+        getParent().inheritanceStream().forEach(target -> {
+            for (SkriptField field : target.fields.values()) {
+                if (field.isStatic()) continue;
+                if (fieldExists(field.name)) continue;
+
+                resetField(field.name);
+            }
+        });
+    }
 
     @Override
     public TypedInstanceWrapper wrap() {
@@ -62,5 +66,21 @@ public class ClassInstance implements FieldHolder, TypeWrappable<TypedInstanceWr
     @Override
     public Class<? extends TypedInstanceWrapper> getSubclass() {
         return ClassManager.getSubclass(name);
+    }
+
+    @Override
+    public MethodRegistry getRegistry() {
+        return getParent().getRegistry();
+    }
+
+
+    @Override
+    public SkriptMethod getExactMethod(MethodIdentifier identifier, boolean isSuper) {
+        return getParent().getExactMethod(identifier, isSuper);
+    }
+
+    @Override
+    public List<SkriptMethod> getCandidates(MethodReference reference) {
+        return getParent().getCandidates(reference);
     }
 }

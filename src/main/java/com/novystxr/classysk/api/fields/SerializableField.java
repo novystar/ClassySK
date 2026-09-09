@@ -4,8 +4,6 @@ import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.yggdrasil.Fields;
 import ch.njol.yggdrasil.YggdrasilSerializable.YggdrasilExtendedSerializable;
-import com.novystxr.classysk.api.Modifier;
-import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import org.jetbrains.annotations.NotNull;
 import org.skriptlang.skript.lang.converter.Converters;
 
@@ -14,11 +12,9 @@ import java.io.StreamCorruptedException;
 public class SerializableField implements YggdrasilExtendedSerializable {
 
     public Object[] value;
-    public boolean isPlural;
 
-    public SerializableField(Object[] value, boolean isPlural) {
+    public SerializableField(Object[] value) {
         this.value = value;
-        this.isPlural = isPlural;
     }
 
     public SerializableField() {}
@@ -28,15 +24,12 @@ public class SerializableField implements YggdrasilExtendedSerializable {
         Fields fields = new Fields();
 
         fields.putObject("value", value);
-        fields.putPrimitive("isPlural", isPlural);
-
         return fields;
     }
 
     @Override
     public void deserialize(@NotNull Fields fields) throws StreamCorruptedException {
         value = fields.getObject("value", Object[].class);
-        isPlural = fields.getPrimitive("isPlural", boolean.class);
     }
 
     public boolean canBeSaved() {
@@ -60,10 +53,5 @@ public class SerializableField implements YggdrasilExtendedSerializable {
         }
         value = newValue;
         return true;
-    }
-
-    public FieldSignature mergeSignature(FieldSignature signature) {
-        Modifier[] modifiers = Modifier.without(signature.modifiers(), Modifier.STATIC);
-        return new FieldSignature(signature.name(), Object.class, null, modifiers, isPlural);
     }
 }

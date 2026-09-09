@@ -1,9 +1,8 @@
 package com.novystxr.classysk.api.classes;
 
 import com.novystxr.classysk.Classysk;
-import com.novystxr.classysk.api.fields.SerializableField;
+import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.fields.SkriptField;
-import com.novystxr.classysk.api.fields.SkriptField.FieldSignature;
 import com.novystxr.classysk.api.util.ReflectUtils;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy.Default;
@@ -16,7 +15,7 @@ import java.util.*;
 public class ClassManager {
 
     private static final Map<String, SkriptClass> classMap = new HashMap<>();
-    static final Map<String, Map<String, SkriptField>> staticFields = new HashMap<>();
+    static final Map<String, Map<String, Object[]>> staticFieldMaps = new HashMap<>();
 
     static final Map<String, Set<ClassInstance>> instances = new HashMap<>();
     static final Map<String, Set<ClassInstance>> awaitingParent = new HashMap<>();
@@ -41,41 +40,37 @@ public class ClassManager {
     }
 
     public static void revalidateFields(SkriptClass skriptClass) {
-        // static field validation
-        // attempt to convert, if failed, static context changes or no longer exists, remove field
-        skriptClass.fieldMap().values().removeIf(field -> {
-            FieldSignature signature = skriptClass.getFieldSignature(field.signature.name());
+        // static fields
+        skriptClass.fieldValueMap().entrySet().removeIf(entry -> {
+            SkriptField field = skriptClass.getField(entry.getKey());
 
-            // if signature no longer exists or static context changed, ignore and use existing signature
-            if (signature == null || signature.isStatic() != field.signature.isStatic()) return true;
-
-            if (signature.canConvert(field.value)) {
-                field.signature = signature;
-            } else {
+            // if field no longer exists or constant, remove it
+            if (field == null || !field.isStatic() || field.hasModifier(Modifier.CONST)) {
                 return true;
             }
+            Object[] converted = Converters.convert(entry.getValue(), field.type());
+            if (converted.length == 0) {
+                return true;
+            }
+            skriptClass.fieldValueMap().put(field.name, converted);
             return false;
+
         });
+        skriptClass.setDefaults();
 
-        // init any non-existing static fields with default values
-        skriptClass.setDefaults(skriptClass);
+        // attempt to convert non-static fields to the new structure
+        for (ClassInstance instance : skriptClass.instances()) {
+            for (var entry : instance.fieldValueMap.entrySet()) {
+                SkriptField field = skriptClass.getField(entry.getKey());
 
-        Set<ClassInstance> instances = skriptClass.instances();
-        if (instances == null)
-            return;
-
-        for (ClassInstance instance : instances) {
-            for (SkriptField field : instance.fieldMap.values()) {
-                String fieldName = field.signature.name();
-                FieldSignature signature = skriptClass.getFieldSignature(fieldName);
-
-                // if signature no longer exists or static context changed, ignore and use existing signature
-                if (signature == null || signature.isStatic() != field.signature.isStatic()) {
+                // if field no longer exists, skip it
+                if (field == null || field.isStatic()) {
                     continue;
                 }
-                // attempt to convert to new signature
-                if (signature.canConvert(field.value)) {
-                    field.signature = signature;
+                // attempt to convert, if failed to convert the field is left in an illegal state which may have limited access.
+                Object[] converted = Converters.convert(entry.getValue(), field.type());
+                if (converted.length != 0) {
+                    instance.fieldValueMap.put(field.name, converted);
                 }
             }
         }
@@ -83,31 +78,9 @@ public class ClassManager {
 
     public static void checkAwaitingParent(SkriptClass parent) {
         Set<ClassInstance> awaiting = awaitingParent.get(parent.name);
-        if (awaiting == null)
-            return;
+        if (awaiting == null) return;
+        parent.instances().addAll(awaiting);
 
-        for (ClassInstance instance : awaiting) {
-            for (var entry : instance.awaitingFields.entrySet()) {
-                String fieldName = entry.getKey();
-                SerializableField sField = entry.getValue();
-
-                Object[] value = sField.value;
-                FieldSignature targetSignature = instance.getFieldSignature(fieldName);
-
-                if (targetSignature == null) {
-                    FieldSignature newSignature = FieldSignature.fromSerializableField(fieldName, sField);
-                    instance.createField(newSignature).value = value;
-
-                } else if (targetSignature.canConvert(value)) {
-                    instance.createField(targetSignature).value = Converters.convert(value, targetSignature.type());
-
-                } else {
-                    FieldSignature newSignature = sField.mergeSignature(targetSignature);
-                    instance.createField(newSignature).value = value;
-                }
-            }
-            instance.awaitingFields.clear();
-        }
         awaitingParent.remove(parent.name);
     }
 
@@ -115,7 +88,11 @@ public class ClassManager {
         try {
             final Constructor<? extends TypedInstanceWrapper> constructor = subclass.getDeclaredConstructor(ClassInstance.class);
             return instance -> {
-                if (subclass != getSubclass(instance.name)) {
+                SkriptClass compare = ClassManager.getClass(subclass.getSimpleName());
+                SkriptClass parent = instance.getParent();
+                if (parent == null) return null;
+
+                if (!parent.inherits(compare)) {
                     return null;
                 }
                 try {
@@ -139,13 +116,17 @@ public class ClassManager {
             Class<? extends TypedInstanceWrapper> subclass = getSubclass(name);
             ReflectUtils.allowRegistration();
 
+            boolean rechain = false;
             if (!Converters.exactConverterExists(ClassInstance.class, subclass)) {
                 ReflectUtils.removeFromQuickAccess(ClassInstance.class, subclass);
                 ReflectUtils.registerConverter(ClassInstance.class, subclass, getConditionalConverter(subclass));
+                rechain = true;
             }
             if (!Converters.exactConverterExists(subclass, ClassInstance.class)) {
                 Converters.registerConverter(subclass, ClassInstance.class, from -> from.instance);
+                rechain = true;
             }
+            if (rechain) Converters.createChainedConverters();
             ReflectUtils.disableRegistration();
         }
         classMap.put(name, skriptClass);
