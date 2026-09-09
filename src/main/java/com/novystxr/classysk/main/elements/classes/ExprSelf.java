@@ -41,7 +41,7 @@ public class ExprSelf extends SimpleExpression<Object> implements EventRestricte
         );
     }
 
-    private SkriptClass skriptClass;
+    public SkriptClass skriptClass;
 
     @Override
     public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, SkriptParser.ParseResult parseResult) {
