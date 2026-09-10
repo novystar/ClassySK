@@ -335,7 +335,7 @@ test "ClassySK - Method Arguments Type Validation":
 	assert {-typeInts::*} is 1, 2, 3
 	
 	parse:
-		{_instance}<TypeValidation>::ints((1, "b"))
+		{_instance}::ints((1, "b"))
 	assert last parse logs is set
 
 	{_instance}::objs(1)
@@ -347,19 +347,19 @@ test "ClassySK - Method Arguments Type Validation":
 	{_instance}::string("a")
 	assert {-typeString} is "a"
 	parse:
-		{_instance}<TypeValidation>::string(1)
+		{_instance}::string(1)
 	assert last parse logs is set
 
 	parse:
-		{_instance}<TypeValidation>::string("b", "c")
+		{_instance}::string("b", "c")
 	assert last parse logs is set
 
 	parse:
-		{_instance}<TypeValidation>::string("d", 2)
+		{_instance}::string("d", 2)
 	assert last parse logs is set
 
 	delete {-typeString}
-	{_instance}<TypeValidation>::string({_int})
+	{_instance}::string({_int})
 	assert {-typeString} is not set
 
 

@@ -9,7 +9,7 @@ test "ClassySK - Field Access":
 	set {_instance} to new instance of TestFields
 
 	parse:
-		set {_} to {_instance}<TestFields>::publicStaticField
+		set {_} to {_instance}::publicStaticField
 
 	assert last parse logs is set with "Attempt to access static field from instance"
 
@@ -23,12 +23,12 @@ test "ClassySK - Field Access":
 	
 	assert {_instance}::publicField is "im public" with "public access (instance)"
 	parse:
-		set {_} to {_instance}<TestFields>::privateField
+		set {_} to {_instance}::privateField
 
 	assert last parse logs is set with "Attempt to access private field from outside class structure (instance)"
 
 	parse:
-		set {_} to {_instance}<TestFields>::privateField
+		set {_} to {_instance}::privateField
 	assert last parse logs is set with "Attempt to access private field from outside class structure (instance)"
 
 class TestTyped:
@@ -274,10 +274,10 @@ test "ClassySK - Constant Fields":
 	assert {_inst}::constInst is 6
 	assert {_inst}::const_undef is 7
 
-	set {_inst}<>::constInst to 8
+	set {_inst}::constInst to 8
 	assert {_inst}::constInst is 6
 
-	set {_inst}<>::const_undef to 8
+	set {_inst}:const_undef to 8
 	assert {_inst}::const_undef is 7
 
 	set {_inst} to new instance of TestConstants
@@ -285,8 +285,8 @@ test "ClassySK - Constant Fields":
 	assert {_inst}::constInst is 1
 	assert {_inst}::const_undef is not set
 
-	set {_inst}<>::constInst to 2
+	set {_inst}::constInst to 2
 	assert {_inst}::constInst is 1
 
-	set {_inst}<>::const_undef to 2
+	set {_inst}::const_undef to 2
 	assert {_inst}::const_undef is not set
