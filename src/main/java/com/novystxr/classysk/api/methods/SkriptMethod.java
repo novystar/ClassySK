@@ -47,10 +47,6 @@ public class SkriptMethod implements AccessModifiable {
 
     }
 
-    public void setTrigger(Trigger trigger) {
-        this.trigger = trigger;
-    }
-
     public Object @Nullable [] run(Event event, @Nullable ClassInstance instance, @NotNull Map<String, Expression<?>> args) {
         if (trigger == null) return null;
         MethodRunEvent runEvent = new MethodRunEvent(instance);
