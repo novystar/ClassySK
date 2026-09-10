@@ -44,8 +44,8 @@ public class MethodRegistry {
     }
 
     public boolean registerMethod(SkriptMethod method) {
-        String name = method.signature.name();
-        Collection<MethodArgument> args = method.signature.arguments().sequencedValues();
+        String name = method.name;
+        Collection<MethodArgument> args = method.arguments.sequencedValues();
 
         Class<?>[] argTypes = args.stream()
             .map(MethodArgument::type)

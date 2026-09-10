@@ -60,9 +60,10 @@ public class StructClass extends Structure {
         );
     }
 
-    private final List<SecMethod> methodSections = new ArrayList<>();
-    private SkriptClass newClass;
+    private final List<SecMethod> methodSyntaxes = new ArrayList<>();
+    private final List<EffField> fieldSyntaxes = new ArrayList<>();
 
+    private SkriptClass newClass;
     private String name;
 
     @Override
@@ -78,15 +79,17 @@ public class StructClass extends Structure {
         for (Node node : entryContainer.getUnhandledNodes()) {
             var element = ParserUtils.parseNodeAsInfos(node, "Could not recognize entry: "+node.getKey(), EffField.INFO, SecMethod.INFO);
 
-            if (element instanceof EffField effField) {
-                String fieldName = effField.name;
-                if (newClass.fields.putIfAbsent(fieldName, effField.field) != null) {
+            if (element instanceof EffField field) {
+                String fieldName = field.name;
+                if (newClass.fields.putIfAbsent(fieldName, field.field) == null) {
+                    fieldSyntaxes.add(field);
+                } else {
                     Skript.error("Field named '"+fieldName+"' already exists in this class");
                     return false;
                 }
-            } else if (element instanceof SecMethod secMethod) {
-                if (secMethod.registerMethod(newClass)) {
-                    methodSections.add(secMethod);
+            } else if (element instanceof SecMethod method) {
+                if (method.register(newClass)) {
+                    methodSyntaxes.add(method);
                 } else {
                     Skript.error("Method with that signature already exists in this class");
                     return false;
@@ -101,27 +104,36 @@ public class StructClass extends Structure {
 
     @Override
     public boolean preLoad() {
+        for (EffField field : fieldSyntaxes) {
+            if (!field.parseDefault())
+                return unregister();
+        }
+        for (SecMethod method : methodSyntaxes) {
+            if (!method.parseDefaults())
+                return unregister();
+        }
+        fieldSyntaxes.clear();
         ClassManager.revalidateFields(newClass);
         return true;
     }
 
     @Override
     public boolean load() {
-        // load method triggers after initial registration so it will always know about other methods within a class
-        for (SecMethod secMethod : methodSections) {
-            secMethod.loadTrigger();
+        for (SecMethod method : methodSyntaxes) {
+            method.loadTrigger();
         }
-        methodSections.clear();
+        methodSyntaxes.clear();
         return true;
     }
 
     @Override
     public void unload() {
-        ClassManager.removeClass(name);
+        unregister();
     }
 
-    public String getName() {
-        return name;
+    private boolean unregister() {
+        ClassManager.removeClass(name);
+        return false;
     }
 
     @Override

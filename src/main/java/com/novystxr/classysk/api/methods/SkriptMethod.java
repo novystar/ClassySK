@@ -8,6 +8,7 @@ import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.event.MethodRunEvent;
+import com.novystxr.classysk.api.util.DefaultValue;
 import com.novystxr.classysk.main.elements.methods.SecMethod;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.NotNull;
@@ -15,31 +16,36 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-public class SkriptMethod {
+public class SkriptMethod implements AccessModifiable {
 
     public record MethodArgument(
         Class<?> type,
 
-        @Nullable Expression<?> defaultValue,
+        @Nullable DefaultValue<?> defaultValue,
         boolean isPlural
     ) {}
 
-    public record MethodSignature(
-        String name,
-        SequencedMap<String, MethodArgument> arguments,
-        Modifier[] modifiers,
+    public final String name;
+    public Modifier[] modifiers;
+    public final SequencedMap<String, MethodArgument> arguments;
+    public final Class<?> type;
+    public final boolean isPlural;
 
-        @Nullable Class<?> type,
-        boolean isPlural
+    public Trigger trigger;
+    public final int minArgCount;
 
-    ) implements AccessModifiable {}
+    public SkriptMethod(String name, SequencedMap<String, MethodArgument> arguments, Modifier[] modifiers, Class<?> type, boolean isPlural) {
+        this.name = name;
+        this.arguments = arguments;
+        this.modifiers = modifiers;
+        this.type = type;
+        this.isPlural = isPlural;
 
-    public SkriptMethod(MethodSignature signature) {
-        this.signature = signature;
+        this.minArgCount = arguments.values().stream()
+            .filter(arg -> arg.defaultValue() == null)
+            .mapToInt(arg -> 1).sum();
+
     }
-
-    private Trigger trigger;
-    public final MethodSignature signature;
 
     public void setTrigger(Trigger trigger) {
         this.trigger = trigger;
@@ -52,7 +58,7 @@ public class SkriptMethod {
             Expression<?> expr = entry.getValue();
             String key = entry.getKey();
 
-            if (signature.arguments.get(key).isPlural()) {
+            if (arguments.get(key).isPlural()) {
                 Object[] values = expr.getArray(event);
                 String[] keys = KeyProviderExpression.areKeysRecommended(expr) ?
                     ((KeyProviderExpression<?>) expr).getArrayKeys(event) : null;
@@ -77,4 +83,18 @@ public class SkriptMethod {
         return null;
     }
 
+    @Override
+    public Modifier[] modifiers() {
+        return modifiers;
+    }
+
+    @Override
+    public boolean isPlural() {
+        return isPlural;
+    }
+
+    @Override
+    public Class<?> type() {
+        return type;
+    }
 }

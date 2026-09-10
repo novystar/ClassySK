@@ -69,7 +69,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
             return validator.validateStatic(skriptClass) && postInit();
         }
         instanceExpr = (Expression<ClassInstance>) exprs[0];
-        return validator.validateFromExpression(instanceExpr) && postInit();
+        return validator.validateExpression(instanceExpr) && postInit();
     }
 
     private boolean postInit() {

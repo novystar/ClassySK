@@ -94,7 +94,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
     }
 
     /**
-     * A helper method to get all possible return types based off of previous guesses from {@link Validator#validateFromExpression(Expression)}
+     * A helper method to get all possible return types based off of previous guesses from {@link Validator#validateExpression(Expression)}
      * @return The {@link Validator#product} return type, OR all return types of {@link Validator#guesses}
      */
     public final Class<?>[] possibleTypes() {
@@ -185,7 +185,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
     /**
      * Used for validating instances via expression at parse time
      */
-    public final boolean validateFromExpression(Expression<ClassInstance> expr) {
+    public final boolean validateExpression(Expression<ClassInstance> expr) {
         this.instanceExpr = expr;
         SkriptClass inferredClass = getExpressionClass(expr);
 

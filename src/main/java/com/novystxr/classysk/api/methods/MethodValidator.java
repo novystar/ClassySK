@@ -12,7 +12,7 @@ import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.MethodParser.ReferenceArgument;
 import com.novystxr.classysk.api.methods.MethodValidator.ValidReference;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
-import com.novystxr.classysk.api.methods.SkriptMethod.MethodSignature;
+import org.bukkit.event.Event;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
 import org.skriptlang.skript.log.runtime.ErrorSource;
@@ -79,8 +79,7 @@ public class MethodValidator extends Validator<ValidReference> {
     }
 
     private @Nullable ValidReference validateReference(SkriptMethod target, boolean printErrors) {
-        MethodSignature signature = target.signature;
-        SequencedMap<String, MethodArgument> arguments = signature.arguments();
+        SequencedMap<String, MethodArgument> arguments = target.arguments;
 
         Map<String, Expression<?>> result = new HashMap<>();
         if (arguments.isEmpty()) {
@@ -169,15 +168,19 @@ public class MethodValidator extends Validator<ValidReference> {
     public record ValidReference(@NotNull SkriptMethod method, @NotNull Map<String, Expression<?>> args) implements AccessModifiable {
         @Override
         public boolean isPlural() {
-            return method.signature.isPlural();
+            return method.isPlural();
         }
         @Override
         public Modifier[] modifiers() {
-            return method.signature.modifiers();
+            return method.modifiers();
         }
         @Override
         public Class<?> type() {
-            return method.signature.type();
+            return method.type();
+        }
+
+        public Object @Nullable [] run(Event event, ClassInstance instance) {
+            return method.run(event, instance, args);
         }
     }
 }

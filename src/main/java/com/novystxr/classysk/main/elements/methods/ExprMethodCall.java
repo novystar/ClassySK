@@ -13,7 +13,6 @@ import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.methods.MethodParser;
 import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.MethodValidator;
-import com.novystxr.classysk.api.methods.MethodValidator.ValidReference;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
@@ -65,7 +64,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
             }
             return validator.validateStatic(skriptClass) && postInit();
         }
-        return validator.validateFromExpression((Expression<ClassInstance>) exprs[0]) && postInit();
+        return validator.validateExpression((Expression<ClassInstance>) exprs[0]) && postInit();
     }
 
     private boolean postInit() {
@@ -80,8 +79,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
         ClassInstance instance = isStatic ? null : validator.getValidInstance(event);
         if (!isStatic && instance == null) return null;
 
-        ValidReference reference = validator.product();
-        Object[] result = reference.method().run(event, instance, reference.args());
+        Object[] result = validator.product().run(event, instance);
         if (result == null) return null;
 
         result = validator.getSafeConverted(result, shouldBeSingle.isTrue());

@@ -12,7 +12,6 @@ import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.methods.MethodParser;
 import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.MethodValidator;
-import com.novystxr.classysk.api.methods.MethodValidator.ValidReference;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
@@ -61,7 +60,7 @@ public class EffMethodCall extends Effect {
             }
             return validator.validateStatic(skriptClass);
         }
-        return validator.validateFromExpression((Expression<ClassInstance>) exprs[0]);
+        return validator.validateExpression((Expression<ClassInstance>) exprs[0]);
     }
 
     @Override
@@ -69,8 +68,7 @@ public class EffMethodCall extends Effect {
         ClassInstance instance = isStatic ? null : validator.getValidInstance(event);
         if (!isStatic && instance == null) return;
 
-        ValidReference reference = validator.product();
-        reference.method().run(event, instance, reference.args());
+        validator.product().run(event, instance);
     }
 
     @Override

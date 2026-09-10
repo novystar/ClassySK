@@ -1,13 +1,16 @@
 package com.novystxr.classysk.main.elements.fields;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.config.Node;
 import ch.njol.skript.lang.*;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
+import ch.njol.skript.log.SkriptLogger;
 import ch.njol.skript.util.ClassInfoReference;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.fields.SkriptField;
+import com.novystxr.classysk.api.util.DefaultValue;
 import com.novystxr.classysk.api.util.StringUtils;
 import com.novystxr.classysk.api.util.ExprUtils;
 import org.bukkit.event.Event;
@@ -33,30 +36,32 @@ public class EffField extends Effect {
     public String name;
     public SkriptField field;
 
-    @SuppressWarnings("unchecked")
     @Override
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result) {
         name = StringUtils.getConfigLowerCase(result.regexes.getFirst());
 
         ClassInfoReference reference = ExprUtils.getClassRef(exprs[0]);
         boolean isPlural = reference.isPlural().isTrue();
+
         Class<?> type = reference.getClassInfo().getC();
+        Modifier[] modifiers = Modifier.collect(result.tags);
 
-        Expression<?> defaultExpr = null;
-
-        if (exprs[1] != null) {
-            defaultExpr = exprs[1].getConvertedExpression(type);
-            if (defaultExpr == null) {
-                Skript.error("Default value can't convert to type: "+reference.getClassInfo());
-                return false;
-            }
-
-            if (!defaultExpr.isSingle() && !isPlural) {
-                Skript.error("Default value is plural but field only accept single values");
-                return false;
-            }
+        DefaultValue<?> defaultValue = null;
+        if (result.regexes.size() == 2) {
+            String rawExpr = result.regexes.get(1).group().trim();
+            defaultValue = new DefaultValue.Dynamic<>(rawExpr, type, isPlural);
         }
-        field = new SkriptField(name, type, Modifier.collect(result.tags), isPlural, defaultExpr);
+
+        this.field = new SkriptField(name, type, modifiers, isPlural, defaultValue);
+        return true;
+    }
+
+    public boolean parseDefault() {
+        Node node = getNode();
+        SkriptLogger.setNode(node);
+        if (field.defaultValue != null) {
+            return field.defaultValue.parse(node);
+        }
         return true;
     }
 
