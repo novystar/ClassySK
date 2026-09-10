@@ -274,19 +274,23 @@ test "ClassySK - Constant Fields":
 	assert {_inst}::constInst is 6
 	assert {_inst}::const_undef is 7
 
-	set {_inst}::constInst to 8
-	assert {_inst}::constInst is 6
+	parse:
+		set {_inst}::constInst to 8
+	assert last parse logs are set
 
-	set {_inst}:const_undef to 8
-	assert {_inst}::const_undef is 7
+	parse:
+		set {_inst}:const_undef to 8
+	assert last parse logs are set
 
 	set {_inst} to new instance of TestConstants
 
 	assert {_inst}::constInst is 1
 	assert {_inst}::const_undef is not set
 
-	set {_inst}::constInst to 2
-	assert {_inst}::constInst is 1
+	parse:
+		set {_inst}::constInst to 2
+	assert last parse logs are set
 
-	set {_inst}::const_undef to 2
-	assert {_inst}::const_undef is not set
+	parse:
+		set {_inst}::const_undef to 2
+	assert last parse logs are set
