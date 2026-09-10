@@ -18,29 +18,22 @@ import com.novystxr.classysk.api.fields.FieldValidator;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.api.util.ExprUtils;
-import com.novystxr.classysk.main.elements.classes.ExprSelf;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
-import java.util.regex.MatchResult;
-
 import static ch.njol.skript.classes.Changer.ChangeMode.*;
 import static com.novystxr.classysk.Classysk.CLASSNAME_PATTERN;
 import static com.novystxr.classysk.Classysk.NAME_PATTERN;
 import static com.novystxr.classysk.api.Modifier.CONST;
-import static com.novystxr.classysk.api.methods.MethodParser.HINT_PATTERN;
 import static com.novystxr.classysk.api.util.StringUtils.*;
 
 public class ExprFieldAccess extends SimpleExpression<Object> {
     public static void register(SyntaxRegistry registry) {
         registry.register(SyntaxRegistry.EXPRESSION,
             DefaultSyntaxInfos.Expression.builder(ExprFieldAccess.class, Object.class)
-                .addPatterns(
-                "%classinstance%<"+HINT_PATTERN+"::("+NAME_PATTERN+")>",
-                    "<("+CLASSNAME_PATTERN+")::("+NAME_PATTERN+")>"
-                )
+                .addPatterns("%classinstance%::<"+NAME_PATTERN+">)", CLASSNAME_PATTERN+"::<"+NAME_PATTERN+">")
                 .supplier(ExprFieldAccess::new)
                 .priority(Classysk.SHADOW_REALM)
                 .build()
@@ -50,7 +43,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
     private boolean isStatic;
     private String fieldName;
 
-    private SkriptClass skriptClass = null;
+    private SkriptClass skriptClass;
     private Expression<ClassInstance> instanceExpr;
 
     private Kleenean shouldBeSingle;
@@ -62,29 +55,21 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result) {
         isStatic = pattern == 1;
 
-        MatchResult regex = result.regexes.getFirst();
         SkriptClass contextClass = SkriptMethod.getContextClass(getParser());
-
-        String className = getLowerCase(regex.group(1));
-        fieldName = getConfigLowerCase(regex.group(2));
+        fieldName = getConfigLowerCase(result.regexes.get(pattern));
 
         validator = new FieldValidator(getErrorSource(), contextClass, fieldName);
-        if (className != null) {
-            if (className.isEmpty()) return postInit();
-
+        if (isStatic) {
+            String className = getLowerCase(result.regexes.getFirst());
             skriptClass = ClassManager.getClass(className);
             if (skriptClass == null) {
                 Skript.error("Class '%s' does not exist", titleCase(className));
                 return false;
             }
-            return (isStatic ? validator.validateStatic(skriptClass) :
-                !validator.validateUnknown(skriptClass).isFalse()) && postInit();
+            return validator.validateStatic(skriptClass) && postInit();
         }
         instanceExpr = (Expression<ClassInstance>) exprs[0];
-        if (instanceExpr.getSource() instanceof ExprSelf self) {
-            skriptClass = self.skriptClass;
-        }
-        return !validator.validateUnknown(skriptClass).isFalse() && postInit();
+        return validator.validateFromExpression(instanceExpr) && postInit();
     }
 
     private boolean postInit() {
@@ -96,7 +81,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
 
     @Override
     protected Object @Nullable [] get(Event event) {
-        FieldHolder holder = getValidHolder(event);
+        FieldHolder holder = isStatic ? skriptClass : validator.getValidInstance(event);
         if (holder == null) return null;
 
         Object[] value = validator.getSafeConverted(holder.getFieldValue(fieldName), shouldBeSingle.isTrue());
@@ -131,8 +116,8 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
 
     @Override
     public void change(Event event, Object @Nullable [] delta, ChangeMode mode) {
-        FieldHolder fieldHolder = getValidHolder(event);
-        if (fieldHolder == null) return;
+        FieldHolder holder = isStatic ? skriptClass : validator.getValidInstance(event);
+        if (holder == null) return;
 
         SkriptField field = validator.product();
         if (field.hasModifier(CONST)) {
@@ -140,26 +125,26 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
             return;
         }
         switch (mode) {
-            case SET -> setValueAndSave(delta, fieldHolder, event);
+            case SET -> setValueAndSave(delta, holder, event);
             case DELETE -> {
-                fieldHolder.removeField(fieldName);
+                holder.removeField(fieldName);
                 save(event);
             }
             case RESET -> {
-                fieldHolder.resetField(fieldName);
+                holder.resetField(fieldName);
                 save(event);
             }
             case ADD, REMOVE, REMOVE_ALL -> {
                 if (delta == null) return;
-                Object[] initialValue = fieldHolder.getFieldValue(fieldName);
+                Object[] initialValue = holder.getFieldValue(fieldName);
 
                 if (field.isPlural()) {
                     ExprUtils.mutatePlural(initialValue, delta, mode, result ->
-                        setValueAndSave(result, fieldHolder, event));
+                        setValueAndSave(result, holder, event));
                 } else {
                     Object singleValue = initialValue.length == 1 ? initialValue[0] : null;
                     ExprUtils.mutateSingle(singleValue, delta, mode, value ->
-                        setValueAndSave(new Object[]{value}, fieldHolder, event));
+                        setValueAndSave(new Object[]{value}, holder, event));
                 }
             }
         }
@@ -177,11 +162,6 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
             // set variable to the same value it is to trigger serialization
             variable.changeInPlace(event, value -> value);
         }
-    }
-
-    private @Nullable FieldHolder getValidHolder(Event event) {
-        if (isStatic) return skriptClass;
-        return validator.getValidInstance(event, instanceExpr, skriptClass);
     }
 
     @Override
