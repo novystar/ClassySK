@@ -33,7 +33,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
     public static void register(SyntaxRegistry registry) {
         registry.register(SyntaxRegistry.EXPRESSION,
             DefaultSyntaxInfos.Expression.builder(ExprFieldAccess.class, Object.class)
-                .addPatterns("%classinstance%::<"+NAME_PATTERN+">)", CLASSNAME_PATTERN+"::<"+NAME_PATTERN+">")
+                .addPatterns("%classinstance%\\:\\:<"+NAME_PATTERN+">", CLASSNAME_PATTERN+"\\:\\:<"+NAME_PATTERN+">")
                 .supplier(ExprFieldAccess::new)
                 .priority(Classysk.SHADOW_REALM)
                 .build()
