@@ -9,6 +9,7 @@ import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.util.SimpleErrorHandler;
+import com.novystxr.classysk.main.elements.classes.ExprSelf;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -26,6 +27,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
     private final List<T> guesses = new ArrayList<>();
 
     private final ErrorSource errorSource;
+    private Expression<ClassInstance> instanceExpr;
 
     public final T product() {
         return product;
@@ -74,7 +76,25 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
     }
 
     /**
-     * A helper method to get all possible return types based off of previous guesses from {@link Validator#validateUnknown(SkriptClass)}
+     *
+     * Gets the inferred class (if possible) from the target expression. Tries to get it from the expressions return type if it is a subclass of {@link ClassInstance}. This may be used to yield more accurate results if type hints are enabled.
+     *
+     * @param expr The expression to check
+     * @return The relevant {@link SkriptClass} or null.
+     */
+    public static @Nullable SkriptClass getExpressionClass(Expression<ClassInstance> expr) {
+        if (expr.getSource() instanceof ExprSelf self) {
+            return self.skriptClass;
+        }
+        Class<?> returnType = expr.getReturnType();
+        if (returnType != ClassInstance.class && returnType.isAssignableFrom(ClassInstance.class)) {
+            return ClassManager.getClass(returnType.getSimpleName());
+        }
+        return null;
+    }
+
+    /**
+     * A helper method to get all possible return types based off of previous guesses from {@link Validator#validateFromExpression(Expression)}
      * @return The {@link Validator#product} return type, OR all return types of {@link Validator#guesses}
      */
     public final Class<?>[] possibleTypes() {
@@ -132,11 +152,9 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
      * Helper method for validating instances at runtime
      *
      * @param event The event to grab the instance with
-     * @param instanceExpr The expression to grab the instance from
-     * @param hintClass The hint class retrieved at init, null if unspecified
      * @return The instance which has been validated against the reference OR null if it wasn't valid
      */
-    public final @Nullable ClassInstance getValidInstance(Event event, Expression<ClassInstance> instanceExpr, @Nullable SkriptClass hintClass) {
+    public final @Nullable ClassInstance getValidInstance(Event event) {
         ClassInstance newInstance = instanceExpr.getSingle(event);
 
         if (newInstance == null) {
@@ -148,13 +166,8 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
             error("Target instance is not accessible");
             return null;
         }
-
-        if (this.instance == newInstance) return newInstance;
-
-        if (hintClass != null && hintClass != parent) {
-            error("Given instance does not match '"+ hintClass.getEffectiveName() +"'");
-            return null;
-        }
+        if (this.instance == newInstance)
+            return newInstance;
 
         LogEntry error;
         try (var handler = new SimpleErrorHandler()) {
@@ -170,23 +183,21 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
     }
 
     /**
-     * Used for validating instances at parse time
-     *
-     * @param hintClass Either the context class from 'self' or user defined. If null, the validator will attempt to check every class
-     * @return TRUE if could find the right class,
-     * FALSE if could find the right class but the reference is not valid,
-     * UNKNOWN if could not find the right class
+     * Used for validating instances via expression at parse time
      */
-    public final Kleenean validateUnknown(@Nullable SkriptClass hintClass) {
+    public final boolean validateFromExpression(Expression<ClassInstance> expr) {
+        this.instanceExpr = expr;
+        SkriptClass inferredClass = Validator.getExpressionClass(expr);
+
         LogEntry error;
         SkriptClass resultClass = null;
 
         try (var handler = new SimpleErrorHandler().start()) {
-            if (hintClass != null) {
-                T product = getProductFromClass(hintClass);
+            if (inferredClass != null) {
+                T product = getProductFromClass(inferredClass);
                 if (product != null) {
                     guesses.add(product);
-                    resultClass = hintClass;
+                    resultClass = inferredClass;
                 }
             } else {
                 for (SkriptClass skriptClass : ClassManager.getClasses()) {
@@ -202,21 +213,21 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
         if (guesses.isEmpty()) {
             if (error != null)
                 Skript.error(error.getMessage());
-            return Kleenean.FALSE;
+            return false;
         }
         if (guesses.size() != 1) {
-            return Kleenean.UNKNOWN;
+            return true; // unknown, exact resolution happens at runtime
         }
         this.product = guesses.getFirst();
 
         try (var handler = new SimpleErrorHandler().start()) {
             if (validate(product, false, resultClass)) {
-                return Kleenean.TRUE;
+                return true;
             }
             error = handler.getLastError();
         }
         if (error != null) Skript.error(error.getMessage());
-        return Kleenean.FALSE;
+        return true;
     }
 
     /**

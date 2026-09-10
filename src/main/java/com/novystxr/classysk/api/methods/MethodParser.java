@@ -11,7 +11,6 @@ import ch.njol.skript.util.LiteralUtils;
 import ch.njol.skript.util.Utils;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.util.StringUtils;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.converter.Converters;
 
@@ -28,14 +27,21 @@ import static com.novystxr.classysk.Classysk.NAME_PATTERN;
 
 public class MethodParser {
 
-    private static final Pattern FULL_PATTERN =
-        Pattern.compile("^\\s*(?<name>[^:(){}\",]+?)\\s*:\\s*(?<type>[a-zA-Z ]+?)\\s*(?:\\s*=\\s*(?<def>.+))?\\s*$");
-    private static final Pattern ARGUMENT_PATTERN = Pattern.compile("(?:\\s*(?<name>[_a-zA-Z0-9]+):)?(?<value>.+)");
+    // argument components
+    private static final String NAME = "(?<name>[_a-zA-Z0-9]+)";
+    private static final String TYPE = "(?<type>[a-zA-Z ]+)";
+    private static final String VALUE = "(?<value>.+)";
 
-    public static final String HINT_PATTERN = "(?:<("+CLASSNAME_PATTERN+"|)\\u003E)?";
+    // compiled argument patterns
+    private static final Pattern DEF_ARG_PATTERN =
+        Pattern.compile("^\\s*"+NAME+"\\s*:\\s*"+TYPE+"(?:\\s*=\\s*"+VALUE+"+)?$");
 
-    public static final String METHOD_PATTERN = "%classinstance%<"+HINT_PATTERN+"::("+NAME_PATTERN+")>\\([<.+>]\\)";
-    public static final String STATIC_METHOD_PATTERN = "<("+CLASSNAME_PATTERN+")::("+NAME_PATTERN+")>\\([<.+>]\\)";
+    private static final Pattern REF_ARG_PATTERN =
+        Pattern.compile("(?:\\s*"+NAME+":\\s)?"+VALUE);
+
+    // syntax patterns
+    public static final String METHOD_PATTERN = "%classinstance%::<"+NAME_PATTERN+">\\([<.+>]\\)";
+    public static final String STATIC_METHOD_PATTERN = "<"+CLASSNAME_PATTERN+">::<"+NAME_PATTERN+")>\\([<.+>]\\)";
 
     public record ReferenceArgument(
         @Nullable String name,
@@ -47,10 +53,10 @@ public class MethodParser {
         List<ReferenceArgument> args
     ) {}
 
-    public static @Nullable MethodReference parseReference(String name, @NotNull String args) {
+    public static @Nullable MethodReference parseReference(String name, @Nullable String args) {
         List<ReferenceArgument> referenceArguments = new ArrayList<>();
 
-        if (args.isEmpty()) {
+        if (args == null) {
             return new MethodReference(name, new ArrayList<>());
         }
 
@@ -61,7 +67,7 @@ public class MethodParser {
         }
 
         for (String arg : rawArgs) {
-            Matcher matcher = ARGUMENT_PATTERN.matcher(arg);
+            Matcher matcher = REF_ARG_PATTERN.matcher(arg);
             if (!matcher.matches()) {
                 Skript.error("Invalid argument pattern: "+ arg);
                 return null;
@@ -91,14 +97,14 @@ public class MethodParser {
             return null;
         }
         for (String arg : args) {
-            Matcher matcher = FULL_PATTERN.matcher(arg);
+            Matcher matcher = DEF_ARG_PATTERN.matcher(arg);
             if (!matcher.matches()) {
                 Skript.error("Invalid method argument(s)");
                 return null;
             }
-            String name = matcher.group("name");
-            String unparsedType = matcher.group("type");
-            String unparsedDefault = matcher.group("def");
+            String name = matcher.group("name").trim();
+            String unparsedType = matcher.group("type").trim();
+            String unparsedDefault = matcher.group("value");
 
             if (arguments.containsKey(name)) {
                 Skript.error("Duplicate method arguments");
