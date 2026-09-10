@@ -49,7 +49,8 @@ public class ExprMethodCall extends SimpleExpression<Object> {
         SkriptClass contextClass = SkriptMethod.getContextClass(getParser());
 
         String methodName = getConfigLowerCase(result.regexes.get(pattern));
-        String args = getConfigLowerCase(result.regexes.get(pattern+1));
+        String args = result.regexes.size() > pattern + 1
+            ? getConfigLowerCase(result.regexes.get(pattern + 1)) : null;
 
         MethodReference reference = MethodParser.parseReference(methodName, args);
         if (reference == null) return false;

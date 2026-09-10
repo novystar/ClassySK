@@ -45,12 +45,13 @@ public class EffMethodCall extends Effect {
         SkriptClass contextClass = SkriptMethod.getContextClass(getParser());
 
         String methodName = getConfigLowerCase(result.regexes.get(pattern));
-        String args = getConfigLowerCase(result.regexes.get(pattern+1));
+        String args = result.regexes.size() > pattern + 1
+            ? getConfigLowerCase(result.regexes.get(pattern + 1)) : null;
 
         MethodReference reference = MethodParser.parseReference(methodName, args);
         if (reference == null) return false;
 
-        validator = new MethodValidator(getErrorSource(), contextClass, reference, true);
+        validator = new MethodValidator(getErrorSource(), contextClass, reference, false);
         if (isStatic) {
             String className = getConfigLowerCase(result.regexes.getFirst());
             SkriptClass skriptClass = ClassManager.getClass(className);

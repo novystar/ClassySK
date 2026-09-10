@@ -187,7 +187,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
      */
     public final boolean validateFromExpression(Expression<ClassInstance> expr) {
         this.instanceExpr = expr;
-        SkriptClass inferredClass = Validator.getExpressionClass(expr);
+        SkriptClass inferredClass = getExpressionClass(expr);
 
         LogEntry error;
         SkriptClass resultClass = null;
