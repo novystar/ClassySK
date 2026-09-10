@@ -77,8 +77,8 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
                 Skript.error("Class '%s' does not exist", titleCase(className));
                 return false;
             }
-            return isStatic ? validator.validateStatic(skriptClass) :
-                !validator.validateUnknown(skriptClass).isFalse() && postInit();
+            return (isStatic ? validator.validateStatic(skriptClass) :
+                !validator.validateUnknown(skriptClass).isFalse()) && postInit();
         }
         instanceExpr = (Expression<ClassInstance>) exprs[0];
         if (instanceExpr.getSource() instanceof ExprSelf self) {
