@@ -143,10 +143,12 @@ public class MethodValidator extends Validator<ValidReference> {
             String name = entry.getKey();
             if (referenceArgNames.contains(name)) continue;
 
-            if (entry.getValue().defaultValue() == null) {
+            Expression<?> defaultValue = entry.getValue().defaultValue();
+            if (defaultValue == null) {
                 Skript.error("Could not resolve some argument(s) for this method call");
                 return null;
             }
+            result.put(name, defaultValue);
         }
         return new ValidReference(target, result);
     }
