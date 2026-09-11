@@ -56,6 +56,11 @@ public class EffField extends Effect {
         return true;
     }
 
+    public SkriptField withOrigin(String origin) {
+        field.origin = origin;
+        return field;
+    }
+
     public boolean parseDefault() {
         Node node = getNode();
         SkriptLogger.setNode(node);

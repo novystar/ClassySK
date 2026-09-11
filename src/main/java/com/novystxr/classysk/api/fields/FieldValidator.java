@@ -19,17 +19,10 @@ public class FieldValidator extends Validator<SkriptField> {
     }
 
     @Override
-    protected boolean validate(SkriptField field, boolean isStatic, SkriptClass target) {
-        if (field.accessType() == PRIVATE && target != contextClass) {
+    protected boolean validate(SkriptField field, SkriptClass contextClass) {
+        SkriptClass origin = field.getOrigin();
+        if (field.accessType() == PRIVATE && origin != contextClass) {
             Skript.error("Private fields can only be accessed from within their own class");
-            return false;
-        }
-        if (field.isStatic() && !isStatic) {
-            Skript.error("Static fields do not belong to any instance");
-            return false;
-        }
-        if (!field.isStatic() && isStatic) {
-            Skript.error("This field is only accessible from instances");
             return false;
         }
         return true;

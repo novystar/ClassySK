@@ -47,7 +47,7 @@ public class EffMethodCall extends Effect {
         String args = result.regexes.size() > pattern + 1
             ? getConfigLowerCase(result.regexes.get(pattern + 1)) : null;
 
-        MethodReference reference = MethodParser.parseReference(methodName, args);
+        MethodReference reference = MethodParser.parseReference(methodName, args, isStatic);
         if (reference == null) return false;
 
         validator = new MethodValidator(getErrorSource(), contextClass, reference, false);

@@ -1,5 +1,6 @@
 package com.novystxr.classysk.api;
 
+import com.novystxr.classysk.api.classes.SkriptClass;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
@@ -9,6 +10,8 @@ public interface AccessModifiable {
 
     boolean isPlural();
     Class<?> type();
+
+    SkriptClass getOrigin();
 
     default boolean hasModifier(Modifier modifier) {
         return modifiers()[modifier.index] == modifier;

@@ -5,8 +5,6 @@ import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.Map.Entry;
-import java.util.stream.Stream;
 
 public class MethodRegistry {
 

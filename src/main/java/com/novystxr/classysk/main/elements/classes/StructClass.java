@@ -81,7 +81,7 @@ public class StructClass extends Structure {
 
             if (element instanceof EffField field) {
                 String fieldName = field.name;
-                if (newClass.fields.putIfAbsent(fieldName, field.field) == null) {
+                if (newClass.fields.putIfAbsent(fieldName, field.withOrigin(name)) == null) {
                     fieldSyntaxes.add(field);
                 } else {
                     Skript.error("Field named '"+fieldName+"' already exists in this class");

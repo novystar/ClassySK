@@ -21,7 +21,7 @@ import java.util.*;
 
 public abstract class Validator<T extends AccessModifiable> implements RuntimeErrorProducer {
     private ClassInstance instance;
-    protected final SkriptClass contextClass;
+    private final SkriptClass contextClass;
 
     private T product = null;
     private final List<T> guesses = new ArrayList<>();
@@ -44,7 +44,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
     /**
      * Validate your signature and set any extra data
      */
-    protected abstract boolean validate(T product, boolean isStatic, SkriptClass targetClass);
+    protected abstract boolean validate(T product, @Nullable SkriptClass contextClass);
 
     protected abstract @Nullable T getProductFromClass(SkriptClass skriptClass);
     protected abstract @Nullable T getProductFromInstance(ClassInstance instance);
@@ -163,7 +163,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
         }
         SkriptClass parent = newInstance.getParent();
         if (parent == null) {
-            error("Target instance is not accessible");
+            error("Target instance has no parent class");
             return null;
         }
         if (this.instance == newInstance)
@@ -171,7 +171,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
 
         LogEntry error;
         try (var handler = new SimpleErrorHandler()) {
-            if (validateInstance(newInstance, parent)) {
+            if (validateInstance(newInstance)) {
                 return newInstance;
             }
             error = handler.getLastError();
@@ -189,24 +189,16 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
         this.instanceExpr = expr;
         SkriptClass inferredClass = getExpressionClass(expr);
 
+        Collection<SkriptClass> check = inferredClass == null ? ClassManager.getClasses() : List.of(inferredClass);
         LogEntry error;
-        SkriptClass resultClass = null;
-
         try (var handler = new SimpleErrorHandler().start()) {
-            if (inferredClass != null) {
-                T product = getProductFromClass(inferredClass);
-                if (product != null) {
-                    guesses.add(product);
-                    resultClass = inferredClass;
-                }
-            } else {
-                for (SkriptClass skriptClass : ClassManager.getClasses()) {
-                    T product = getProductFromClass(skriptClass);
-                    if (product != null) {
-                        guesses.add(product);
-                        resultClass = skriptClass;
-                    }
-                }
+            for (SkriptClass skriptClass : check) {
+
+                T product = getProductFromClass(skriptClass);
+                if (product == null || !validate(product, contextClass))
+                    continue;
+
+                guesses.add(product);
             }
             error = handler.getLastError();
         }
@@ -219,15 +211,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
             return true; // unknown, exact resolution happens at runtime
         }
         this.product = guesses.getFirst();
-
-        try (var handler = new SimpleErrorHandler().start()) {
-            if (validate(product, false, resultClass)) {
-                return true;
-            }
-            error = handler.getLastError();
-        }
-        if (error != null) Skript.error(error.getMessage());
-        return true;
+        return false;
     }
 
     /**
@@ -239,7 +223,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
         this.product = getProductFromClass(skriptClass);
         if (product == null) return false;
 
-        return validate(product, true, skriptClass);
+        return validate(product, contextClass);
     }
 
     /**
@@ -249,13 +233,20 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
      * @return true if the instance was valid, false if it was not
      *
      */
-    public final boolean validateInstance(@NotNull ClassInstance newInstance, SkriptClass parent) {
-        this.product = getProductFromInstance(newInstance);
-        if (product != null) {
-            if (validate(product, false, parent)) {
-                this.instance = newInstance;
-                return true;
+    public final boolean validateInstance(@NotNull ClassInstance newInstance) {
+        LogEntry error;
+        try (var handler = new SimpleErrorHandler().start()) {
+            this.product = getProductFromInstance(newInstance);
+            if (product != null) {
+                if (validate(product, contextClass)) {
+                    this.instance = newInstance;
+                    return true;
+                }
             }
+            error = handler.getLastError();
+        }
+        if (error != null) {
+            error(error.getMessage());
         }
         return false;
     }
