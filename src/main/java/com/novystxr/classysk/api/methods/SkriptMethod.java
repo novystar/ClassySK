@@ -8,7 +8,6 @@ import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassInstance;
-import com.novystxr.classysk.api.event.MethodRunEvent;
 import com.novystxr.classysk.api.util.DefaultValue;
 import com.novystxr.classysk.main.elements.methods.SecMethod;
 import org.bukkit.event.Event;
@@ -51,7 +50,7 @@ public class SkriptMethod implements AccessModifiable {
 
     public Object @Nullable [] run(Event event, @Nullable ClassInstance instance, @NotNull Map<String, Expression<?>> args) {
         if (trigger == null) return null;
-        MethodRunEvent runEvent = new MethodRunEvent(instance);
+        MethodEvent runEvent = new MethodEvent(instance);
         for (var entry : args.entrySet()) {
             Expression<?> expr = entry.getValue();
             String key = entry.getKey();

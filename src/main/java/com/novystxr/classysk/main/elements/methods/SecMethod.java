@@ -14,7 +14,7 @@ import com.novystxr.classysk.api.methods.MethodParser;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.classes.SkriptClass;
-import com.novystxr.classysk.api.event.MethodRunEvent;
+import com.novystxr.classysk.api.methods.MethodEvent;
 import com.novystxr.classysk.api.util.DefaultValue;
 import com.novystxr.classysk.api.util.StringUtils;
 import com.novystxr.classysk.api.util.ExprUtils;
@@ -119,8 +119,8 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
     public void loadTrigger() {
         if (sectionNode == null) return;
 
-        result.trigger = result.type() == null ? loadCode(sectionNode, "method body", MethodRunEvent.class)
-            : loadReturnableSectionCode(sectionNode, "method body", new Class[]{MethodRunEvent.class});
+        result.trigger = result.type() == null ? loadCode(sectionNode, "method body", MethodEvent.class)
+            : loadReturnableSectionCode(sectionNode, "method body", new Class[]{MethodEvent.class});
     }
 
     @Override
@@ -130,7 +130,7 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
 
     @Override
     public void returnValues(Event event, Expression<?> value) {
-        if (event instanceof MethodRunEvent runEvent) {
+        if (event instanceof MethodEvent runEvent) {
             runEvent.returnObject = value.getArray(event);
         }
     }

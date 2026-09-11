@@ -1,16 +1,16 @@
-package com.novystxr.classysk.api.event;
+package com.novystxr.classysk.api.methods;
 
 import com.novystxr.classysk.api.classes.ClassInstance;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
-public class MethodRunEvent extends Event {
+public class MethodEvent extends Event {
 
     public final ClassInstance instance;
     public Object[] returnObject;
 
-    public MethodRunEvent(ClassInstance instance) {
+    public MethodEvent(ClassInstance instance) {
         this.instance = instance;
     }
 

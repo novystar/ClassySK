@@ -21,6 +21,7 @@ import com.novystxr.classysk.api.util.StringUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
+import org.skriptlang.skript.registration.SyntaxInfo;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
 import java.util.HashMap;
@@ -50,6 +51,7 @@ public class SecExprNewInstance extends SectionExpression<Object> {
             DefaultSyntaxInfos.Expression.builder(SecExprNewInstance.class, Object.class)
                 .addPattern("[a] new [instance of] <"+ Classysk.CLASSNAME_PATTERN +">")
                 .supplier(SecExprNewInstance::new)
+                .priority(SyntaxInfo.COMBINED)
                 .build()
         );
     }

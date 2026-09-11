@@ -12,10 +12,12 @@ import static com.novystxr.classysk.api.Modifier.PRIVATE;
 public class FieldValidator extends Validator<SkriptField> {
 
     private final String fieldName;
+    private final boolean isStatic;
 
-    public FieldValidator(ErrorSource errorSource, SkriptClass contextClass, String fieldName) {
+    public FieldValidator(ErrorSource errorSource, SkriptClass contextClass, String fieldName, boolean isStatic) {
         super(errorSource, contextClass);
         this.fieldName = fieldName;
+        this.isStatic = isStatic;
     }
 
     @Override
@@ -23,6 +25,14 @@ public class FieldValidator extends Validator<SkriptField> {
         SkriptClass origin = field.getOrigin();
         if (field.accessType() == PRIVATE && origin != contextClass) {
             Skript.error("Private fields can only be accessed from within their own class");
+            return false;
+        }
+        if (field.isStatic() && !isStatic) {
+            Skript.error("Static fields do not belong to any instance");
+            return false;
+        }
+        if (!field.isStatic() && isStatic) {
+            Skript.error("This field is only accessible from instances");
             return false;
         }
         return true;

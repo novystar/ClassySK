@@ -9,7 +9,7 @@ import ch.njol.util.Kleenean;
 import ch.njol.util.coll.CollectionUtils;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.SkriptClass;
-import com.novystxr.classysk.api.event.MethodRunEvent;
+import com.novystxr.classysk.api.methods.MethodEvent;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
@@ -51,9 +51,9 @@ public class ExprSelf extends SimpleExpression<Object> implements EventRestricte
 
     @Override
     protected ClassInstance @Nullable [] get(Event event) {
-        if (event instanceof MethodRunEvent runEvent) {
-            return runEvent.instance == null
-                ? null : CollectionUtils.array(runEvent.instance);
+        if (event instanceof MethodEvent methodEvent) {
+            return methodEvent.instance == null
+                ? null : CollectionUtils.array(methodEvent.instance);
         }
         return null;
     }
@@ -75,6 +75,6 @@ public class ExprSelf extends SimpleExpression<Object> implements EventRestricte
 
     @Override
     public Class<? extends Event>[] supportedEvents() {
-        return CollectionUtils.array(MethodRunEvent.class);
+        return CollectionUtils.array(MethodEvent.class);
     }
 }
