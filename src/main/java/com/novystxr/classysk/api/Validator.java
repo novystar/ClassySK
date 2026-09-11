@@ -211,7 +211,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
             return true; // unknown, exact resolution happens at runtime
         }
         this.product = guesses.getFirst();
-        return false;
+        return true;
     }
 
     /**

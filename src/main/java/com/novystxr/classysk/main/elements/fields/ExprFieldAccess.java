@@ -58,7 +58,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
         SkriptClass contextClass = SkriptMethod.getContextClass(getParser());
         fieldName = getConfigLowerCase(result.regexes.get(pattern));
 
-        validator = new FieldValidator(getErrorSource(), contextClass, fieldName);
+        validator = new FieldValidator(getErrorSource(), contextClass, fieldName, isStatic);
         if (isStatic) {
             String className = getLowerCase(result.regexes.getFirst());
             skriptClass = ClassManager.getClass(className);

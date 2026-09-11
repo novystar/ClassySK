@@ -1,7 +1,6 @@
 package com.novystxr.classysk.api.fields;
 
-import ch.njol.skript.lang.Expression;
-import ch.njol.skript.lang.util.ContextlessEvent;
+import com.novystxr.classysk.api.util.DefaultValue;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.converter.Converters;
@@ -31,9 +30,9 @@ public interface FieldHolder {
         SkriptField field = getField(fieldName);
         if (field == null) return;
 
-        Expression<?> defaultValue = field.defaultValue;
+        DefaultValue<?> defaultValue = field.defaultValue;
         if (defaultValue != null) {
-            Object[] convertedValue = Converters.convert(defaultValue.getArray(ContextlessEvent.get()), field.type());
+            Object[] convertedValue = Converters.convert(defaultValue.getArray(), field.type());
             if (convertedValue.length == 0) return;
 
             fieldValueMap().put(fieldName, convertedValue);

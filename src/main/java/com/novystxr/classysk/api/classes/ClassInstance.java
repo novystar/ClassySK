@@ -33,6 +33,6 @@ public class ClassInstance implements FieldHolder {
 
     @Override
     public @Nullable SkriptField getField(String fieldName) {
-        return getParent().getField(name);
+        return getParent().getField(fieldName);
     }
 }

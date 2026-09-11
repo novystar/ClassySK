@@ -28,7 +28,7 @@ public class EffField extends Effect {
     }
 
     public static SyntaxInfo<EffField> INFO = SyntaxInfo.builder(EffField.class)
-        .addPattern("(:public|:private) [:static] [:const] <"+ Classysk.NAME_PATTERN +">\\: %*classinfo% [= %-objects%]")
+        .addPattern("(:public|:private) [:static] [:const] <"+ Classysk.NAME_PATTERN +">\\: %*classinfo% [= <.+>]")
         .supplier(EffField::new)
         .build();
 
@@ -39,20 +39,17 @@ public class EffField extends Effect {
     @Override
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result) {
         name = StringUtils.getConfigLowerCase(result.regexes.getFirst());
-
         ClassInfoReference reference = ExprUtils.getClassRef(exprs[0]);
-        boolean isPlural = reference.isPlural().isTrue();
 
+        boolean isPlural = reference.isPlural().isTrue();
         Class<?> type = reference.getClassInfo().getC();
-        Modifier[] modifiers = Modifier.collect(result.tags);
 
         DefaultValue<?> defaultValue = null;
         if (result.regexes.size() == 2) {
             String rawExpr = result.regexes.get(1).group().trim();
             defaultValue = new DefaultValue.Dynamic<>(rawExpr, type, isPlural);
         }
-
-        this.field = new SkriptField(name, type, modifiers, isPlural, defaultValue);
+        this.field = new SkriptField(name, type, Modifier.collect(result.tags), isPlural, defaultValue);
         return true;
     }
 
