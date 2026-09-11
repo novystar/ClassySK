@@ -50,14 +50,15 @@ public class MethodParser {
 
     public record MethodReference(
         String name,
-        List<ReferenceArgument> args
+        List<ReferenceArgument> args,
+        boolean isStatic
     ) {}
 
-    public static @Nullable MethodReference parseReference(String name, @Nullable String args) {
+    public static @Nullable MethodReference parseReference(String name, @Nullable String args, boolean isStatic) {
         List<ReferenceArgument> referenceArguments = new ArrayList<>();
 
         if (args == null) {
-            return new MethodReference(name, new ArrayList<>());
+            return new MethodReference(name, new ArrayList<>(), isStatic);
         }
 
         List<String> rawArgs = splitArgs(args);
@@ -86,7 +87,7 @@ public class MethodParser {
             referenceArguments.add(new ReferenceArgument(argName, expr));
         }
 
-        return new MethodReference(name, referenceArguments);
+        return new MethodReference(name, referenceArguments, isStatic);
     }
 
     public static @Nullable SequencedMap<String, MethodArgument> parseArguments(String argsString) {

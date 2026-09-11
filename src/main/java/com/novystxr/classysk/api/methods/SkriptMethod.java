@@ -5,6 +5,7 @@ import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.variables.Variables;
 import com.novystxr.classysk.api.AccessModifiable;
 import com.novystxr.classysk.api.Modifier;
+import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.event.MethodRunEvent;
@@ -32,6 +33,7 @@ public class SkriptMethod implements AccessModifiable {
     public final boolean isPlural;
 
     public Trigger trigger;
+    public String origin;
     public final int minArgCount;
 
     public SkriptMethod(String name, SequencedMap<String, MethodArgument> arguments, Modifier[] modifiers, Class<?> type, boolean isPlural) {
@@ -68,6 +70,11 @@ public class SkriptMethod implements AccessModifiable {
             }
         }
         return trigger.execute(runEvent) ? runEvent.returnObject : null;
+    }
+
+    @Override
+    public SkriptClass getOrigin() {
+        return ClassManager.getClass(origin);
     }
 
     public static @Nullable SkriptClass getContextClass(ParserInstance parser) {
