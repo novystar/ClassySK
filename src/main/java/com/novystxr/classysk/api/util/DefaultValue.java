@@ -4,13 +4,11 @@ package com.novystxr.classysk.api.util;
 import ch.njol.skript.Skript;
 import ch.njol.skript.config.Node;
 import ch.njol.skript.lang.Expression;
-import ch.njol.skript.lang.Literal;
 import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.util.ContextlessEvent;
 import ch.njol.skript.lang.util.SimpleExpression;
-import ch.njol.skript.lang.util.SimpleLiteral;
 import ch.njol.skript.util.LiteralUtils;
 import ch.njol.util.Kleenean;
 import org.bukkit.event.Event;
@@ -39,12 +37,6 @@ public abstract class DefaultValue<T> extends SimpleExpression<T> {
     }
 
     @Override
-    public Class<? extends T> getReturnType() {
-        Expression<? extends T> expr = getExpr();
-        return expr == null ? null : expr.getReturnType();
-    }
-
-    @Override
     public boolean isSingle() {
         Expression<? extends T> expr = getExpr();
         return expr == null || expr.isSingle();
@@ -54,29 +46,6 @@ public abstract class DefaultValue<T> extends SimpleExpression<T> {
     public String toString(Event event, boolean debug) {
         Expression<? extends T> expr = getExpr();
         return expr == null ? "unparsed default" : toString(event, debug);
-    }
-
-    public static class Simple<T> extends DefaultValue<T> {
-        public Literal<T> literal;
-
-        public Simple(T[] value, Class<T> type) {
-            this.literal = new SimpleLiteral<>(value, type, false);
-        }
-
-        @Override
-        public boolean parse() {
-            return true;
-        }
-
-        @Override
-        public boolean parse(Node node) {
-            return true;
-        }
-
-        @Override
-        protected Expression<? extends T> getExpr() {
-            return literal;
-        }
     }
 
     public static class Dynamic<T> extends DefaultValue<T> {
@@ -123,6 +92,39 @@ public abstract class DefaultValue<T> extends SimpleExpression<T> {
         @Override
         protected Expression<? extends T> getExpr() {
             return parsedExpr;
+        }
+
+        @Override
+        public Class<? extends T> getReturnType() {
+            return parseAs;
+        }
+    }
+
+    public static class Empty<T> extends DefaultValue<T> {
+
+        private final Class<T> type;
+        public Empty(Class<T> type) {
+            this.type = type;
+        }
+
+        @Override
+        public boolean parse() {
+            return true;
+        }
+
+        @Override
+        public boolean parse(Node node) {
+            return true;
+        }
+
+        @Override
+        protected Expression<? extends T> getExpr() {
+            return null;
+        }
+
+        @Override
+        public Class<? extends T> getReturnType() {
+            return type;
         }
     }
 }

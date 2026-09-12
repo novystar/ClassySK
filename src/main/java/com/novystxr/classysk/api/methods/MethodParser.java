@@ -29,7 +29,7 @@ public class MethodParser {
 
     // argument components
     private static final String NAME = "(?<name>[_a-zA-Z0-9]+)";
-    private static final String TYPE = "(?<type>[a-zA-Z ]+)";
+    private static final String TYPE = "(?<optional>optional)?(?<type>[a-zA-Z ]+)";
     private static final String VALUE = "(?<value>.+)";
 
     // compiled argument patterns
@@ -106,6 +106,7 @@ public class MethodParser {
             String name = matcher.group("name").trim();
             String unparsedType = matcher.group("type").trim();
             String unparsedDefault = matcher.group("value");
+            boolean optional = matcher.group("optional") != null;
 
             if (arguments.containsKey(name)) {
                 Skript.error("Duplicate method arguments");
@@ -128,6 +129,10 @@ public class MethodParser {
                     Skript.error("Invalid argument name: %s", variableName);
                     return null;
                 }
+                if (optional)
+                    Skript.warning("'optional' is unnecessary here because default arguments are already optional.");
+            } else if (optional) {
+                defaultValue = new DefaultValue.Empty<>(type);
             }
             MethodArgument argument = new MethodArgument(type, defaultValue, isPlural);
             arguments.put(name, argument);
