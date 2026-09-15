@@ -10,9 +10,11 @@ import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.MethodParser.ReferenceArgument;
+import com.novystxr.classysk.api.methods.MethodRegistry.MethodIdentifier;
 import com.novystxr.classysk.api.methods.MethodValidator.ValidReference;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.util.DefaultValue;
+import org.bukkit.event.Event;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
 import org.skriptlang.skript.log.runtime.ErrorSource;
@@ -59,18 +61,21 @@ public class MethodValidator extends Validator<ValidReference> {
 
     @Override
     protected @Nullable ValidReference getProductFromInstance(ClassInstance instance) {
-        SkriptMethod method = product() == null ? null
-            : instance.getExactMethod(product().method.getIdentifier(), isSuper);
-        if (method == null) {
-            return getProductFromClass(instance.getParent());
+        SkriptClass parent = instance.getParent();
+        // TODO: for inheritance this should be changed to an 'inherits' check because methods of subclasses will also have the same signature
+        if (product() == null || parent != product().getOrigin()) {
+            return getProductFromClass(parent);
         }
-        return product().copy(method);
+        SkriptMethod method = instance.getParent().methodRegistry.getExactMethod(MethodIdentifier.from(product().method));
+        if (method == null) {
+            return getProductFromClass(parent);
+            }
+        return new ValidReference(method, product().args);
     }
 
     @Override
     protected boolean validate(ValidReference reference, SkriptClass contextClass) {
         SkriptClass origin = reference.getOrigin();
-
         if (expectsReturn && reference.type() == null) {
             Skript.error("This method can't return anything");
             return false;
@@ -186,13 +191,13 @@ public class MethodValidator extends Validator<ValidReference> {
         public Class<?> type() {
             return method.type();
         }
-
+        @Override
         public SkriptClass getOrigin() {
             return method.getOrigin();
         }
 
-        public ValidReference copy(SkriptMethod method) {
-            return new ValidReference(method, args);
+        public Object @Nullable [] run(Event event, ClassInstance instance) {
+            return method.run(event, instance, args);
         }
     }
 }

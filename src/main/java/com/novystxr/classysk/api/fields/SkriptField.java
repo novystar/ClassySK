@@ -9,15 +9,12 @@ import org.jetbrains.annotations.Nullable;
 
 public class SkriptField implements AccessModifiable {
 
-    public static SkriptField UNKNOWN = new SkriptField("$unknown", Object.class, Modifier.PUBLIC.array(), true, null);
-
     public final String name;
     public final Class<?> type;
     public final Modifier[] modifiers;
     public final boolean isPlural;
     public final DefaultValue<?> defaultValue;
-
-    public String origin = null;
+    public String origin;
 
     public SkriptField(String name, Class<?> type, Modifier[] modifiers, boolean isPlural, @Nullable DefaultValue<?> defaultValue) {
         this.name = name;
@@ -27,8 +24,9 @@ public class SkriptField implements AccessModifiable {
         this.defaultValue = defaultValue;
     }
 
+    @Override
     public SkriptClass getOrigin() {
-        return origin == null ? null : ClassManager.getClass(origin);
+        return ClassManager.getClass(origin);
     }
 
     @Override

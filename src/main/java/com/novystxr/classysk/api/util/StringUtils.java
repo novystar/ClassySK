@@ -49,6 +49,7 @@ public class StringUtils {
     }
 
     public static String getConfigLowerCase(MatchResult matchResult) {
+        if (matchResult == null) return null;
         return getConfigLowerCase(matchResult.group(0));
     }
 }

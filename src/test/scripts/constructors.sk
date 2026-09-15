@@ -8,7 +8,7 @@ class TestConstruct:
 
 	public static staticField: boolean
 
-	public static createAll() :: class instance:
+	public static createAll() :: instance:
 		set {_instance} to new instance of TestConstruct:
 			int: 1
 			intDefault: 2

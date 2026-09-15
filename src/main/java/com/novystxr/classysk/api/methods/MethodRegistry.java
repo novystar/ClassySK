@@ -1,23 +1,22 @@
 package com.novystxr.classysk.api.methods;
 
-import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class MethodRegistry {
 
     public record MethodIdentifier(
         String name,
-        Class<?>[] argTypes
+        Class<?>[] argTypes,
+        boolean isStatic
     ) {
         @Override
         public boolean equals(Object o) {
             if (!(o instanceof MethodIdentifier identifier)) return false;
-            return name.equals(identifier.name) && Arrays.equals(argTypes, identifier.argTypes);
+            return name.equals(identifier.name) && Arrays.equals(argTypes, identifier.argTypes) && isStatic == identifier.isStatic;
         }
 
         @Override
@@ -30,20 +29,20 @@ public class MethodRegistry {
                 .map(MethodArgument::type)
                 .toArray(Class[]::new);
 
-            return new MethodIdentifier(method.name, argTypes);
+            return new MethodIdentifier(method.name, argTypes, method.isStatic());
         }
     }
 
-    private Map<MethodIdentifier, SkriptMethod> registry = new HashMap<>();
+    private final Map<MethodIdentifier, SkriptMethod> registry = new HashMap<>();
 
     public @Nullable SkriptMethod getExactMethod(MethodIdentifier identifier) {
         return registry.get(identifier);
     }
 
-    public Map<MethodIdentifier, SkriptMethod> candidates(MethodReference reference, boolean isStatic) {
+    public List<SkriptMethod> candidates(MethodReference reference) {
         int refArgs = reference.args().size();
 
-        Map<MethodIdentifier, SkriptMethod> result = new HashMap<>();
+        List<SkriptMethod> result = new ArrayList<>();
         for (var entry : registry.entrySet()) {
             MethodIdentifier key = entry.getKey();
             SkriptMethod method = entry.getValue();
@@ -54,26 +53,16 @@ public class MethodRegistry {
                 continue;
             if (refArgs > key.argTypes.length)
                 continue;
-            if (isStatic != method.isStatic())
+            if (reference.isStatic() != method.isStatic())
                 continue;
 
-            result.put(key, method);
+            result.add(method);
         }
         return result;
     }
 
-    public void init() {
-        registry = new HashMap<>();
-    }
-
     public boolean registerMethod(SkriptMethod method) {
         return registry.putIfAbsent(MethodIdentifier.from(method), method) == null;
-    }
-
-    public List<SkriptMethod> getAbstract() {
-        return registry.values().stream()
-            .filter(method -> method.hasModifier(Modifier.ABSTRACT))
-            .collect(Collectors.toList());
     }
 
 }

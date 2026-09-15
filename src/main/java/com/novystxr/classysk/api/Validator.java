@@ -2,9 +2,13 @@ package com.novystxr.classysk.api;
 
 import ch.njol.skript.Skript;
 import ch.njol.skript.lang.Expression;
+import ch.njol.skript.lang.Variable;
+import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.log.LogEntry;
 import ch.njol.skript.util.Utils;
+import ch.njol.skript.variables.HintManager;
 import ch.njol.util.Kleenean;
+import com.novystxr.classysk.api.classes.ClassContextHolder;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
@@ -27,6 +31,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
     private final List<T> guesses = new ArrayList<>();
 
     private final ErrorSource errorSource;
+    private Expression<ClassInstance> instanceExpr;
 
     public final T product() {
         return product;
@@ -40,7 +45,10 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
         this.contextClass = contextClass;
     }
 
-    protected abstract boolean validate(T product, SkriptClass contextClass);
+    /**
+     * Validate your signature and set any extra data
+     */
+    protected abstract boolean validate(T product, @Nullable SkriptClass contextClass);
 
     protected abstract @Nullable T getProductFromClass(SkriptClass skriptClass);
     protected abstract @Nullable T getProductFromInstance(ClassInstance instance);
@@ -77,7 +85,35 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
     }
 
     /**
-     * A helper method to get all possible return types based off of previous guesses from {@link Validator#validateUnknown(SkriptClass)}
+     * Gets the inferred classes (if possible) from the target expression.
+     * If any specific classes could not be inferred, this returns a collection of every class.
+     */
+    @SuppressWarnings("UnstableApiUsage")
+    public static Collection<SkriptClass> getPossibleClasses(Expression<?> expr) {
+        if (expr instanceof ClassContextHolder holder) {
+            return List.of(holder.getContextClass());
+        }
+        List<SkriptClass> possibleClasses = new ArrayList<>();
+        Class<?>[] possibleTypes;
+
+        HintManager hintManager = ParserInstance.get().getHintManager();
+        if (hintManager.isActive() && expr instanceof Variable<?> variable && HintManager.canUseHints(variable)) {
+            possibleTypes = hintManager.get(variable).toArray(Class[]::new);
+        } else {
+            possibleTypes = expr.possibleReturnTypes();
+        }
+        for (Class<?> type : possibleTypes) {
+            if (type == ClassInstance.class || type == Object.class) {
+                return ClassManager.getClasses();
+            } else if (ClassInstance.class.isAssignableFrom(type)) {
+                possibleClasses.add(ClassManager.getClass(type.getSimpleName()));
+            }
+        }
+        return possibleClasses;
+    }
+
+    /**
+     * A helper method to get all possible return types based off of previous guesses from {@link Validator#validateExpression(Expression)}
      * @return The {@link Validator#product} return type, OR all return types of {@link Validator#guesses}
      */
     public final Class<?>[] possibleTypes() {
@@ -135,54 +171,25 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
      * Helper method for validating instances at runtime
      *
      * @param event The event to grab the instance with
-     * @param instanceExpr The expression to grab the instance from
-     * @param hintClass The hint class retrieved at init, null if unspecified
      * @return The instance which has been validated against the reference OR null if it wasn't valid
      */
-    public final @Nullable ClassInstance getValidInstance(Event event, Expression<ClassInstance> instanceExpr, @Nullable SkriptClass hintClass) {
+    public final @Nullable ClassInstance getValidInstance(Event event) {
         ClassInstance newInstance = instanceExpr.getSingle(event);
-        if (hintClass == contextClass) hintClass = null;
-
-        if (newInstance == null) {
-            error("Target instance was not set");
-            return null;
-        }
-        SkriptClass parent = newInstance.getParent();
-        if (parent == null) {
-            error("Target instance is not accessible");
-            return null;
-        }
-
-        if (this.instance == newInstance) return newInstance;
-
-        if (hintClass != null && !hintClass.inherits(parent)) {
-            error("Given instance does not match '"+ hintClass.getEffectiveName() +"'");
-            return null;
-        }
-        if (validateInstance(newInstance)) {
-            return newInstance;
-        }
-        return null;
+        return validateInstance(newInstance) ? newInstance : null;
     }
 
     /**
-     * Used for validating instances at parse time
-     *
-     * @param hintClass Either the context class from 'self' or user defined. If null, the validator will attempt to check every class
-     * @return TRUE if could find the right class,
-     * FALSE if could find the right class but the reference is not valid,
-     * UNKNOWN if could not find the right class
+     * Used for validating instances via expression at parse time
      */
-    public final Kleenean validateUnknown(@Nullable SkriptClass hintClass) {
-        Collection<SkriptClass> check = hintClass == null ? ClassManager.getClasses() : List.of(hintClass);
+    public final boolean validateExpression(Expression<?> expr) {
+        //noinspection unchecked
+        this.instanceExpr = (Expression<ClassInstance>) expr;
         LogEntry error;
         try (var handler = new SimpleErrorHandler().start()) {
-            for (SkriptClass skriptClass : check) {
-
+            for (SkriptClass skriptClass : getPossibleClasses(expr)) {
                 T product = getProductFromClass(skriptClass);
-                if (product == null || !validate(product, contextClass()))
+                if (product == null || !validate(product, contextClass))
                     continue;
-
                 guesses.add(product);
             }
             error = handler.getLastError();
@@ -190,13 +197,13 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
         if (guesses.isEmpty()) {
             if (error != null)
                 Skript.error(error.getMessage());
-            return Kleenean.FALSE;
+            return false;
         }
         if (guesses.size() != 1) {
-            return Kleenean.UNKNOWN;
+            return true; // unknown, exact resolution happens at runtime
         }
         this.product = guesses.getFirst();
-        return Kleenean.TRUE;
+        return true;
     }
 
     /**
@@ -208,7 +215,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
         this.product = getProductFromClass(skriptClass);
         if (product == null) return false;
 
-        return validate(product, contextClass());
+        return validate(product, contextClass);
     }
 
     /**
@@ -218,12 +225,24 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
      * @return true if the instance was valid, false if it was not
      *
      */
-    public final boolean validateInstance(@NotNull ClassInstance newInstance) {
+    public final boolean validateInstance(@Nullable ClassInstance newInstance) {
+        if (newInstance == null) {
+            error("Target instance was not set");
+            return false;
+        }
+        SkriptClass parent = newInstance.getParent();
+        if (parent == null) {
+            error("Target instance has no parent class");
+            return false;
+        }
+        if (this.instance == newInstance)
+            return true;
+
         LogEntry error;
         try (var handler = new SimpleErrorHandler().start()) {
             this.product = getProductFromInstance(newInstance);
             if (product != null) {
-                if (validate(product, contextClass())) {
+                if (validate(product, contextClass)) {
                     this.instance = newInstance;
                     return true;
                 }

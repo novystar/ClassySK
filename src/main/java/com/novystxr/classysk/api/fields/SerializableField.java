@@ -10,7 +10,6 @@ import org.skriptlang.skript.lang.converter.Converters;
 import java.io.StreamCorruptedException;
 
 public class SerializableField implements YggdrasilExtendedSerializable {
-
     public Object[] value;
 
     public SerializableField(Object[] value) {
@@ -22,7 +21,6 @@ public class SerializableField implements YggdrasilExtendedSerializable {
     @Override
     public Fields serialize() {
         Fields fields = new Fields();
-
         fields.putObject("value", value);
         return fields;
     }
@@ -33,7 +31,6 @@ public class SerializableField implements YggdrasilExtendedSerializable {
     }
 
     public boolean canBeSaved() {
-        Object[] newValue = new Object[value.length];
         for (int i = 0; i < value.length; i++) {
             if (value[i] == null) {
                 continue;
@@ -43,15 +40,12 @@ public class SerializableField implements YggdrasilExtendedSerializable {
             if (serializeAs != null) {
                 classInfo = Classes.getExactClassInfo(serializeAs);
                 if (classInfo == null) return false;
-                newValue[i] = Converters.convert(value[i], serializeAs);
-            } else {
-                newValue[i] = value[i];
+                value[i] = Converters.convert(value[i], serializeAs);
             }
             if (classInfo.getSerializer() == null) {
                 return false;
             }
         }
-        value = newValue;
         return true;
     }
 }

@@ -51,7 +51,6 @@ public class SkriptClass implements FieldHolder, MethodHolder, ModifierHolder {
         return inheritanceStream()
             .anyMatch(target -> target == otherClass);
     }
-
     @Override
     public Map<String, Object[]> fieldValueMap() {
         return ClassManager.staticFieldMaps.computeIfAbsent(name, key -> new HashMap<>());
@@ -77,15 +76,8 @@ public class SkriptClass implements FieldHolder, MethodHolder, ModifierHolder {
         }
     }
 
-    public void setupInstance(ClassInstance instance) {
-        instances().add(instance);
-        instance.setDefaults();
-    }
-
-    public ClassInstance createInstance() {
-        ClassInstance newInstance = new ClassInstance(name);
-        setupInstance(newInstance);
-        return newInstance;
+    public Class<? extends ClassInstance> getSubclass() {
+        return ClassManager.getSubclass(name);
     }
 
     public String getEffectiveName() {
@@ -126,5 +118,4 @@ public class SkriptClass implements FieldHolder, MethodHolder, ModifierHolder {
             super(name, name, Modifier.none());
         }
     }
-
 }

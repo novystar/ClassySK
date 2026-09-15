@@ -1,14 +1,16 @@
 package com.novystxr.classysk.main.elements.classes;
 
-import ch.njol.skript.Skript;
 import ch.njol.skript.doc.*;
+import ch.njol.skript.lang.EventRestrictedSyntax;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
+import ch.njol.util.coll.CollectionUtils;
+import com.novystxr.classysk.api.classes.ClassContextHolder;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.SkriptClass;
-import com.novystxr.classysk.api.methods.MethodRunEvent;
+import com.novystxr.classysk.api.methods.MethodEvent;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
@@ -29,37 +31,37 @@ import org.skriptlang.skript.registration.SyntaxRegistry;
     \t\tadd 1 to self::counter
     """)
 @Since("1.0.0")
-public class ExprSelf extends SimpleExpression<ClassInstance> {
+public class ExprSelf extends SimpleExpression<Object> implements EventRestrictedSyntax, ClassContextHolder {
     public static void register(SyntaxRegistry registry) {
         registry.register(
             SyntaxRegistry.EXPRESSION,
-            DefaultSyntaxInfos.Expression.builder(ExprSelf.class, ClassInstance.class)
+            DefaultSyntaxInfos.Expression.builder(ExprSelf.class, Object.class)
                 .addPatterns("self", "(this|[the] current) instance")
                 .supplier(ExprSelf::new)
                 .build()
         );
     }
 
-    protected SkriptClass contextClass;
+    private SkriptClass skriptClass;
 
     @Override
     public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, SkriptParser.ParseResult parseResult) {
-        contextClass = SkriptMethod.getContextClass(getParser());
-
-        if (contextClass == null) {
-            Skript.error("This expression can only be used within a method section.");
-            return false;
-        }
-        return true;
+        this.skriptClass = SkriptMethod.getContextClass(getParser());
+        return skriptClass != null;
     }
 
     @Override
     protected ClassInstance @Nullable [] get(Event event) {
-        if (event instanceof MethodRunEvent runEvent) {
-            return runEvent.instance == null
-                ? null : new ClassInstance[]{runEvent.instance};
+        if (event instanceof MethodEvent methodEvent) {
+            return methodEvent.instance == null
+                ? null : CollectionUtils.array(methodEvent.instance);
         }
         return null;
+    }
+
+    @Override
+    public SkriptClass getContextClass() {
+        return skriptClass;
     }
 
     @Override
@@ -69,11 +71,16 @@ public class ExprSelf extends SimpleExpression<ClassInstance> {
 
     @Override
     public Class<? extends ClassInstance> getReturnType() {
-        return ClassInstance.class;
+        return skriptClass.getSubclass();
     }
 
     @Override
     public String toString(@Nullable Event event, boolean debug) {
         return "self";
+    }
+
+    @Override
+    public Class<? extends Event>[] supportedEvents() {
+        return CollectionUtils.array(MethodEvent.class);
     }
 }

@@ -335,7 +335,7 @@ test "ClassySK - Method Arguments Type Validation":
 	assert {-typeInts::*} is 1, 2, 3
 	
 	parse:
-		{_instance}<TypeValidation>::ints((1, "b"))
+		{_instance}::ints((1, "b"))
 	assert last parse logs is set
 
 	{_instance}::objs(1)
@@ -347,19 +347,19 @@ test "ClassySK - Method Arguments Type Validation":
 	{_instance}::string("a")
 	assert {-typeString} is "a"
 	parse:
-		{_instance}<TypeValidation>::string(1)
+		{_instance}::string(1)
 	assert last parse logs is set
 
 	parse:
-		{_instance}<TypeValidation>::string("b", "c")
+		{_instance}::string("b", "c")
 	assert last parse logs is set
 
 	parse:
-		{_instance}<TypeValidation>::string("d", 2)
+		{_instance}::string("d", 2)
 	assert last parse logs is set
 
 	delete {-typeString}
-	{_instance}<TypeValidation>::string({_int})
+	{_instance}::string({_int})
 	assert {-typeString} is not set
 
 
@@ -490,7 +490,7 @@ class TestReturns:
 		return self::returnBools()
 
 	
-	public returnSelf() :: class instance:
+	public returnSelf() :: instance:
 		return self
 
 test "ClassySK - Method Returns":
@@ -618,19 +618,19 @@ test "ClassySK - Keyed method input":
 
 class TestChain:
 
-	public chain_instance: class instance
+	public chain_instance: instance
 
-	public chain1() :: class instance:
+	public chain1() :: instance:
 		return self
-	public chain2() :: class instance:
+	public chain2() :: instance:
 		return self
-	public chain3() :: class instance:
+	public chain3() :: instance:
 		return self
-	public chain4() :: class instance:
+	public chain4() :: instance:
 		return self
-	public chain5() :: class instance:
+	public chain5() :: instance:
 		return self
-	public chain6() :: class instance:
+	public chain6() :: instance:
 		return self
 
 test "ClassySK - Method Chaining":
@@ -652,3 +652,19 @@ test "ClassySK - Method Chaining":
 	set {_result} to {_inst}::chain_instance::chain1()::chain3()::chain_instance::chain4()
 	assert {_result} is set
 	assert {_result} is an instance of TestChain
+
+class TestOptional:
+	public testOptional(test?: int):
+		set {-testOptional} to {_test}
+
+test "ClassySK - Optional Args":
+	set {_test} to new TestOptional
+
+	{_test}::testOptional(2.5)
+	assert {-testOptional} is 2
+
+	{_test}::testOptional(test: 5)
+	assert {-testOptional} is 5
+
+	{_test}::testOptional()
+	assert {-testOptional} is not set

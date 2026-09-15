@@ -10,11 +10,11 @@ import ch.njol.skript.util.ClassInfoReference;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.Modifier;
+import com.novystxr.classysk.api.methods.MethodEvent;
 import com.novystxr.classysk.api.methods.MethodParser;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.classes.SkriptClass;
-import com.novystxr.classysk.api.methods.MethodRunEvent;
 import com.novystxr.classysk.api.util.DefaultValue;
 import com.novystxr.classysk.api.util.StringUtils;
 import com.novystxr.classysk.api.util.ExprUtils;
@@ -63,12 +63,12 @@ public class SecMethod extends EffectSection implements ReturnHandler<Object> {
     }
 
     public static SyntaxInfo<SecMethod> ANONYMOUS_INFO = SyntaxInfo.builder(SecMethod.class)
-        .addPattern("[:public|:protected|:private] [override] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [(\\:\\:|returns|->) %-*classinfo%]")
+        .addPattern("[:public|:protected|:private] [override] <"+ Classysk.NAME_PATTERN +">\\([<.+>]\\) [(\\:\\:|returns|->) %-*classinfo%]")
         .supplier(SecMethod::new)
         .build();
 
     public static SyntaxInfo<SecMethod> INFO = SyntaxInfo.builder(SecMethod.class)
-        .addPattern("(:public|:protected|:private) [:final] [:static|:abstract|:override] <"+ Classysk.NAME_PATTERN +">\\([args:<.+>]\\) [(\\:\\:|returns|->) %-*classinfo%]")
+        .addPattern("(:public|:protected|:private) [:final] [:static|:abstract|:override] <"+ Classysk.NAME_PATTERN +">\\([<.+>]\\) [(\\:\\:|returns|->) %-*classinfo%]")
         .supplier(SecMethod::new)
         .build();
 
@@ -112,7 +112,7 @@ public class SecMethod extends EffectSection implements ReturnHandler<Object> {
         String methodName = StringUtils.getConfigLowerCase(result.regexes.get(0));
         SequencedMap<String, MethodArgument> args = new LinkedHashMap<>();
 
-        if (result.hasTag("args")) {
+        if (result.regexes.size() == 2) {
             String argsString = result.regexes.get(1).group();
             args = MethodParser.parseArguments(argsString);
             if (args == null) {
@@ -138,20 +138,16 @@ public class SecMethod extends EffectSection implements ReturnHandler<Object> {
 
     public boolean register(SkriptClass contextClass) {
         this.contextClass = contextClass;
+        result.origin = contextClass.name;
         return contextClass.methodRegistry.registerMethod(result);
-    }
-
-    public boolean register(SkriptClass contextClass, String origin) {
-        result.origin = origin;
-        return register(contextClass);
     }
 
     @SuppressWarnings("unchecked")
     public void loadTrigger() {
         if (sectionNode == null) return;
 
-        result.trigger = result.type() == null ? loadCode(sectionNode, "method body", MethodRunEvent.class)
-            : loadReturnableSectionCode(sectionNode, "method body", new Class[]{MethodRunEvent.class});
+        result.trigger = result.type() == null ? loadCode(sectionNode, "method body", MethodEvent.class)
+            : loadReturnableSectionCode(sectionNode, "method body", new Class[]{MethodEvent.class});
     }
 
     @Override
@@ -161,14 +157,14 @@ public class SecMethod extends EffectSection implements ReturnHandler<Object> {
 
     @Override
     public void returnValues(Event event, Expression<?> value) {
-        if (event instanceof MethodRunEvent runEvent) {
+        if (event instanceof MethodEvent runEvent) {
             runEvent.returnObject = value.getArray(event);
         }
     }
 
     @Override
     public boolean isSingleReturnValue() {
-        return !result.isPlural();
+        return !result.isPlural;
     }
 
     @Override

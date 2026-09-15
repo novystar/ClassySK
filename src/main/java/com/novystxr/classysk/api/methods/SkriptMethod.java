@@ -1,14 +1,16 @@
 package com.novystxr.classysk.api.methods;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.Skript;
 import ch.njol.skript.lang.*;
 import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.variables.Variables;
 import com.novystxr.classysk.api.AccessModifiable;
 import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.classes.AnonymousInstance;
-import com.novystxr.classysk.api.classes.*;
-import com.novystxr.classysk.api.methods.MethodRegistry.MethodIdentifier;
+import com.novystxr.classysk.api.classes.ClassManager;
+import com.novystxr.classysk.api.classes.SkriptClass;
+import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.util.DefaultValue;
 import com.novystxr.classysk.main.elements.methods.SecMethod;
 import org.bukkit.event.Event;
@@ -19,7 +21,7 @@ import java.util.*;
 
 public class SkriptMethod implements AccessModifiable {
 
-    public record MethodArgument (
+    public record MethodArgument(
         Class<?> type,
 
         @Nullable DefaultValue<?> defaultValue,
@@ -41,6 +43,7 @@ public class SkriptMethod implements AccessModifiable {
         this.origin = origin;
 
     }
+
     public SkriptMethod(String name, SequencedMap<String, MethodArgument> arguments, Modifier[] modifiers, Class<?> type, boolean isPlural) {
         this.name = name;
         this.arguments = arguments;
@@ -56,7 +59,7 @@ public class SkriptMethod implements AccessModifiable {
 
     public Object @Nullable [] run(Event event, @Nullable ClassInstance instance, @NotNull Map<String, Expression<?>> args) {
         if (trigger == null) return null;
-        MethodRunEvent runEvent = new MethodRunEvent(instance);
+        MethodEvent runEvent = new MethodEvent(instance);
         if (this instanceof AnonymousMethod && instance != null) {
             ((AnonymousInstance) instance).setLocalVariables(runEvent);
         }
@@ -82,10 +85,6 @@ public class SkriptMethod implements AccessModifiable {
 
     public SkriptClass getOrigin() {
         return ClassManager.getClass(origin);
-    }
-
-    public MethodIdentifier getIdentifier() {
-        return MethodIdentifier.from(this);
     }
 
     public boolean validateOverride(@NotNull SkriptMethod target) {

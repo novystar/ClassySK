@@ -12,7 +12,6 @@ import ch.njol.skript.util.Utils;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.util.DefaultValue;
 import com.novystxr.classysk.api.util.StringUtils;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NonNull;
 
@@ -33,18 +32,18 @@ public class MethodParser {
     private static final String NAME = "(?<name>[_a-zA-Z0-9]+)";
     private static final String TYPE = "(?<type>[a-zA-Z ]+)";
     private static final String VALUE = "(?<value>.+)";
+    private static final String OPTIONAL = "(?<optional>\\?)?";
 
     // compiled argument patterns
     private static final Pattern DEF_ARG_PATTERN =
-        Pattern.compile("^\\s*"+NAME+"\\s*:\\s*"+TYPE+"(?:\\s*=\\s*"+VALUE+"+)?$");
+        Pattern.compile("^\\s*"+NAME+"\\s*"+OPTIONAL+"\\s*:\\s*"+TYPE+"(?:\\s*=\\s*"+VALUE+"+)?$");
 
     private static final Pattern REF_ARG_PATTERN =
         Pattern.compile("(?:\\s*"+NAME+":\\s)?"+VALUE);
 
     // syntax patterns
-    public static final String HINT_PATTERN = "(?:<("+CLASSNAME_PATTERN+"|)\\u003E)?";
-    public static final String METHOD_PATTERN = "(%-classinstance%|:super)<"+HINT_PATTERN+"::("+NAME_PATTERN+")>\\([<.+>]\\)";
-    public static final String STATIC_METHOD_PATTERN = "<("+CLASSNAME_PATTERN+")::("+NAME_PATTERN+")>\\([<.+>]\\)";
+    public static final String METHOD_PATTERN = "%classinstance%\\:\\:<"+NAME_PATTERN+">\\([<.+>]\\)";
+    public static final String STATIC_METHOD_PATTERN = "<"+CLASSNAME_PATTERN+">\\:\\:<"+NAME_PATTERN+">\\([<.+>]\\)";
 
     public record ReferenceArgument(
         @Nullable String name,
@@ -56,7 +55,6 @@ public class MethodParser {
         List<ReferenceArgument> args,
         boolean isStatic
     ) {
-
         @Override
         public @NonNull String toString() {
             StringBuilder builder = new StringBuilder(name+"(");
@@ -74,29 +72,26 @@ public class MethodParser {
             }
             return builder.append(")").toString();
         }
+
     }
 
-    public static @Nullable MethodReference parseReference(String name, @NotNull String args, boolean isStatic) {
+    public static @Nullable MethodReference parseReference(String name, @Nullable String args, boolean isStatic) {
         List<ReferenceArgument> referenceArguments = new ArrayList<>();
-
-        if (args.isEmpty()) {
+        if (args == null) {
             return new MethodReference(name, new ArrayList<>(), isStatic);
         }
-
         List<String> rawArgs = splitArgs(args);
         if (rawArgs == null) {
-            Skript.error("Could not separate arguments; Invalid parenthesis");
+            Skript.error("Invalid text/variables/parentheses in the arguments of this method call.");
             return null;
         }
-
         for (String arg : rawArgs) {
             Matcher matcher = REF_ARG_PATTERN.matcher(arg);
             if (!matcher.matches()) {
                 Skript.error("Invalid argument pattern: "+ arg);
                 return null;
             }
-
-            String unparsedExpr = matcher.group("value").trim();
+            String unparsedExpr = matcher.group("value");
             String argName = matcher.group("name");
 
             SkriptParser parser = new SkriptParser(unparsedExpr, SkriptParser.ALL_FLAGS, ParseContext.DEFAULT);
@@ -108,7 +103,6 @@ public class MethodParser {
             }
             referenceArguments.add(new ReferenceArgument(argName, expr));
         }
-
         return new MethodReference(name, referenceArguments, isStatic);
     }
 
@@ -128,6 +122,7 @@ public class MethodParser {
             String name = matcher.group("name").trim();
             String unparsedType = matcher.group("type").trim();
             String unparsedDefault = matcher.group("value");
+            boolean optional = matcher.group("optional") != null;
 
             if (arguments.containsKey(name)) {
                 Skript.error("Duplicate method arguments");
@@ -150,6 +145,8 @@ public class MethodParser {
                     Skript.error("Invalid argument name: %s", variableName);
                     return null;
                 }
+            } else if (optional) {
+                defaultValue = new DefaultValue.Empty<>(type);
             }
             MethodArgument argument = new MethodArgument(type, defaultValue, isPlural);
             arguments.put(name, argument);

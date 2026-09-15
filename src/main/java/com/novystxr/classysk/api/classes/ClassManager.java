@@ -3,10 +3,8 @@ package com.novystxr.classysk.api.classes;
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.fields.SkriptField;
-import com.novystxr.classysk.api.util.ReflectUtils;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy.Default;
-import org.skriptlang.skript.lang.converter.Converter;
 import org.skriptlang.skript.lang.converter.Converters;
 
 import java.lang.reflect.Constructor;
@@ -18,25 +16,47 @@ public class ClassManager {
     static final Map<String, Map<String, Object[]>> staticFieldMaps = new HashMap<>();
 
     static final Map<String, Set<ClassInstance>> instances = new HashMap<>();
-    static final Map<String, Set<ClassInstance>> awaitingParent = new HashMap<>();
 
-    private static final Map<String, Class<? extends TypedInstanceWrapper>> generatedClasses = new HashMap<>();
+    private static final Map<String, Class<? extends ClassInstance>> subclasses = new HashMap<>();
+    private static final Map<String, Constructor<? extends ClassInstance>> constructors = new HashMap<>();
 
-    public static Class<? extends TypedInstanceWrapper> getSubclass(String name) {
-        return generatedClasses.computeIfAbsent(name, key ->
+    public static Class<? extends ClassInstance> getSubclass(String name) {
+        if (!Classysk.TYPES_ALLOWED) {
+            return ClassInstance.class;
+        }
+
+        return subclasses.computeIfAbsent(name, key ->
             new ByteBuddy()
-                .subclass(TypedInstanceWrapper.class)
+                .subclass(ClassInstance.class)
                 .name("com.novystxr.generated."+name)
                 .make()
-                .load(TypedInstanceWrapper.class.getClassLoader(), Default.WRAPPER)
+                .load(ClassInstance.class.getClassLoader(), Default.WRAPPER)
                 .getLoaded()
         );
     }
 
-    public static void setAwaitingParent(ClassInstance instance) {
-        ClassManager.awaitingParent.computeIfAbsent(instance.name, key ->
-                Collections.newSetFromMap(new WeakHashMap<>()))
-            .add(instance);
+    public static ClassInstance getNewInstance(String name) {
+        if (!Classysk.TYPES_ALLOWED) {
+            return trackInstance( new ClassInstance(name) );
+        }
+        Constructor<? extends ClassInstance> constructor = constructors.computeIfAbsent(name, key -> {
+            try {
+                return getSubclass(name).getDeclaredConstructor(String.class);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        try {
+            return trackInstance( constructor.newInstance(name) );
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static ClassInstance trackInstance(ClassInstance instance) {
+        Set<ClassInstance> instances = ClassManager.instances.computeIfAbsent(instance.name, key -> Collections.newSetFromMap(new WeakHashMap<>()));
+        instances.add(instance);
+        return instance;
     }
 
     public static void revalidateFields(SkriptClass skriptClass) {
@@ -76,59 +96,8 @@ public class ClassManager {
         }
     }
 
-    public static void checkAwaitingParent(SkriptClass parent) {
-        Set<ClassInstance> awaiting = awaitingParent.get(parent.name);
-        if (awaiting == null) return;
-        parent.instances().addAll(awaiting);
-
-        awaitingParent.remove(parent.name);
-    }
-
-    public static Converter<ClassInstance, ? extends TypedInstanceWrapper> getConditionalConverter(Class<? extends TypedInstanceWrapper> subclass) {
-        try {
-            final Constructor<? extends TypedInstanceWrapper> constructor = subclass.getDeclaredConstructor(ClassInstance.class);
-            return instance -> {
-                SkriptClass compare = ClassManager.getClass(subclass.getSimpleName());
-                SkriptClass parent = instance.getParent();
-                if (parent == null) return null;
-
-                if (!parent.inherits(compare)) {
-                    return null;
-                }
-                try {
-                    if (instance.wrapper == null) {
-                        instance.wrapper = constructor.newInstance(instance);
-                    }
-                    return instance.wrapper;
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            };
-
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public static void registerClass(SkriptClass skriptClass) {
         String name = skriptClass.name;
-        if (Classysk.TYPES_ALLOWED) {
-            Class<? extends TypedInstanceWrapper> subclass = getSubclass(name);
-            ReflectUtils.allowRegistration();
-
-            boolean rechain = false;
-            if (!Converters.exactConverterExists(ClassInstance.class, subclass)) {
-                ReflectUtils.removeFromQuickAccess(ClassInstance.class, subclass);
-                ReflectUtils.registerConverter(ClassInstance.class, subclass, getConditionalConverter(subclass));
-                rechain = true;
-            }
-            if (!Converters.exactConverterExists(subclass, ClassInstance.class)) {
-                Converters.registerConverter(subclass, ClassInstance.class, from -> from.instance);
-                rechain = true;
-            }
-            if (rechain) Converters.createChainedConverters();
-            ReflectUtils.disableRegistration();
-        }
         classMap.put(name, skriptClass);
     }
 
