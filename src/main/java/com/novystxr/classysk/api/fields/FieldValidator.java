@@ -23,7 +23,7 @@ public class FieldValidator extends Validator<SkriptField> {
     @Override
     protected boolean validate(SkriptField field, SkriptClass contextClass) {
         SkriptClass origin = field.getOrigin();
-        if (field.accessType() == PRIVATE && origin != contextClass) {
+        if (field.accessType() == PRIVATE && !contextClass.equals(origin)) {
             Skript.error("Private fields can only be accessed from within their own class");
             return false;
         }

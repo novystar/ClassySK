@@ -38,6 +38,7 @@ public class EffMethodCall extends Effect {
     private boolean isStatic;
 
     @Override
+    @SuppressWarnings("unchecked")
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result) {
         isStatic = pattern == 1;
         SkriptClass contextClass = SkriptMethod.getContextClass(getParser());
@@ -49,7 +50,7 @@ public class EffMethodCall extends Effect {
         MethodReference reference = MethodParser.parseReference(methodName, args, isStatic);
         if (reference == null) return false;
 
-        validator = new MethodValidator(getErrorSource(), contextClass, reference, false);
+        validator = new MethodValidator(getErrorSource(), contextClass, reference, false, result.hasTag("super"));
         if (isStatic) {
             String className = getConfigLowerCase(result.regexes.getFirst());
             SkriptClass skriptClass = ClassManager.getClass(className);
@@ -59,7 +60,7 @@ public class EffMethodCall extends Effect {
             }
             return validator.validateStatic(skriptClass);
         }
-        return validator.validateExpression(exprs[0]);
+        return validator.validateExpression((Expression<ClassInstance>) exprs[0]);
     }
 
     @Override

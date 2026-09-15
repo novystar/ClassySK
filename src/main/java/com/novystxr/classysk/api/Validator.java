@@ -8,11 +8,11 @@ import ch.njol.skript.log.LogEntry;
 import ch.njol.skript.util.Utils;
 import ch.njol.skript.variables.HintManager;
 import ch.njol.util.Kleenean;
+import com.novystxr.classysk.api.anonymous.AnonymousClass;
 import com.novystxr.classysk.api.classes.ClassContextHolder;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
-import com.novystxr.classysk.api.classes.SkriptClass.AnonymousClass;
 import com.novystxr.classysk.api.util.SimpleErrorHandler;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.NotNull;
@@ -89,7 +89,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
      * If any specific classes could not be inferred, this returns a collection of every class.
      */
     @SuppressWarnings("UnstableApiUsage")
-    public static Collection<SkriptClass> getPossibleClasses(Expression<?> expr) {
+    public static Collection<SkriptClass> getPossibleClasses(Expression<ClassInstance> expr) {
         if (expr instanceof ClassContextHolder holder) {
             return List.of(holder.getContextClass());
         }
@@ -177,18 +177,16 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
         ClassInstance newInstance = instanceExpr.getSingle(event);
         return validateInstance(newInstance) ? newInstance : null;
     }
-
     /**
      * Used for validating instances via expression at parse time
      */
-    public final boolean validateExpression(Expression<?> expr) {
-        //noinspection unchecked
-        this.instanceExpr = (Expression<ClassInstance>) expr;
+    public boolean validateExpression(Expression<ClassInstance> expr) {
+        this.instanceExpr = expr;
         LogEntry error;
         try (var handler = new SimpleErrorHandler().start()) {
             for (SkriptClass skriptClass : getPossibleClasses(expr)) {
                 T product = getProductFromClass(skriptClass);
-                if (product == null || !validate(product, contextClass))
+                if (product == null || !validate(product, contextClass()))
                     continue;
                 guesses.add(product);
             }
@@ -215,7 +213,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
         this.product = getProductFromClass(skriptClass);
         if (product == null) return false;
 
-        return validate(product, contextClass);
+        return validate(product, contextClass());
     }
 
     /**
@@ -242,7 +240,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
         try (var handler = new SimpleErrorHandler().start()) {
             this.product = getProductFromInstance(newInstance);
             if (product != null) {
-                if (validate(product, contextClass)) {
+                if (validate(product, contextClass())) {
                     this.instance = newInstance;
                     return true;
                 }

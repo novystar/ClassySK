@@ -12,7 +12,7 @@ public class ExprSuper extends ExprSelf {
         if (!super.init(exprs, pattern, isDelayed, result))
             return false;
 
-        if (contextClass.getExtends() == null) {
+        if (getContextClass().getExtends() == null) {
             Skript.error("Super can't be used here because the relevant class does not extend any other.");
             return false;
         }

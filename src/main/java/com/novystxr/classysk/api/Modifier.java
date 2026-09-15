@@ -26,13 +26,6 @@ public enum Modifier {
         this.index = index;
     }
 
-    public static Modifier[] without(Modifier[] modifiers, Modifier... without) {
-        List<Modifier> withoutList = Arrays.asList(without);
-        return Arrays.stream(modifiers)
-            .map(modifier -> withoutList.contains(modifier) ? null : modifier)
-            .toArray(Modifier[]::new);
-    }
-
     /**
      * Helper method to create a valid array of modifiers, uniquely ordered respectively to their indexes
      *

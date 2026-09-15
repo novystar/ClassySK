@@ -14,6 +14,7 @@ import com.novystxr.classysk.api.methods.MethodRegistry.MethodIdentifier;
 import com.novystxr.classysk.api.methods.MethodValidator.ValidReference;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.util.DefaultValue;
+import com.novystxr.classysk.main.elements.methods.ExprSuper;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
@@ -62,11 +63,10 @@ public class MethodValidator extends Validator<ValidReference> {
     @Override
     protected @Nullable ValidReference getProductFromInstance(ClassInstance instance) {
         SkriptClass parent = instance.getParent();
-        // TODO: for inheritance this should be changed to an 'inherits' check because methods of subclasses will also have the same signature
-        if (product() == null || parent != product().getOrigin()) {
+        if (product() == null || !parent.inherits(product().getOrigin())) {
             return getProductFromClass(parent);
         }
-        SkriptMethod method = instance.getParent().methodRegistry.getExactMethod(MethodIdentifier.from(product().method));
+        SkriptMethod method = (isSuper ? parent.getExtends() : parent).getExactMethod(MethodIdentifier.from(product().method));
         if (method == null) {
             return getProductFromClass(parent);
             }
@@ -80,7 +80,7 @@ public class MethodValidator extends Validator<ValidReference> {
             Skript.error("This method can't return anything");
             return false;
         }
-        if (reference.hasModifier(PRIVATE) && origin != contextClass) {
+        if (reference.hasModifier(PRIVATE) && !contextClass.equals(origin)) {
             Skript.error("Private methods can only be accessed from within their own class");
             return false;
         }
@@ -89,6 +89,16 @@ public class MethodValidator extends Validator<ValidReference> {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public boolean validateExpression(Expression<ClassInstance> expr) {
+        if (isSuper) {
+            expr = new ExprSuper();
+            if (!expr.init(null, 0, null, null))
+                return false;
+        }
+        return super.validateExpression(expr);
     }
 
     private @Nullable ValidReference validateReference(SkriptMethod target, boolean printErrors) {
@@ -197,7 +207,7 @@ public class MethodValidator extends Validator<ValidReference> {
         }
 
         public Object @Nullable [] run(Event event, ClassInstance instance) {
-            return method.run(event, instance, args);
+            return method.run(event, new MethodEvent(instance), args);
         }
     }
 }
