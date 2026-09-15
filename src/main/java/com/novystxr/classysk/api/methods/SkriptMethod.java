@@ -1,5 +1,6 @@
 package com.novystxr.classysk.api.methods;
 
+import ch.njol.skript.Skript;
 import ch.njol.skript.lang.*;
 import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.variables.Variables;
@@ -35,6 +36,12 @@ public class SkriptMethod implements AccessModifiable {
     public String origin;
     public final int minArgCount;
 
+    public SkriptMethod(String name, SequencedMap<String, MethodArgument> arguments, Modifier[] modifiers, Class<?> type, boolean isPlural, String origin) {
+        this(name, arguments, modifiers, type, isPlural);
+        this.origin = origin;
+
+    }
+
     public SkriptMethod(String name, SequencedMap<String, MethodArgument> arguments, Modifier[] modifiers, Class<?> type, boolean isPlural) {
         this.name = name;
         this.arguments = arguments;
@@ -48,55 +55,74 @@ public class SkriptMethod implements AccessModifiable {
 
     }
 
-    public Object @Nullable [] run(Event event, @Nullable ClassInstance instance, @NotNull Map<String, Expression<?>> args) {
+    public Object @Nullable [] run(Event contextEvent, MethodEvent runEvent, @NotNull Map<String, Expression<?>> args) {
         if (trigger == null) return null;
-        MethodEvent runEvent = new MethodEvent(instance);
         for (var entry : args.entrySet()) {
             Expression<?> expr = entry.getValue();
             String key = entry.getKey();
 
             if (arguments.get(key).isPlural()) {
-                Object[] values = expr.getArray(event);
+                Object[] values = expr.getArray(contextEvent);
                 String[] keys = KeyProviderExpression.areKeysRecommended(expr) ?
-                    ((KeyProviderExpression<?>) expr).getArrayKeys(event) : null;
+                    ((KeyProviderExpression<?>) expr).getArrayKeys(contextEvent) : null;
                 KeyedValue<?>[] keyedValues = KeyedValue.zip(values, keys);
 
                 for (KeyedValue<?> keyedValue : keyedValues) {
                     Variables.setVariable(key+"::"+keyedValue.key(), keyedValue.value(), runEvent, true);
                 }
             } else {
-                Variables.setVariable(key, expr.getSingle(event), runEvent, true);
+                Variables.setVariable(key, expr.getSingle(contextEvent), runEvent, true);
             }
         }
         return trigger.execute(runEvent) ? runEvent.returnObject : null;
     }
 
-    @Override
     public SkriptClass getOrigin() {
         return ClassManager.getClass(origin);
     }
 
-    public static @Nullable SkriptClass getContextClass(ParserInstance parser) {
+    public boolean validateOverride(@NotNull SkriptMethod target) {
+        origin = target.origin;
+        if (hasModifier(Modifier.ABSTRACT) && !target.hasModifier(Modifier.ABSTRACT)) {
+            Skript.error("The method this would re-declare is concrete.");
+            return false;
+        }
+        if (!target.hasModifier(Modifier.ABSTRACT) && !hasModifier(Modifier.OVERRIDE)) {
+            Skript.error("This would override a method from a super class. Mark it with 'override'.");
+            return false;
+        }
+        if (target.hasAnyModifier(Modifier.FINAL, Modifier.PRIVATE)) {
+            Skript.error("This method cannot be overridden");
+            return false;
+        }
+        if (accessType().ordinal() > target.accessType().ordinal()) {
+            Skript.error("This override declared a lower access-type than the target.");
+            return false;
+        }
+        if (type() != target.type()) {
+            Skript.error("The return type of this override does not match the target.");
+            return false;
+        }
+        if (!new ArrayList<>(arguments.sequencedKeySet()).equals(new ArrayList<>(target.arguments.sequencedKeySet()))) {
+            Skript.error("Argument names must match when overriding a method.");
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public Modifier[] modifiers() { return modifiers; }
+    @Override
+    public boolean isPlural() { return isPlural; }
+    @Override
+    public Class<?> type() { return type; }
+
+    public static SkriptClass getContextClass(ParserInstance parser) {
         if (parser.getCurrentStructure() instanceof SectionSkriptEvent secSkriptEvent) {
             if (secSkriptEvent.getSection() instanceof SecMethod secMethod) {
                 return secMethod.contextClass;
             }
         }
         return null;
-    }
-
-    @Override
-    public Modifier[] modifiers() {
-        return modifiers;
-    }
-
-    @Override
-    public boolean isPlural() {
-        return isPlural;
-    }
-
-    @Override
-    public Class<?> type() {
-        return type;
     }
 }

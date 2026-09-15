@@ -98,7 +98,7 @@ public class Types {
                     String name = fields.getAndRemoveObject("name", String.class);
                     name = StringUtils.getLowerCase(name);
 
-                    ClassInstance instance = ClassManager.getNewInstance(name);
+                    ClassInstance instance = ClassInstance.newInstance(name);
                     for (FieldContext context : fields) {
                         if (!context.getID().startsWith("field:")) continue;
 

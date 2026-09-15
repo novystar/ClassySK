@@ -44,17 +44,12 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
     private String fieldName;
 
     private SkriptClass skriptClass;
-    private Expression<ClassInstance> instanceExpr;
+    private Variable<?> variable;
 
-    private Kleenean shouldBeSingle;
-    private Class<?>[] possibleTypes;
-    private Class<?> bestReturnType;
-
-    @SuppressWarnings("unchecked")
     @Override
+    @SuppressWarnings("unchecked")
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result) {
         isStatic = pattern == 1;
-
         SkriptClass contextClass = SkriptMethod.getContextClass(getParser());
         fieldName = getConfigLowerCase(result.regexes.get(pattern));
 
@@ -68,9 +63,15 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
             }
             return validator.validateStatic(skriptClass) && postInit();
         }
-        instanceExpr = (Expression<ClassInstance>) exprs[0];
-        return validator.validateExpression(instanceExpr) && postInit();
+        if (exprs[0].getSource() instanceof Variable<?> var) {
+            variable = var;
+        }
+        return validator.validateExpression((Expression<ClassInstance>) exprs[0]) && postInit();
     }
+
+    private Kleenean shouldBeSingle;
+    private Class<?>[] possibleTypes;
+    private Class<?> bestReturnType;
 
     private boolean postInit() {
         possibleTypes = validator.possibleTypes();
@@ -157,8 +158,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
     }
 
     private void save(Event event) {
-        if (isStatic) return;
-        if (instanceExpr.getSource() instanceof Variable<?> variable) {
+        if (variable != null) {
             // set variable to the same value it is to trigger serialization
             variable.changeInPlace(event, value -> value);
         }

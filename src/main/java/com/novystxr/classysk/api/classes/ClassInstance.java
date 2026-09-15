@@ -2,21 +2,26 @@ package com.novystxr.classysk.api.classes;
 
 import java.util.*;
 
+import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.fields.FieldHolder;
 import com.novystxr.classysk.api.fields.SkriptField;
 import org.jetbrains.annotations.Nullable;
 
 public class ClassInstance implements FieldHolder {
-    public final String name;
 
-    public final Map<String, Object[]> fieldValueMap = new HashMap<>();
+    static final SubclassManager<ClassInstance, ClassInstance> subclassManager =
+        new SubclassManager<>("subclass", String.class);
 
-    public ClassInstance(String name) {
-        this.name = name;
+    public static ClassInstance newInstance(String name) {
+        return ClassManager.trackInstance( Classysk.TYPES_ALLOWED ?
+            subclassManager.newInstance(name, ClassInstance.class) : new ClassInstance(name));
     }
 
-    public SkriptClass getParent() {
-        return ClassManager.getClass(name);
+    public final String name;
+    public final Map<String, Object[]> fieldValueMap = new HashMap<>();
+
+    protected ClassInstance(String name) {
+        this.name = name;
     }
 
     @Override
@@ -26,13 +31,18 @@ public class ClassInstance implements FieldHolder {
 
     @Override
     public void setDefaults() {
-        getParent().fields.values().stream()
+        getParent().inheritanceStream().forEach(target -> target.fields.values().stream()
             .filter(field -> !field.isStatic() && !fieldExists(field.name))
-            .forEach(field -> resetField(field.name));
+            .forEach(field -> resetField(field.name))
+        );
     }
 
     @Override
     public @Nullable SkriptField getField(String fieldName) {
         return getParent().getField(fieldName);
+    }
+
+    public SkriptClass getParent() {
+        return ClassManager.getClass(name);
     }
 }
