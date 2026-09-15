@@ -7,7 +7,6 @@ import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.ModifierHolder;
 import com.novystxr.classysk.api.fields.FieldHolder;
 import com.novystxr.classysk.api.fields.SkriptField;
-import com.novystxr.classysk.api.methods.MethodHolder;
 import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.MethodRegistry;
 import com.novystxr.classysk.api.methods.MethodRegistry.MethodIdentifier;
@@ -18,7 +17,7 @@ import org.jetbrains.annotations.Nullable;
 /**
  * The single non-instance version of a class
  */
-public class SkriptClass implements FieldHolder, MethodHolder, ModifierHolder {
+public class SkriptClass implements FieldHolder, ModifierHolder {
 
     public final String name;
     public final String extendsName;
@@ -84,38 +83,36 @@ public class SkriptClass implements FieldHolder, MethodHolder, ModifierHolder {
         return StringUtils.titleCase(name);
     }
 
-    @Override
-    public MethodRegistry getRegistry() {
-        return methodRegistry;
-    }
-
-    @Override
-    public SkriptMethod getExactMethod(MethodIdentifier identifier, boolean isSuper) {
-        return inheritanceStream().skip(isSuper ? 1 : 0)
-            .map(target -> target.getRegistry().getExactMethod(identifier))
+    public SkriptMethod getExactMethod(MethodIdentifier identifier) {
+        return inheritanceStream()
+            .map(target -> target.methodRegistry.getExactMethod(identifier))
             .filter(Objects::nonNull)
             .findFirst().orElse(null);
     }
 
-    @Override
     public List<SkriptMethod> getCandidates(MethodReference reference) {
-        if (reference.isStatic()) return methodRegistry.candidates(reference, true).values().stream().toList();
+        if (reference.isStatic()) return methodRegistry.candidates(reference).values().stream().toList();
 
         Map<MethodIdentifier, SkriptMethod> result = new HashMap<>();
         for (SkriptClass target : inheritanceStream().toList().reversed()) {
-            result.putAll(target.methodRegistry.candidates(reference, false));
+            result.putAll(target.methodRegistry.candidates(reference));
         }
         return result.values().stream().toList();
+    }
+
+    public ClassInstance createInstance() {
+        ClassInstance newInstance = ClassInstance.newInstance(name);
+        newInstance.setDefaults();
+        return newInstance;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return (obj instanceof SkriptClass skriptClass) ? skriptClass.name.equals(name) : super.equals(obj);
     }
 
     @Override
     public Modifier[] modifiers() {
         return modifiers;
-    }
-
-    public static class AnonymousClass extends SkriptClass {
-        public AnonymousClass(String name) {
-            super(name, name, Modifier.none());
-        }
     }
 }

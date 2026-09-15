@@ -11,12 +11,12 @@ import ch.njol.util.Kleenean;
 import ch.njol.util.coll.CollectionUtils;
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.Modifier;
+import com.novystxr.classysk.api.anonymous.AnonymousClass;
 import com.novystxr.classysk.api.classes.*;
-import com.novystxr.classysk.api.classes.SkriptClass.AnonymousClass;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.methods.MethodRegistry.MethodIdentifier;
 import com.novystxr.classysk.api.methods.SkriptMethod;
-import com.novystxr.classysk.api.methods.SkriptMethod.AnonymousMethod;
+import com.novystxr.classysk.api.anonymous.AnonymousMethod;
 import com.novystxr.classysk.api.util.ParserUtils;
 import com.novystxr.classysk.api.util.StringUtils;
 import com.novystxr.classysk.main.elements.methods.SecMethod;
@@ -113,8 +113,8 @@ public class SecExprNewInstance extends SectionExpression<Object> implements Cla
                         Skript.error("Only abstract classes can be implemented anonymously");
                         return false;
                     }
-                    SkriptMethod target = skriptClass.getExactMethod(MethodIdentifier.from(secMethod.result), false);
                     SkriptMethod method = secMethod.result;
+                    SkriptMethod target = skriptClass.getExactMethod(MethodIdentifier.from(method));
                     abstractMethods.remove(target);
 
                     if (target == null) {
@@ -129,14 +129,13 @@ public class SecExprNewInstance extends SectionExpression<Object> implements Cla
                     if (!method.validateOverride(target)) {
                         return false;
                     }
-                    method.modifiers = Modifier.collect(target.accessType(), Modifier.OVERRIDE);
-                    secMethod.result = new AnonymousMethod(method);
-
                     if (anonymous == null) {
                         anonymous = new AnonymousClass(name);
                     }
+                    method.modifiers = Modifier.collect(target.accessType(), Modifier.OVERRIDE);
+                    secMethod.result = new AnonymousMethod(method);
                     if (!secMethod.register(anonymous)) {
-                        Skript.error("Method with that signature already exists");
+                        Skript.error("That method has already been implemented here");
                         return false;
                     }
                     methods.add(secMethod);
@@ -156,13 +155,7 @@ public class SecExprNewInstance extends SectionExpression<Object> implements Cla
 
     @Override
     protected ClassInstance @Nullable [] get(Event event) {
-        ClassInstance newInstance;
-        if (anonymous == null) {
-            newInstance = skriptClass.createInstance();
-        } else {
-            newInstance = new AnonymousInstance(name, anonymous, event);
-            anonymous.setupInstance(newInstance);
-        }
+        ClassInstance newInstance = anonymous == null ? skriptClass.createInstance() : anonymous.createInstance(event);
 
         for (Entry<String, Expression<?>> entry : fields.entrySet()) {
             String fieldName = entry.getKey();

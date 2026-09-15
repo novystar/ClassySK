@@ -3,11 +3,8 @@ package com.novystxr.classysk.api.classes;
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.fields.SkriptField;
-import net.bytebuddy.ByteBuddy;
-import net.bytebuddy.dynamic.loading.ClassLoadingStrategy.Default;
 import org.skriptlang.skript.lang.converter.Converters;
 
-import java.lang.reflect.Constructor;
 import java.util.*;
 
 public class ClassManager {
@@ -17,43 +14,11 @@ public class ClassManager {
 
     static final Map<String, Set<ClassInstance>> instances = new HashMap<>();
 
-    private static final Map<String, Class<? extends ClassInstance>> subclasses = new HashMap<>();
-    private static final Map<String, Constructor<? extends ClassInstance>> constructors = new HashMap<>();
-
     public static Class<? extends ClassInstance> getSubclass(String name) {
-        if (!Classysk.TYPES_ALLOWED) {
-            return ClassInstance.class;
-        }
-
-        return subclasses.computeIfAbsent(name, key ->
-            new ByteBuddy()
-                .subclass(ClassInstance.class)
-                .name("com.novystxr.generated."+name)
-                .make()
-                .load(ClassInstance.class.getClassLoader(), Default.WRAPPER)
-                .getLoaded()
-        );
+        return Classysk.TYPES_ALLOWED ? ClassInstance.subclassManager.getSubclass(name, ClassInstance.class) : ClassInstance.class;
     }
 
-    public static ClassInstance getNewInstance(String name) {
-        if (!Classysk.TYPES_ALLOWED) {
-            return trackInstance( new ClassInstance(name) );
-        }
-        Constructor<? extends ClassInstance> constructor = constructors.computeIfAbsent(name, key -> {
-            try {
-                return getSubclass(name).getDeclaredConstructor(String.class);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
-        try {
-            return trackInstance( constructor.newInstance(name) );
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static ClassInstance trackInstance(ClassInstance instance) {
+    public static <T extends ClassInstance> T trackInstance(T instance) {
         Set<ClassInstance> instances = ClassManager.instances.computeIfAbsent(instance.name, key -> Collections.newSetFromMap(new WeakHashMap<>()));
         instances.add(instance);
         return instance;

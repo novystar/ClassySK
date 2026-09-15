@@ -1,13 +1,11 @@
 package com.novystxr.classysk.api.methods;
 
 import ch.njol.skript.Skript;
-import ch.njol.skript.Skript;
 import ch.njol.skript.lang.*;
 import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.variables.Variables;
 import com.novystxr.classysk.api.AccessModifiable;
 import com.novystxr.classysk.api.Modifier;
-import com.novystxr.classysk.api.classes.AnonymousInstance;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassInstance;
@@ -57,27 +55,23 @@ public class SkriptMethod implements AccessModifiable {
 
     }
 
-    public Object @Nullable [] run(Event event, @Nullable ClassInstance instance, @NotNull Map<String, Expression<?>> args) {
+    public Object @Nullable [] run(Event contextEvent, MethodEvent runEvent, @NotNull Map<String, Expression<?>> args) {
         if (trigger == null) return null;
-        MethodEvent runEvent = new MethodEvent(instance);
-        if (this instanceof AnonymousMethod && instance != null) {
-            ((AnonymousInstance) instance).setLocalVariables(runEvent);
-        }
         for (var entry : args.entrySet()) {
             Expression<?> expr = entry.getValue();
             String key = entry.getKey();
 
             if (arguments.get(key).isPlural()) {
-                Object[] values = expr.getArray(event);
+                Object[] values = expr.getArray(contextEvent);
                 String[] keys = KeyProviderExpression.areKeysRecommended(expr) ?
-                    ((KeyProviderExpression<?>) expr).getArrayKeys(event) : null;
+                    ((KeyProviderExpression<?>) expr).getArrayKeys(contextEvent) : null;
                 KeyedValue<?>[] keyedValues = KeyedValue.zip(values, keys);
 
                 for (KeyedValue<?> keyedValue : keyedValues) {
                     Variables.setVariable(key+"::"+keyedValue.key(), keyedValue.value(), runEvent, true);
                 }
             } else {
-                Variables.setVariable(key, expr.getSingle(event), runEvent, true);
+                Variables.setVariable(key, expr.getSingle(contextEvent), runEvent, true);
             }
         }
         return trigger.execute(runEvent) ? runEvent.returnObject : null;
@@ -131,11 +125,4 @@ public class SkriptMethod implements AccessModifiable {
         }
         return null;
     }
-
-    public static class AnonymousMethod extends SkriptMethod {
-        public AnonymousMethod(SkriptMethod method) {
-            super(method.name, method.arguments, method.modifiers, method.type, method.isPlural, method.origin);
-        }
-    }
-
 }
