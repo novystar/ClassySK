@@ -105,7 +105,7 @@ public class StructClass extends Structure {
                     Skript.error("This class does not extend any other");
                     return false;
                 }
-                if (secMethod.register(newClass, name)) {
+                if (secMethod.register(newClass)) {
                     methodSyntaxes.add(secMethod);
                 } else {
                     Skript.error("Method with that signature already exists in this class");
@@ -154,7 +154,6 @@ public class StructClass extends Structure {
             return false;
         }
         fieldSyntaxes.clear();
-        ClassManager.checkAwaitingParent(newClass);
         ClassManager.revalidateFields(newClass);
         return true;
     }
@@ -210,7 +209,7 @@ public class StructClass extends Structure {
             SkriptLogger.setNode(methodSyntax.getNode());
 
             SkriptMethod method = methodSyntax.result;
-            SkriptMethod overridden = target.getExactMethod(MethodIdentifier.from(method), false);
+            SkriptMethod overridden = target.getExactMethod(MethodIdentifier.from(method));
 
             if (overridden == null) {
                 if (method.hasModifier(Modifier.OVERRIDE)) {
