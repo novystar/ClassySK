@@ -71,6 +71,7 @@ public class ReflectUtils {
         if (!Converters.exactConverterExists(fromType, toType)) {
             allowRegistration();
 
+            removeFromQuickAccess(fromType, toType);
             Converters.registerConverter((Class<F>) fromType, (Class<T>) toType, (Converter<F, T>) converter);
             disableRegistration();
         }
@@ -88,12 +89,12 @@ public class ReflectUtils {
 
     public static void unregisterAllFrom(Class<?> fromType) {
         getConverters().removeIf(info -> info.getFrom() == fromType);
-        getQuickAccessConverters().values().removeIf(info -> info.getFrom() == fromType);
+        getQuickAccessConverters().values().removeIf(info -> info != null && info.getFrom() == fromType);
     }
 
     public static void unregisterAllTo(Class<?> toType) {
         getConverters().removeIf(info -> info.getTo() == toType);
-        getQuickAccessConverters().values().removeIf(info -> info.getTo() == toType);
+        getQuickAccessConverters().values().removeIf(info -> info != null && info.getTo() == toType);
     }
 
 }
