@@ -18,9 +18,4 @@ public class AnonymousClass extends SkriptClass {
     public ClassInstance createInstance() {
         throw new IllegalStateException();
     }
-
-    @Override
-    public boolean equals(Object obj) {
-        return obj == this;
-    }
 }
