@@ -8,6 +8,7 @@ import org.jspecify.annotations.Nullable;
 import org.skriptlang.skript.log.runtime.ErrorSource;
 
 import static com.novystxr.classysk.api.Modifier.PRIVATE;
+import static com.novystxr.classysk.api.Modifier.PROTECTED;
 
 public class FieldValidator extends Validator<SkriptField> {
 
@@ -23,8 +24,12 @@ public class FieldValidator extends Validator<SkriptField> {
     @Override
     protected boolean validate(SkriptField field, SkriptClass contextClass) {
         SkriptClass origin = field.getOrigin();
-        if (field.accessType() == PRIVATE && !contextClass.equals(origin)) {
+        if (field.hasModifier(PRIVATE) && contextClass != origin) {
             Skript.error("Private fields can only be accessed from within their own class");
+            return false;
+        }
+        if (field.hasModifier(PROTECTED) && (contextClass == null || !contextClass.inherits(origin))) {
+            Skript.error("Protected fields can only be accessed from inheritors");
             return false;
         }
         if (field.isStatic() && !isStatic) {
