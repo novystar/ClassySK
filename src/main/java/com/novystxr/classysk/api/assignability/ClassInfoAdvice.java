@@ -1,15 +1,14 @@
-package com.novystxr.classysk.api.classes;
+package com.novystxr.classysk.api.assignability;
 
 import ch.njol.skript.classes.ClassInfo;
-import ch.njol.skript.classes.Parser;
+import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.util.StringUtils;
-import com.novystxr.classysk.main.elements.Types;
 import net.bytebuddy.asm.Advice;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class TypedClassAdvice {
+public class ClassInfoAdvice {
 
     public static final Pattern pattern = Pattern.compile("(\\w*) instances?");
 
@@ -20,16 +19,8 @@ public class TypedClassAdvice {
         Matcher matcher = pattern.matcher(input);
         if (matcher.matches()) {
             String name = StringUtils.getLowerCase(matcher.group(1));
-            result = getClassInfo(ClassManager.getSubclass(name));
-
+            result = new ClassInfo<>(AssignabilityBridge.getSubInterface(name), "typedinstance")
+                .serializeAs(ClassInstance.class);
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    public static <T extends ClassInstance> ClassInfo<T> getClassInfo(Class<T> subclass) {
-        return new ClassInfo<>(subclass, "classinstance")
-            .name("Class Instance")
-            .serializeAs(ClassInstance.class)
-            .parser((Parser<T>) Types.classParser);
     }
 }

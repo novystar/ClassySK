@@ -5,7 +5,7 @@ import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
-import com.novystxr.classysk.api.classes.SubclassManager;
+import com.novystxr.classysk.api.assignability.SubclassManager;
 import org.bukkit.event.Event;
 
 public class AnonymousInstance extends ClassInstance {
@@ -15,11 +15,11 @@ public class AnonymousInstance extends ClassInstance {
 
     public static AnonymousInstance newInstance(String name, SkriptClass parent, Event event) {
         return ClassManager.trackInstance( Classysk.TYPES_ALLOWED ?
-            anonymousClassManager.newInstance(name, ClassManager.getSubclass(name), name, parent, event) :
+            anonymousClassManager.newInstance(name, ClassInstance.getSubclass(name), name, parent, event) :
             new AnonymousInstance(name, parent, event));
     }
 
-    private AnonymousInstance(String name, SkriptClass parent, Event event) {
+    public AnonymousInstance(String name, SkriptClass parent, Event event) {
         super(name);
         this.parent = parent;
         variablesMap = Variables.copyLocalVariables(event);

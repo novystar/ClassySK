@@ -9,6 +9,7 @@ import ch.njol.skript.util.Utils;
 import ch.njol.skript.variables.HintManager;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.api.anonymous.AnonymousClass;
+import com.novystxr.classysk.api.assignability.AssignabilityBridge;
 import com.novystxr.classysk.api.classes.ClassContextHolder;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.ClassManager;
@@ -105,7 +106,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
         for (Class<?> type : possibleTypes) {
             if (type == ClassInstance.class || type == Object.class) {
                 return ClassManager.getClasses();
-            } else if (ClassInstance.class.isAssignableFrom(type)) {
+            } else if (AssignabilityBridge.class.isAssignableFrom(type)) {
                 possibleClasses.add(ClassManager.getClass(type.getSimpleName()));
             }
         }

@@ -2,7 +2,10 @@ package com.novystxr.classysk.api.classes;
 
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.Modifier;
+import com.novystxr.classysk.api.assignability.AssignabilityBridge;
+import com.novystxr.classysk.api.assignability.TypedInstanceWrapper;
 import com.novystxr.classysk.api.fields.SkriptField;
+import com.novystxr.classysk.api.util.ReflectUtils;
 import org.skriptlang.skript.lang.converter.Converters;
 
 import java.util.*;
@@ -13,10 +16,6 @@ public class ClassManager {
     static final Map<String, Map<String, Object[]>> staticFieldMaps = new HashMap<>();
 
     static final Map<String, Set<ClassInstance>> instances = new HashMap<>();
-
-    public static Class<? extends ClassInstance> getSubclass(String name) {
-        return Classysk.TYPES_ALLOWED ? ClassInstance.subclassManager.getSubclass(name, ClassInstance.class) : ClassInstance.class;
-    }
 
     public static <T extends ClassInstance> T trackInstance(T instance) {
         Set<ClassInstance> instances = ClassManager.instances.computeIfAbsent(instance.name, key -> Collections.newSetFromMap(new WeakHashMap<>()));
@@ -52,7 +51,7 @@ public class ClassManager {
                 if (field == null || field.isStatic()) {
                     continue;
                 }
-                // attempt to convert, if failed to convert the field is left in an illegal state which may have limited access.
+                // attempt to convert, if failed the field is left in an illegal state which may have limited access.
                 Object[] converted = Converters.convert(entry.getValue(), field.type());
                 if (converted.length != 0) {
                     instance.fieldValueMap.put(field.name, converted);
@@ -63,12 +62,25 @@ public class ClassManager {
 
     public static void registerClass(SkriptClass skriptClass) {
         String name = skriptClass.name;
+        String extendsName = skriptClass.extendsName;
         classMap.put(name, skriptClass);
+
+        if (Classysk.TYPES_ALLOWED && extendsName != null) {
+            ReflectUtils.registerConverter(
+                ClassInstance.getSubclass(name), AssignabilityBridge.getSubInterface(extendsName), instance -> instance.wrap(extendsName));
+            ReflectUtils.registerConverter(
+                TypedInstanceWrapper.getSubclass(extendsName), ClassInstance.class, TypedInstanceWrapper::unwrap);
+        }
     }
 
 
-    public static void removeClass(String name) {
+    public static void unregisterClass(String name) {
         classMap.remove(name);
+
+        if (Classysk.TYPES_ALLOWED) {
+            ReflectUtils.unregisterAllFrom(ClassInstance.getSubclass(name));
+        }
+
     }
 
     public static SkriptClass getClass(String name) {

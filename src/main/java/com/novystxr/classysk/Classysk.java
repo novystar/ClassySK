@@ -3,7 +3,7 @@ package com.novystxr.classysk;
 import ch.njol.skript.Skript;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.variables.Variables;
-import com.novystxr.classysk.api.classes.TypedClassAdvice;
+import com.novystxr.classysk.api.assignability.ClassInfoAdvice;
 import com.novystxr.classysk.api.fields.SerializableField;
 import com.novystxr.classysk.api.util.Logger;
 import com.novystxr.classysk.main.MainModule;
@@ -33,7 +33,7 @@ public class Classysk extends JavaPlugin {
             ByteBuddyAgent.install();
             new ByteBuddy()
                 .redefine(Classes.class)
-                .visit(Advice.to(TypedClassAdvice.class).on(ElementMatchers.named("getClassInfoFromUserInput")))
+                .visit(Advice.to(ClassInfoAdvice.class).on(ElementMatchers.named("getClassInfoFromUserInput")))
                 .make()
                 .load(Classes.class.getClassLoader(), ClassReloadingStrategy.fromInstalledAgent());
 

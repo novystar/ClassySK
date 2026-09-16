@@ -76,7 +76,7 @@ public class SkriptClass implements FieldHolder, ModifierHolder {
     }
 
     public Class<? extends ClassInstance> getSubclass() {
-        return ClassManager.getSubclass(name);
+        return ClassInstance.getSubclass(name);
     }
 
     public String getEffectiveName() {
@@ -104,11 +104,6 @@ public class SkriptClass implements FieldHolder, ModifierHolder {
         ClassInstance newInstance = ClassInstance.newInstance(name);
         newInstance.setDefaults();
         return newInstance;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        return (obj instanceof SkriptClass skriptClass) ? skriptClass.name.equals(name) : super.equals(obj);
     }
 
     @Override

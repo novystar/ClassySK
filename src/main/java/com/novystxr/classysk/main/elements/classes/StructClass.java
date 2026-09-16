@@ -173,7 +173,7 @@ public class StructClass extends Structure {
     }
 
     private void unregisterClass() {
-        ClassManager.removeClass(name);
+        ClassManager.unregisterClass(name);
     }
 
     private boolean cyclic() {

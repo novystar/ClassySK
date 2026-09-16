@@ -1,4 +1,4 @@
-package com.novystxr.classysk.api.classes;
+package com.novystxr.classysk.api.assignability;
 
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy.Default;
@@ -29,11 +29,13 @@ public class SubclassManager<E, P extends E> {
 
     @SuppressWarnings("unchecked")
     public Class<? extends P> getSubclass(String key, Class<? extends E> clazz) {
+        Class<? extends AssignabilityBridge> bridge = AssignabilityBridge.getSubInterface(key);
         return subclasses.computeIfAbsent(key, k -> (Class<? extends P>) new ByteBuddy()
             .subclass(clazz)
+            .implement(bridge)
             .name("com.novystxr.generated."+packageID+"."+key)
             .make()
-            .load(clazz.getClassLoader(), Default.WRAPPER)
+            .load(bridge.getClassLoader(), Default.WRAPPER)
             .getLoaded()
         );
     }
