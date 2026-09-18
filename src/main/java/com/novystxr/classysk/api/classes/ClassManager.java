@@ -3,7 +3,6 @@ package com.novystxr.classysk.api.classes;
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.assignability.AssignabilityBridge;
-import com.novystxr.classysk.api.assignability.TypedInstanceWrapper;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.util.ReflectUtils;
 import org.skriptlang.skript.lang.converter.Converters;
@@ -66,10 +65,11 @@ public class ClassManager {
         classMap.put(name, skriptClass);
 
         if (Classysk.TYPES_ALLOWED && extendsName != null) {
+            Class<? extends AssignabilityBridge> bridge = AssignabilityBridge.getSubInterface(extendsName);
             ReflectUtils.registerConverter(
-                ClassInstance.getSubclass(name), AssignabilityBridge.getSubInterface(extendsName), instance -> instance.wrap(extendsName));
+                ClassInstance.getSubclass(name), bridge, instance -> instance.wrap(extendsName));
             ReflectUtils.registerConverter(
-                TypedInstanceWrapper.getSubclass(extendsName), ClassInstance.class, TypedInstanceWrapper::unwrap);
+                bridge, ClassInstance.class, AssignabilityBridge::unwrap);
         }
     }
 
