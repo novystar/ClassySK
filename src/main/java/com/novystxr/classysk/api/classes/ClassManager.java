@@ -61,15 +61,17 @@ public class ClassManager {
 
     public static void registerClass(SkriptClass skriptClass) {
         String name = skriptClass.name;
-        String extendsName = skriptClass.extendsName;
         classMap.put(name, skriptClass);
 
-        if (Classysk.TYPES_ALLOWED && extendsName != null) {
-            Class<? extends AssignabilityBridge> bridge = AssignabilityBridge.getSubInterface(extendsName);
+        if (Classysk.TYPES_ALLOWED) {
             ReflectUtils.registerConverter(
-                ClassInstance.getSubclass(name), bridge, instance -> instance.wrap(extendsName));
-            ReflectUtils.registerConverter(
-                bridge, ClassInstance.class, AssignabilityBridge::unwrap);
+                AssignabilityBridge.getSubInterface(name), ClassInstance.class, AssignabilityBridge::unwrap);
+
+            String extendsName = skriptClass.extendsName;
+            if (extendsName != null) {
+                ReflectUtils.registerConverter(
+                    ClassInstance.getSubclass(name), AssignabilityBridge.getSubInterface(extendsName), instance -> instance.wrap(extendsName));
+            }
         }
     }
 
