@@ -3,6 +3,7 @@ package com.novystxr.classysk.api.classes;
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.fields.SkriptField;
+import com.novystxr.classysk.api.util.ReflectUtils;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy.Default;
 import org.skriptlang.skript.lang.converter.Converters;
@@ -99,6 +100,10 @@ public class ClassManager {
     public static void registerClass(SkriptClass skriptClass) {
         String name = skriptClass.name;
         classMap.put(name, skriptClass);
+
+        if (Classysk.TYPES_ALLOWED) {
+            ReflectUtils.registerClassInfo(name, getSubclass(name));
+        }
     }
 
 

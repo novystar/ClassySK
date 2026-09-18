@@ -38,7 +38,7 @@ public class MethodValidator extends Validator<ValidReference> {
         List<SkriptMethod> candidates = skriptClass.methodRegistry.candidates(reference);
 
         if (candidates.isEmpty()) {
-            Skript.error("Could not identify method signature from reference: "+reference.name());
+            Skript.error("Could not identify method signature from reference: "+reference);
             return null;
         }
         if (candidates.size() == 1) {
@@ -113,7 +113,7 @@ public class MethodValidator extends Validator<ValidReference> {
             //noinspection unchecked
             Expression<?> convertedExpr = arg.expr().getConvertedExpression(toClass);
             if (convertedExpr == null) {
-                if (printErrors) Skript.error("Argument '%s' is not of required type: %s", name, Classes.getExactClassName(toClass));
+                if (printErrors) Skript.error("Argument '%s' is not of required type: %s", name, Classes.getSuperClassInfo(toClass));
                 return null;
             }
             if (!convertedExpr.isSingle() && !targetArg.isPlural()) {

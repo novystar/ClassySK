@@ -13,6 +13,7 @@ import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.util.DefaultValue;
 import com.novystxr.classysk.api.util.StringUtils;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -53,7 +54,25 @@ public class MethodParser {
         String name,
         List<ReferenceArgument> args,
         boolean isStatic
-    ) {}
+    ) {
+        @Override
+        public @NonNull String toString() {
+            StringBuilder builder = new StringBuilder(name+"(");
+
+            int i = 0;
+            for (ReferenceArgument arg : args) {
+                i++;
+                if (arg.name != null) {
+                    builder.append(arg.name).append(": ");
+                }
+                builder.append(Classes.getSuperClassInfo(arg.expr.getReturnType()));
+                if (i != args.size()) {
+                    builder.append(", ");
+                }
+            }
+            return builder.append(")").toString();
+        }
+    }
 
     public static @Nullable MethodReference parseReference(String name, @Nullable String args, boolean isStatic) {
         List<ReferenceArgument> referenceArguments = new ArrayList<>();

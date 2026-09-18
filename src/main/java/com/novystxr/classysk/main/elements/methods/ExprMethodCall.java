@@ -48,14 +48,14 @@ public class ExprMethodCall extends SimpleExpression<Object> {
 
         String methodName = getConfigLowerCase(result.regexes.get(pattern));
         String args = result.regexes.size() > pattern + 1
-            ? getConfigLowerCase(result.regexes.get(pattern + 1)) : null;
+            ? result.regexes.get(pattern + 1).group() : null;
 
         MethodReference reference = MethodParser.parseReference(methodName, args, isStatic);
         if (reference == null) return false;
 
         validator = new MethodValidator(getErrorSource(), contextClass, reference, true);
         if (isStatic) {
-            String className = getConfigLowerCase(result.regexes.getFirst());
+            String className = getLowerCase(result.regexes.getFirst());
             SkriptClass skriptClass = ClassManager.getClass(className);
             if (skriptClass == null) {
                 Skript.error("Class '%s' does not exist", titleCase(className));
