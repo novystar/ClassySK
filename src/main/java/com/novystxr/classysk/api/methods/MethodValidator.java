@@ -133,7 +133,7 @@ public class MethodValidator extends Validator<ValidReference> {
             //noinspection unchecked
             Expression<?> convertedExpr = arg.expr().getConvertedExpression(toClass);
             if (convertedExpr == null) {
-                if (printErrors) Skript.error("Argument '%s' is not of required type: %s", name, Classes.getExactClassName(toClass));
+                if (printErrors) Skript.error("Argument '%s' is not of required type: %s", name, Classes.getSuperClassInfo(toClass));
                 return null;
             }
             if (!convertedExpr.isSingle() && !targetArg.isPlural()) {

@@ -1,8 +1,11 @@
 package com.novystxr.classysk.api.assignability;
 
 import ch.njol.skript.classes.ClassInfo;
+import ch.njol.skript.classes.Parser;
 import com.novystxr.classysk.api.classes.ClassInstance;
+import com.novystxr.classysk.api.util.ReflectUtils;
 import com.novystxr.classysk.api.util.StringUtils;
+import com.novystxr.classysk.main.elements.Types;
 import net.bytebuddy.asm.Advice;
 
 import java.util.regex.Matcher;
@@ -19,8 +22,15 @@ public class ClassInfoAdvice {
         Matcher matcher = pattern.matcher(input);
         if (matcher.matches()) {
             String name = StringUtils.getLowerCase(matcher.group(1));
-            result = new ClassInfo<>(AssignabilityBridge.getSubInterface(name), "typedinstance")
-                .serializeAs(ClassInstance.class);
+            result = getClassInfo(name, AssignabilityBridge.getSubInterface(name));
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T extends AssignabilityBridge> ClassInfo<T> getClassInfo(String name, Class<T> subclass) {
+        ReflectUtils.createLanguageNode(name);
+        return new ClassInfo<>(subclass, name+"classinstance")
+            .serializeAs(ClassInstance.class)
+            .parser((Parser<T>) Types.classParser);
     }
 }

@@ -64,6 +64,7 @@ public class ClassManager {
         classMap.put(name, skriptClass);
 
         if (Classysk.TYPES_ALLOWED) {
+            ReflectUtils.registerClassInfo(name, AssignabilityBridge.getSubInterface(name));
             ReflectUtils.registerConverter(
                 AssignabilityBridge.getSubInterface(name), ClassInstance.class, AssignabilityBridge::unwrap);
 

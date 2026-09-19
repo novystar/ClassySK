@@ -1,6 +1,9 @@
 package com.novystxr.classysk.api.fields;
 
+import ch.njol.skript.SkriptConfig;
 import com.novystxr.classysk.api.util.DefaultValue;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.converter.Converters;
@@ -58,6 +61,25 @@ public interface FieldHolder {
 
     default @NotNull Object[] getFieldValue(String fieldName) {
         Object[] value = fieldValueMap().get(fieldName);
-        return value == null ? new Object[0] : Arrays.copyOf(value, value.length);
+        if (value == null) return new Object[0];
+
+        return convertIfOldPlayer(fieldName, Arrays.copyOf(value, value.length));
+    }
+
+    @SuppressWarnings("unchecked")
+    default <T> T[] convertIfOldPlayer(String fieldName, T[] objects) {
+        if (!SkriptConfig.enablePlayerVariableFix.value())
+            return objects;
+
+        boolean anyChanged = false;
+        for (int i = 0; i < objects.length; i++) {
+            if (objects[i] instanceof Player oldPlayer) {
+                objects[i] = (T) Bukkit.getPlayer(oldPlayer.getUniqueId());
+                anyChanged = true;
+            }
+        }
+        if (anyChanged)
+            setFieldValue(fieldName, objects);
+        return objects;
     }
 }

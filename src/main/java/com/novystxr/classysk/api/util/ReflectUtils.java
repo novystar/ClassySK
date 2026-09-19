@@ -1,7 +1,14 @@
 package com.novystxr.classysk.api.util;
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.classes.ClassInfo;
+import ch.njol.skript.classes.Parser;
+import ch.njol.skript.localization.Language;
+import ch.njol.skript.registrations.Classes;
 import ch.njol.util.*;
+import com.novystxr.classysk.api.assignability.AssignabilityBridge;
+import com.novystxr.classysk.api.classes.ClassInstance;
+import com.novystxr.classysk.main.elements.Types;
 import org.skriptlang.skript.lang.converter.Converter;
 import org.skriptlang.skript.lang.converter.ConverterInfo;
 import org.skriptlang.skript.lang.converter.Converters;
@@ -15,6 +22,8 @@ public class ReflectUtils {
     private static final Field acceptRegistrations;
     private static final Field quickAccessConverters;
     private static final Field converters;
+    private static final Field exactClassInfos;
+    private static final Field localizedLanguage;
 
     static {
         try {
@@ -27,8 +36,46 @@ public class ReflectUtils {
             converters = Converters.class.getDeclaredField("CONVERTERS");
             converters.setAccessible(true);
 
+            exactClassInfos = Classes.class.getDeclaredField("exactClassInfos");
+            exactClassInfos.setAccessible(true);
+
+            localizedLanguage = Language.class.getDeclaredField("localizedLanguage");
+            localizedLanguage.setAccessible(true);
+
         } catch (NoSuchFieldException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static void createLanguageNode(String name) {
+        String key = "types."+name+"classinstance";
+        if (Language.keyExists(key)) return;
+
+        try {
+            var localizedLanguageMap = (Map<String, String>) localizedLanguage.get(null);
+            localizedLanguageMap.put("types."+name+"classinstance", StringUtils.titleCase(name) + " instance");
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T extends AssignabilityBridge> void registerClassInfo(String name, Class<T> clazz) {
+        if (Classes.getExactClassInfo(clazz) == null) {
+            name = StringUtils.getLowerCase(name);
+            createLanguageNode(name);
+            ClassInfo<?> info = new ClassInfo<>(clazz, name + "classinstance")
+                .serializeAs(ClassInstance.class)
+                .parser((Parser<? extends T>) Types.classParser);
+            try {
+
+                var exactClassInfosMap = (Map<Class<?>, ClassInfo<?>>) exactClassInfos.get(null);
+                exactClassInfosMap.put(clazz, info);
+
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
