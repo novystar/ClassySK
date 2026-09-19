@@ -10,6 +10,7 @@ Nothing here is set in stone but these are my future ambitions regarding the pro
 -  Inheritance: extending other classes
 -  Abstract Methods: unimplemented methods that should be implemented by inheritors
 -  Transient fields: Fields that don't get saved
+-  Enums
 -  Rust style 'impl' block for adding methods to skript types
 -  Method and field reflection
 -  Custom namespaces (maybe)
