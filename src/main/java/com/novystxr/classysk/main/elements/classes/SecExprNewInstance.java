@@ -63,18 +63,17 @@ public class SecExprNewInstance extends SectionExpression<Object> implements Cla
     private final Map<String, Expression<?>> fields = new HashMap<>();
 
     private AnonymousClass anonymous = null;
-
     private String name;
 
     @Override
     public boolean init(Expression<?>[] expressions, int pattern, Kleenean delayed, ParseResult result, @Nullable SectionNode sectionNode, @Nullable List<TriggerItem> triggerItems) {
         name = StringUtils.getLowerCase(result.regexes.getFirst());
-        if (!ClassManager.classExists(name)) {
-            Skript.error("Class named " + name + " does not exist");
+        skriptClass = ClassManager.getClass(name);
+        if (skriptClass == null) {
+            Skript.error("Class '%s' does not exist", StringUtils.titleCase(name));
             return false;
         }
-        skriptClass = ClassManager.getClass(name);
-        boolean inParent = SkriptMethod.getContextClass(getParser()) == skriptClass;
+        SkriptClass contextClass = SkriptMethod.getContextClass(getParser());
 
         List<SecMethod> methods = new ArrayList<>();
         List<SkriptMethod> abstractMethods = skriptClass.methodRegistry.getAbstract();
@@ -97,7 +96,7 @@ public class SecExprNewInstance extends SectionExpression<Object> implements Cla
                         Skript.error("Static field cannot be set on an instance");
                         return false;
                     }
-                    if (field.accessType() == Modifier.PRIVATE && !inParent) {
+                    if (field.accessType() == Modifier.PRIVATE && contextClass != skriptClass) {
                         Skript.error("Private fields can't be accessed here");
                         return false;
                     }
@@ -184,6 +183,6 @@ public class SecExprNewInstance extends SectionExpression<Object> implements Cla
 
     @Override
     public String toString(@Nullable Event event, boolean debug) {
-        return "new instance of class "+skriptClass.getEffectiveName();
+        return "new instance of class "+StringUtils.titleCase(name);
     }
 }

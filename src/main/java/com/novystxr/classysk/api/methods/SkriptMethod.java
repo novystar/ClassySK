@@ -8,7 +8,6 @@ import com.novystxr.classysk.api.AccessModifiable;
 import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
-import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.util.DefaultValue;
 import com.novystxr.classysk.main.elements.methods.SecMethod;
 import org.bukkit.event.Event;
@@ -88,7 +87,7 @@ public class SkriptMethod implements AccessModifiable {
             return false;
         }
         if (!target.hasModifier(Modifier.ABSTRACT) && !hasModifier(Modifier.OVERRIDE)) {
-            Skript.error("This would override a method from a super class. Mark it with 'override'.");
+            Skript.error("This would override a method from the super class. Mark it with 'override'.");
             return false;
         }
         if (target.hasAnyModifier(Modifier.FINAL, Modifier.PRIVATE)) {
