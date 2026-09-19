@@ -2,6 +2,7 @@ package com.novystxr.classysk.api.assignability;
 
 import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.classes.Parser;
+import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.util.ReflectUtils;
 import com.novystxr.classysk.api.util.StringUtils;
@@ -13,7 +14,7 @@ import java.util.regex.Pattern;
 
 public class ClassInfoAdvice {
 
-    public static final Pattern pattern = Pattern.compile("(\\w*) instances?");
+    public static final Pattern pattern = Pattern.compile("("+ Classysk.CLASSNAME_PATTERN +") instances?");
 
     @Advice.OnMethodExit
     static void onExit(@Advice.Argument(0) String input, @Advice.Return(readOnly = false) ClassInfo<?> result) {
