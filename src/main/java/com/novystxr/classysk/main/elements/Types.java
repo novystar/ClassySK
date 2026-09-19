@@ -7,10 +7,14 @@ import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.yggdrasil.Fields;
 import ch.njol.yggdrasil.Fields.FieldContext;
+import com.novystxr.classysk.api.assignability.AssignabilityBridge;
+import com.novystxr.classysk.api.assignability.TypedInstanceWrapper;
 import com.novystxr.classysk.api.classes.*;
 import com.novystxr.classysk.api.fields.SerializableField;
 import com.novystxr.classysk.api.util.StringUtils;
 import org.skriptlang.skript.addon.SkriptAddon;
+import org.skriptlang.skript.lang.comparator.Comparators;
+import org.skriptlang.skript.lang.comparator.Relation;
 import org.skriptlang.skript.lang.properties.Property;
 import org.skriptlang.skript.lang.properties.handlers.base.ExpressionPropertyHandler;
 
@@ -18,7 +22,7 @@ import java.io.StreamCorruptedException;
 
 @SuppressWarnings("UnstableApiUsage")
 public class Types {
-    public static Parser<? extends ClassInstance> classParser = new Parser<>() {
+    public static Parser<ClassInstance> classParser = new Parser<>() {
 
         @Override
         public boolean canParse(ParseContext context) {
@@ -65,7 +69,7 @@ public class Types {
         );
 
         Classes.registerClass(new ClassInfo<>(ClassInstance.class, "classinstance")
-            .since("1.0.0")
+            .since("1.0.0, 1.2.0 (Concrete Types)")
             .user("instances?")
             .usage("[%-class%] instance[s]")
             .examples(
@@ -98,7 +102,7 @@ public class Types {
                     String name = fields.getAndRemoveObject("name", String.class);
                     name = StringUtils.getLowerCase(name);
 
-                    ClassInstance instance = ClassManager.getNewInstance(name);
+                    ClassInstance instance = ClassInstance.newInstance(name);
                     for (FieldContext context : fields) {
                         if (!context.getID().startsWith("field:")) continue;
 
@@ -119,6 +123,27 @@ public class Types {
                 @Override
                 protected boolean canBeInstantiated() {
                     return false;
+                }
+            })
+        );
+
+        Comparators.registerComparator(TypedInstanceWrapper.class, ClassInstance.class,
+            (wrapped, unwrapped) -> Relation.get(wrapped.unwrap() == unwrapped));
+
+        Classes.registerClass(new ClassInfo<>(AssignabilityBridge.class, "typedinstance")
+            .serializeAs(ClassInstance.class)
+            .parser(new Parser<>() {
+                @Override
+                public boolean canParse(ParseContext context) {
+                    return classParser.canParse(context);
+                }
+                @Override
+                public String toString(AssignabilityBridge o, int flags) {
+                    return classParser.toString(o.unwrap(), flags);
+                }
+                @Override
+                public String toVariableNameString(AssignabilityBridge o) {
+                    return classParser.toVariableNameString(o.unwrap());
                 }
             })
         );

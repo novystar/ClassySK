@@ -1,0 +1,50 @@
+class A:
+	public getName() :: string:
+		return "A"
+
+class B extends A:
+	public override getName() :: string:
+		return "B"
+
+class C extends B:
+	public override getName() :: string:
+		return "C"
+
+class D extends C:
+
+class E extends D:
+
+class F extends E:
+	public override getName() :: string:
+		return "F"
+
+class G extends F:
+
+
+class TestSuper extends B:
+	public override getName() :: string:
+		return super::getName()
+
+test "ClassySK - Overrides & Inheritance":
+	set {_A} to new instance of A
+	set {_B} to new instance of B
+	set {_C} to new instance of C
+	set {_D} to new instance of D
+	set {_E} to new instance of E
+	set {_F} to new instance of F
+	set {_G} to new instance of G
+
+	assert {_A}::getName() is "A"
+	assert {_B}::getName() is "B"
+	assert {_C}::getName() is "C"
+
+	assert {_D}::getName() is "C"
+	assert {_E}::getName() is "C"
+
+	assert {_F}::getName() is "F"
+	assert {_G}::getName() is "F"
+
+test "ClassySK - Super":
+	set {_testSuper} to new instance of TestSuper
+
+	assert {_testSuper}::getName() is "B"
