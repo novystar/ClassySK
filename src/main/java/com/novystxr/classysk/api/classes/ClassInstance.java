@@ -1,6 +1,7 @@
 package com.novystxr.classysk.api.classes;
 
 import java.util.*;
+import java.util.function.Function;
 
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.assignability.AssignabilityBridge;
@@ -12,16 +13,16 @@ import org.jetbrains.annotations.Nullable;
 
 public class ClassInstance implements FieldHolder, AssignabilityBridge {
 
-    private static final SubclassManager<ClassInstance, ClassInstance> subclassManager =
-        new SubclassManager<>("subclass", String.class);
+    private static final SubclassManager<ClassInstance> subclassManager =
+        new SubclassManager<>(ClassInstance.class, "subclass", String.class);
 
     public static Class<? extends ClassInstance> getSubclass(String name) {
-        return Classysk.TYPES_ALLOWED ? subclassManager.getSubclass(name, ClassInstance.class) : ClassInstance.class;
+        return Classysk.TYPES_ALLOWED ? subclassManager.getSubclass(name) : ClassInstance.class;
     }
 
     public static ClassInstance newInstance(String name) {
         return ClassManager.trackInstance( Classysk.TYPES_ALLOWED ?
-            subclassManager.newInstance(name, ClassInstance.class) : new ClassInstance(name));
+            subclassManager.newInstance(name) : new ClassInstance(name));
     }
 
     public final String name;
@@ -61,6 +62,27 @@ public class ClassInstance implements FieldHolder, AssignabilityBridge {
     }
 
     public SkriptClass getParent() {
-        return ClassManager.getClass(name);
+        return data == null ? ClassManager.getClass(name) : data.getDataClass();
+    }
+
+    // instance data
+    // preferring composition because inheritance is not very feasible with generated classes
+
+    public ClassInstance withData(Function<ClassInstance, InstanceData> data) {
+        this.data = data.apply(this);
+        return this;
+    }
+
+    private InstanceData data;
+
+    public <T extends InstanceData> T getData(Class<T> clazz) {
+        return clazz.isInstance(data) ? clazz.cast(data) : null;
+    }
+
+    public class InstanceData {
+
+        public SkriptClass getDataClass() {
+            return ClassManager.getClass(name);
+        }
     }
 }

@@ -31,11 +31,11 @@ import org.skriptlang.skript.registration.SyntaxRegistry;
     \t\tadd 1 to self::counter
     """)
 @Since("1.0.0")
-public class ExprSelf extends SimpleExpression<ClassInstance> implements EventRestrictedSyntax, ClassContextHolder {
+public class ExprSelf extends SimpleExpression<Object> implements EventRestrictedSyntax, ClassContextHolder {
     public static void register(SyntaxRegistry registry) {
         registry.register(
             SyntaxRegistry.EXPRESSION,
-            DefaultSyntaxInfos.Expression.builder(ExprSelf.class,  ClassInstance.class)
+            DefaultSyntaxInfos.Expression.builder(ExprSelf.class,  Object.class)
                 .addPatterns("self", "(this|[the] current) instance")
                 .supplier(ExprSelf::new)
                 .build()

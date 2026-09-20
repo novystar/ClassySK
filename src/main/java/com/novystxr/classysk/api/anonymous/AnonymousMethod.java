@@ -17,7 +17,7 @@ public class AnonymousMethod extends SkriptMethod {
     @Override
     public Object @Nullable [] run(Event contextEvent, MethodEvent runEvent, @NotNull Map<String, Expression<?>> args) {
         // assume not null because anonymous methods can't be static
-        ((AnonymousInstance) runEvent.instance).setLocalVariables(runEvent);
+        runEvent.instance.getData(AnonymousData.class).setLocalVariables(runEvent);
         return super.run(contextEvent, runEvent, args);
     }
 }

@@ -100,6 +100,10 @@ public class SkriptClass implements FieldHolder, ModifierHolder {
         return result.values().stream().toList();
     }
 
+    public SkriptClass refresh() {
+        return ClassManager.getClass(name);
+    }
+
     public ClassInstance createInstance() {
         ClassInstance newInstance = ClassInstance.newInstance(name);
         newInstance.setDefaults();

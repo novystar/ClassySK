@@ -8,7 +8,6 @@ import ch.njol.skript.log.LogEntry;
 import ch.njol.skript.util.Utils;
 import ch.njol.skript.variables.HintManager;
 import ch.njol.util.Kleenean;
-import com.novystxr.classysk.api.anonymous.AnonymousClass;
 import com.novystxr.classysk.api.assignability.AssignabilityBridge;
 import com.novystxr.classysk.api.classes.ClassContextHolder;
 import com.novystxr.classysk.api.classes.ClassInstance;
@@ -55,8 +54,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
     protected abstract @Nullable T getProductFromInstance(ClassInstance instance);
 
     protected SkriptClass contextClass() {
-        if (contextClass == null) return null;
-        return contextClass instanceof AnonymousClass ? contextClass : ClassManager.getClass(contextClass.name);
+        return contextClass == null ? null : contextClass.refresh();
     }
 
     /**

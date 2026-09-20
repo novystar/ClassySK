@@ -6,11 +6,12 @@ import net.bytebuddy.dynamic.loading.ClassLoadingStrategy.Default;
 import java.lang.reflect.Constructor;
 import java.util.*;
 
-public class SubclassManager<E, P extends E> {
+public class SubclassManager<T> {
 
-    private final Class<?>[] argTypes;
+    private final Class<T> fromType;
     private final String packageID;
 
+    private final Class<?>[] argTypes;
     private final boolean canUseKey;
 
     /**
@@ -18,20 +19,20 @@ public class SubclassManager<E, P extends E> {
      * @param packageID A unique package identifier to generate the subclasses in
      * @param argTypes Constructor argument types to fetch the constructor of the generated class
      */
-    public SubclassManager(String packageID, Class<?>... argTypes) {
+    public SubclassManager(Class<T> fromType, String packageID, Class<?>... argTypes) {
+        this.fromType = fromType;
         this.packageID = packageID;
         this.argTypes = argTypes;
         this.canUseKey = argTypes.length == 1 && argTypes[0] == String.class;
     }
 
-    private final Map<String, Constructor<? extends P>> constructors = new HashMap<>();
-    private final Map<String, Class<? extends P>> subclasses = new HashMap<>();
+    private final Map<String, Constructor<? extends T>> constructors = new HashMap<>();
+    private final Map<String, Class<? extends T>> subclasses = new HashMap<>();
 
-    @SuppressWarnings("unchecked")
-    public Class<? extends P> getSubclass(String key, Class<? extends E> clazz) {
+    public Class<? extends T> getSubclass(String key) {
         Class<? extends AssignabilityBridge> bridge = AssignabilityBridge.getSubInterface(key);
-        return subclasses.computeIfAbsent(key, k -> (Class<? extends P>) new ByteBuddy()
-            .subclass(clazz)
+        return subclasses.computeIfAbsent(key, k -> new ByteBuddy()
+            .subclass(fromType)
             .implement(bridge)
             .name("com.novystxr.generated."+packageID+"."+key)
             .make()
@@ -40,12 +41,12 @@ public class SubclassManager<E, P extends E> {
         );
     }
 
-    public P newInstance(String key, Class<? extends E> clazz, Object... args) {
+    public T newInstance(String key, Object... args) {
         if (canUseKey && args.length == 0)
             args = new Object[]{key};
-        Constructor<? extends P> constructor = constructors.computeIfAbsent(key, k -> {
+        Constructor<? extends T> constructor = constructors.computeIfAbsent(key, k -> {
             try {
-                return getSubclass(key, clazz).getDeclaredConstructor(argTypes);
+                return getSubclass(key).getDeclaredConstructor(argTypes);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

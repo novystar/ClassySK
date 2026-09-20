@@ -7,17 +7,11 @@ import com.novystxr.classysk.api.classes.ClassInstance;
  * This will wrap and unwrap when necessary using converters.
  */
 public class TypedInstanceWrapper implements AssignabilityBridge {
-    private static final SubclassManager<TypedInstanceWrapper, TypedInstanceWrapper>
-        subclassManager = new SubclassManager<>("wrapper", ClassInstance.class);
-
-    public static Class<? extends TypedInstanceWrapper> getSubclass(String key) {
-        return subclassManager.getSubclass(key, TypedInstanceWrapper.class);
-    }
+    private static final SubclassManager<TypedInstanceWrapper>
+        subclassManager = new SubclassManager<>(TypedInstanceWrapper.class, "wrapper", ClassInstance.class);
 
     public static TypedInstanceWrapper newInstance(ClassInstance instance, String key) {
-        Class<? extends TypedInstanceWrapper> subclass = subclassManager.getSubclass(key, TypedInstanceWrapper.class);
-
-        return subclassManager.newInstance(key, subclass, instance);
+        return subclassManager.newInstance(key, instance);
     }
 
     public final ClassInstance instance;
