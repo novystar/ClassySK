@@ -22,7 +22,8 @@ public class MainModule implements AddonModule {
             ExprMethodCall::register,
             CondInstanceOf::register,
             PropExprClass::register,
-            ExprClass::register
+            ExprClass::register,
+            ExprCast::register
             );
 
         //register(addon, SecMethod::register, EffField::register); // docs only
