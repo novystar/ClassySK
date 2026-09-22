@@ -154,6 +154,7 @@ public class StructClass extends Structure {
             return false;
         }
         fieldSyntaxes.clear();
+        ClassManager.createWrapperConverters(newClass);
         ClassManager.revalidateFields(newClass);
         return true;
     }

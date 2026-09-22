@@ -15,6 +15,7 @@ import com.novystxr.classysk.api.util.StringUtils;
 import org.skriptlang.skript.addon.SkriptAddon;
 import org.skriptlang.skript.lang.comparator.Comparators;
 import org.skriptlang.skript.lang.comparator.Relation;
+import org.skriptlang.skript.lang.converter.Converters;
 import org.skriptlang.skript.lang.properties.Property;
 import org.skriptlang.skript.lang.properties.handlers.base.ExpressionPropertyHandler;
 
@@ -126,7 +127,7 @@ public class Types {
                 }
             })
         );
-
+        Converters.registerConverter(ClassInstance.class, ClassInstance.class, i -> i);
         Comparators.registerComparator(TypedInstanceWrapper.class, ClassInstance.class,
             (wrapped, unwrapped) -> Relation.get(wrapped.unwrap() == unwrapped));
 

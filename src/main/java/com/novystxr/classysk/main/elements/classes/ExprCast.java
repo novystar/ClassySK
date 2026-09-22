@@ -7,9 +7,8 @@ import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
-import com.novystxr.classysk.api.Validator;
+import com.novystxr.classysk.api.assignability.AssignabilityBridge;
 import com.novystxr.classysk.api.classes.ClassContextHolder;
-import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.util.StringUtils;
@@ -17,8 +16,6 @@ import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
 import org.skriptlang.skript.registration.SyntaxRegistry;
-
-import java.util.Arrays;
 
 import static com.novystxr.classysk.api.util.StringUtils.titleCase;
 
@@ -64,9 +61,9 @@ public class ExprCast extends SimpleExpression<Object> implements ClassContextHo
 
     private String name;
     private SkriptClass skriptClass;
-    private Class<? extends ClassInstance> type;
 
-    private Expression<ClassInstance> instanceExpr;
+    private Class<? extends AssignabilityBridge> type;
+    private Expression<? extends AssignabilityBridge> instanceExpr;
 
     @Override
     @SuppressWarnings("unchecked")
@@ -78,22 +75,22 @@ public class ExprCast extends SimpleExpression<Object> implements ClassContextHo
             Skript.error("Class '%s' does not exist", titleCase(name));
             return false;
         }
-        type = skriptClass.getSubclass();
-        instanceExpr = (Expression<ClassInstance>) exprs[0];
+        type = skriptClass.getSubInterface();
+        instanceExpr = exprs[0].getConvertedExpression(type);
+        if (instanceExpr == null) {
+            instanceExpr = exprs[0].getConvertedExpression(skriptClass.getSubclass());
+        }
 
-        if (Validator.getPossibleClasses(instanceExpr).stream().noneMatch(skriptClass::inherits)) {
+        if (instanceExpr == null) {
             Skript.error("This expression can't possibly cast to '%s'", titleCase(name));
             return false;
         }
-
         return true;
     }
 
     @Override
     protected Object @Nullable [] get(Event event) {
-        return Arrays.stream(instanceExpr.getArray(event))
-            .filter(i -> type.isAssignableFrom(i.getClass()))
-            .toArray();
+        return instanceExpr.getArray(event);
     }
 
     @Override
@@ -102,13 +99,13 @@ public class ExprCast extends SimpleExpression<Object> implements ClassContextHo
     }
 
     @Override
-    public Class<? extends ClassInstance> getReturnType() {
+    public Class<? extends AssignabilityBridge> getReturnType() {
         return type;
     }
 
     @Override
     public String toString(@Nullable Event event, boolean debug) {
-        return "("+titleCase(name)+") " + instanceExpr;
+        return instanceExpr+" as "+titleCase(name);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.novystxr.classysk.main;
 
+import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.main.elements.*;
 import com.novystxr.classysk.main.elements.classes.*;
 import com.novystxr.classysk.main.elements.fields.*;
@@ -22,9 +23,11 @@ public class MainModule implements AddonModule {
             ExprMethodCall::register,
             CondInstanceOf::register,
             PropExprClass::register,
-            ExprClass::register,
-            ExprCast::register
-            );
+            ExprClass::register
+        );
+
+        if (Classysk.TYPES_ALLOWED)
+            register(addon, ExprCast::register);
 
         //register(addon, SecMethod::register, EffField::register); // docs only
     }

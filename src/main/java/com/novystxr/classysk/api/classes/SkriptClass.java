@@ -5,6 +5,7 @@ import java.util.stream.Stream;
 
 import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.ModifierHolder;
+import com.novystxr.classysk.api.assignability.AssignabilityBridge;
 import com.novystxr.classysk.api.fields.FieldHolder;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
@@ -73,6 +74,10 @@ public class SkriptClass implements FieldHolder, ModifierHolder {
 
             resetField(field.name);
         }
+    }
+
+    public Class<? extends AssignabilityBridge> getSubInterface() {
+        return AssignabilityBridge.getSubInterface(name);
     }
 
     public Class<? extends ClassInstance> getSubclass() {
