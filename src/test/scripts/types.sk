@@ -100,7 +100,7 @@ class TestAssignAbilityThird extends TestAssignAbilitySecond:
 
 local function chain(inst: TestAssignability instance):
 	set {-TestAssignability} to {_inst}
-	noCast1({_inst})
+	chain1({_inst})
 
 local function chain1(inst: TestAssignAbilityFirst instance):
 	set {-TestAssignability::chain::1} to {_inst}
