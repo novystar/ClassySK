@@ -119,31 +119,23 @@ test "ClassySK - implicit cast chain (functions)":
 	set {_inst} to new TestAssignAbilityThird
 
 	chain({_inst})
-	assert {-TestAssignability::chain::1} is not set
-	assert {-TestAssignability::chain::2} is not set
-	assert {-TestAssignability::chain::3} is not set
+	assert {-TestAssignability::chain::1} is {_inst}
+	assert {-TestAssignability::chain::2} is {_inst}
+	assert {-TestAssignability::chain::3} is {_inst}
 
 	delete {-TestAssignability::chain::*}
 	set {_inst} to new TestAssignAbilitySecond
 
 	chain({_inst})
-	assert {-TestAssignability::chain::1} is not set
-	assert {-TestAssignability::chain::2} is not set
-	assert {-TestAssignability::chain::3} is not set
-
-	delete {-TestAssignability::chain::*}
-	set {_inst} to new TestAssignAbilitySecond
-
-	chain({_inst})
-	assert {-TestAssignability::chain::1} is not set
-	assert {-TestAssignability::chain::2} is not set
+	assert {-TestAssignability::chain::1} is {_inst}
+	assert {-TestAssignability::chain::2} is {_inst}
 	assert {-TestAssignability::chain::3} is not set
 
 	delete {-TestAssignability::chain::*}
 	set {_inst} to new TestAssignAbilityFirst
 
 	chain({_inst})
-	assert {-TestAssignability::chain::1} is not set
+	assert {-TestAssignability::chain::1} is {_inst}
 	assert {-TestAssignability::chain::2} is not set
 	assert {-TestAssignability::chain::3} is not set
 
@@ -161,31 +153,23 @@ test "ClassySK - implicit cast chain (methods)":
 	set {_inst} to new TestAssignAbilityThird
 
 	TestAssignability::chain({_inst})
-	assert {-TestAssignability::chain::1} is not set
-	assert {-TestAssignability::chain::2} is not set
-	assert {-TestAssignability::chain::3} is not set
+	assert {-TestAssignability::chain::1} is {_inst}
+	assert {-TestAssignability::chain::2} is {_inst}
+	assert {-TestAssignability::chain::3} is {_inst}
 
 	delete {-TestAssignability::chain::*}
 	set {_inst} to new TestAssignAbilitySecond
 
 	TestAssignability::chain({_inst})
-	assert {-TestAssignability::chain::1} is not set
-	assert {-TestAssignability::chain::2} is not set
-	assert {-TestAssignability::chain::3} is not set
-
-	delete {-TestAssignability::chain::*}
-	set {_inst} to new TestAssignAbilitySecond
-
-	TestAssignability::chain({_inst})
-	assert {-TestAssignability::chain::1} is not set
-	assert {-TestAssignability::chain::2} is not set
+	assert {-TestAssignability::chain::1} is {_inst}
+	assert {-TestAssignability::chain::2} is {_inst}
 	assert {-TestAssignability::chain::3} is not set
 
 	delete {-TestAssignability::chain::*}
 	set {_inst} to new TestAssignAbilityFirst
 
 	TestAssignability::chain({_inst})
-	assert {-TestAssignability::chain::1} is not set
+	assert {-TestAssignability::chain::1} is {_inst}
 	assert {-TestAssignability::chain::2} is not set
 	assert {-TestAssignability::chain::3} is not set
 
