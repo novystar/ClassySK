@@ -106,11 +106,11 @@ local function chain1(inst: TestAssignAbilityFirst instance):
 	set {-TestAssignability::chain::1} to {_inst}
 	chain2({_inst})
 
-local function noCast2(inst: TestAssignAbilitySecond instance):
+local function chain2(inst: TestAssignAbilitySecond instance):
 	set {-TestAssignability::chain::2} to {_inst}
 	chain3({_inst})
 
-local function noCast3(inst: TestAssignAbilityThird instance):
+local function chain3(inst: TestAssignAbilityThird instance):
 	set {-TestAssignability::chain::3} to {_inst}
 
 
