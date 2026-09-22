@@ -88,8 +88,8 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
      * If any specific classes could not be inferred, this returns a collection of every class.
      */
     @SuppressWarnings("UnstableApiUsage")
-    public static Collection<SkriptClass> getPossibleClasses(Expression<ClassInstance> expr) {
-        if (expr instanceof ClassContextHolder holder) {
+    public static Collection<SkriptClass> getPossibleClasses(Expression<? extends ClassInstance> expr) {
+        if (expr.getSource() instanceof ClassContextHolder holder) {
             return List.of(holder.getContextClass());
         }
         List<SkriptClass> possibleClasses = new ArrayList<>();
