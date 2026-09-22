@@ -77,9 +77,6 @@ public class ExprCast extends SimpleExpression<Object> implements ClassContextHo
         }
         type = skriptClass.getSubInterface();
         instanceExpr = exprs[0].getConvertedExpression(type);
-        if (instanceExpr == null) {
-            instanceExpr = exprs[0].getConvertedExpression(skriptClass.getSubclass());
-        }
 
         if (instanceExpr == null) {
             Skript.error("This expression can't possibly cast to '%s'", titleCase(name));

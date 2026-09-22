@@ -63,6 +63,7 @@ public class ClassManager {
         if (Classysk.TYPES_ALLOWED) {
             Class<? extends ClassInstance> directType = skriptClass.getSubclass();
 
+            ReflectUtils.registerConverter(directType, skriptClass.getSubInterface(), i -> i);
             skriptClass.inheritanceStream().skip(1).forEach(target ->
                 ReflectUtils.registerConverter(directType, target.getSubInterface(),
                     i -> i.wrap(target.name))
