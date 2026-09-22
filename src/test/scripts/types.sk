@@ -78,7 +78,7 @@ class TestAssignability:
 		TestAssignability::withCast1({_inst} as TestAssignAbilityFirst)
 
 	public static withCast1(inst: TestAssignAbilityFirst instance):
-		set {-TestAssignability::withCast::1} to {_isnt}
+		set {-TestAssignability::withCast::1} to {_inst}
 		TestAssignability::withCast2({_inst} as TestAssignAbilitySecond)
 
 	public static withCast2(inst: TestAssignAbilitySecond instance):
@@ -94,7 +94,7 @@ class TestAssignability:
 		TestAssignability::noCast1({_inst})
 
 	public static noCast1(inst: TestAssignAbilityFirst instance):
-		set {-TestAssignability::noCast::1} to {_isnt}
+		set {-TestAssignability::noCast::1} to {_inst}
 		TestAssignability::noCast2({_inst})
 
 	public static noCast2(inst: TestAssignAbilitySecond instance):
@@ -116,7 +116,7 @@ local function chainWithCast(inst: TestAssignability instance):
 	withCast1({_inst} as TestAssignAbilityFirst)
 
 local function withCast1(inst: TestAssignAbilityFirst instance):
-	set {-TestAssignability::withCast::1} to {_isnt}
+	set {-TestAssignability::withCast::1} to {_inst}
 	withCast2({_inst} as TestAssignAbilitySecond)
 
 local function withCast2(inst: TestAssignAbilitySecond instance):
@@ -132,7 +132,7 @@ local function chainNoCast(inst: TestAssignability instance):
 	noCast1({_inst})
 
 local function noCast1(inst: TestAssignAbilityFirst instance):
-	set {-TestAssignability::noCast::1} to {_isnt}
+	set {-TestAssignability::noCast::1} to {_inst}
 	noCast2({_inst})
 
 local function noCast2(inst: TestAssignAbilitySecond instance):
@@ -202,7 +202,7 @@ test "ClassySK - no cast chain (functions)":
 	assert {-TestAssignability::noCast::3} is not set
 
 	delete {-TestAssignability::noCast::*}
-	set {_inst} to new TestAssignAbilitySecondlocal function
+	set {_inst} to new TestAssignAbilitySecond
 
 	chainNoCast({_inst})
 	assert {-TestAssignability::noCast::1} is not set
