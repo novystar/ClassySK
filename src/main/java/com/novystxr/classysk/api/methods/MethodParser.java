@@ -30,7 +30,7 @@ public class MethodParser {
 
     // argument components
     private static final String NAME = "(?<name>[_a-zA-Z0-9]+)";
-    private static final String TYPE = "(?<type>[a-zA-Z ]+)";
+    private static final String TYPE = "(?<type>[a-zA-Z\\d ]+)";
     private static final String VALUE = "(?<value>.+)";
     private static final String OPTIONAL = "(?<optional>\\?)?";
 
