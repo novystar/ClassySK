@@ -60,7 +60,7 @@ test "ClassySK - Types":
 
 	delete {-typed::a::*}
 	{_B}::setPlural(({_A}, {_A}, {_B}, {_A}))
-	assert size of {-typed::a::*} is 3withCast
+	assert size of {-typed::a::*} is 3
 
 	set {_B}::A_instances to {_A}, {_A}, {_A}
 	assert size of {_B}::A_instances is 3
@@ -75,17 +75,17 @@ test "ClassySK - Types":
 
 class TestAssignability:
 	public static chainWithCast(inst: TestAssignability instance):
-		TestAssignability::withCast1({_inst} as TestAssignability1)
+		TestAssignability::withCast1({_inst} as TestAssignAbilityFirst)
 
-	public static withCast1(inst: TestAssignability1 instance):
+	public static withCast1(inst: TestAssignAbilityFirst instance):
 		set {-TestAssignability::withCast::1} to {_isnt}
-		TestAssignability::withCast2({_inst} as TestAssignability2)
+		TestAssignability::withCast2({_inst} as TestAssignAbilitySecond)
 
-	public static withCast2(inst: TestAssignability2 instance):
+	public static withCast2(inst: TestAssignAbilitySecond instance):
 		set {-TestAssignability::withCast::2} to {_inst}
-		TestAssignability::withCast3({_inst} as TestAssignability3)
+		TestAssignability::withCast3({_inst} as TestAssignAbilityThird)
 
-	public static withCast3(inst: TestAssignability3 instance):
+	public static withCast3(inst: TestAssignAbilityThird instance):
 		set {-TestAssignability::withCast::3} to {_inst}
 
 
@@ -93,37 +93,37 @@ class TestAssignability:
 		set {-TestAssignability} to {_inst}
 		TestAssignability::noCast1({_inst})
 
-	public static noCast1(inst: TestAssignability1 instance):
+	public static noCast1(inst: TestAssignAbilityFirst instance):
 		set {-TestAssignability::noCast::1} to {_isnt}
 		TestAssignability::noCast2({_inst})
 
-	public static noCast2(inst: TestAssignability2 instance):
+	public static noCast2(inst: TestAssignAbilitySecond instance):
 		set {-TestAssignability::noCast::2} to {_inst}
 		TestAssignability::noCast3({_inst})
 
-	public static noCast3(inst: TestAssignability3 instance):
+	public static noCast3(inst: TestAssignAbilityThird instance):
 		set {-TestAssignability::noCast::3} to {_inst}
 
 	
 
-class TestAssignability1 extends TestAssignability:
+class TestAssignAbilityFirst extends TestAssignability:
 
-class TestAssignability2 extends TestAssignability1:
+class TestAssignAbilitySecond extends TestAssignAbilityFirst:
 
-class TestAssignability3 extends TestAssignability2:
+class TestAssignAbilityThird extends TestAssignAbilitySecond:
 
 local function chainWithCast(inst: TestAssignability instance):
-	withCast1({_inst} as TestAssignability1)
+	withCast1({_inst} as TestAssignAbilityFirst)
 
-local function withCast1(inst: TestAssignability1 instance):
+local function withCast1(inst: TestAssignAbilityFirst instance):
 	set {-TestAssignability::withCast::1} to {_isnt}
-	withCast2({_inst} as TestAssignability2)
+	withCast2({_inst} as TestAssignAbilitySecond)
 
-local function withCast2(inst: TestAssignability2 instance):
+local function withCast2(inst: TestAssignAbilitySecond instance):
 	set {-TestAssignability::withCast::2} to {_inst}
-	withCast3({_inst} as TestAssignability3)
+	withCast3({_inst} as TestAssignAbilityThird)
 
-local function withCast3(inst: TestAssignability3 instance):
+local function withCast3(inst: TestAssignAbilityThird instance):
 	set {-TestAssignability::withCast::3} to {_inst}
 
 
@@ -131,21 +131,21 @@ local function chainNoCast(inst: TestAssignability instance):
 	set {-TestAssignability} to {_inst}
 	noCast1({_inst})
 
-local function noCast1(inst: TestAssignability1 instance):
+local function noCast1(inst: TestAssignAbilityFirst instance):
 	set {-TestAssignability::noCast::1} to {_isnt}
 	noCast2({_inst})
 
-local function noCast2(inst: TestAssignability2 instance):
+local function noCast2(inst: TestAssignAbilitySecond instance):
 	set {-TestAssignability::noCast::2} to {_inst}
 	noCast3({_inst})
 
-local function noCast3(inst: TestAssignability3 instance):
+local function noCast3(inst: TestAssignAbilityThird instance):
 	set {-TestAssignability::noCast::3} to {_inst}
 
 
 test "ClassySK - upcast chain (functions)":
 	delete {-TestAssignability::withCast::*}
-	set {_inst} to new TestAssignability3
+	set {_inst} to new TestAssignAbilityThird
 
 	chainWithCast({_inst})
 	assert {-TestAssignability::withCast::1} is {_inst}
@@ -153,7 +153,7 @@ test "ClassySK - upcast chain (functions)":
 	assert {-TestAssignability::withCast::3} is {_inst}
 
 	delete {-TestAssignability::withCast::*}
-	set {_inst} to new TestAssignability2
+	set {_inst} to new TestAssignAbilitySecond
 
 	chainWithCast({_inst})
 	assert {-TestAssignability::withCast::1} is {_inst}
@@ -161,7 +161,7 @@ test "ClassySK - upcast chain (functions)":
 	assert {-TestAssignability::withCast::3} is not set
 
 	delete {-TestAssignability::withCast::*}
-	set {_inst} to new TestAssignability2
+	set {_inst} to new TestAssignAbilitySecond
 
 	chainWithCast({_inst})
 	assert {-TestAssignability::withCast::1} is {_inst}
@@ -169,7 +169,7 @@ test "ClassySK - upcast chain (functions)":
 	assert {-TestAssignability::withCast::3} is not set
 
 	delete {-TestAssignability::withCast::*}
-	set {_inst} to new TestAssignability1
+	set {_inst} to new TestAssignAbilityFirst
 
 	chainWithCast({_inst})
 	assert {-TestAssignability::withCast::1} is {_inst}
@@ -186,7 +186,7 @@ test "ClassySK - upcast chain (functions)":
 
 test "ClassySK - no cast chain (functions)":
 	delete {-TestAssignability::noCast::*}
-	set {_inst} to new TestAssignability3
+	set {_inst} to new TestAssignAbilityThird
 
 	chainNoCast({_inst})
 	assert {-TestAssignability::noCast::1} is not set
@@ -194,7 +194,7 @@ test "ClassySK - no cast chain (functions)":
 	assert {-TestAssignability::noCast::3} is not set
 
 	delete {-TestAssignability::noCast::*}
-	set {_inst} to new TestAssignability2
+	set {_inst} to new TestAssignAbilitySecond
 
 	chainNoCast({_inst})
 	assert {-TestAssignability::noCast::1} is not set
@@ -202,7 +202,7 @@ test "ClassySK - no cast chain (functions)":
 	assert {-TestAssignability::noCast::3} is not set
 
 	delete {-TestAssignability::noCast::*}
-	set {_inst} to new TestAssignability2local function
+	set {_inst} to new TestAssignAbilitySecondlocal function
 
 	chainNoCast({_inst})
 	assert {-TestAssignability::noCast::1} is not set
@@ -210,7 +210,7 @@ test "ClassySK - no cast chain (functions)":
 	assert {-TestAssignability::noCast::3} is not set
 
 	delete {-TestAssignability::noCast::*}
-	set {_inst} to new TestAssignability1
+	set {_inst} to new TestAssignAbilityFirst
 
 	chainNoCast({_inst})
 	assert {-TestAssignability::noCast::1} is not set
@@ -230,7 +230,7 @@ test "ClassySK - no cast chain (functions)":
 
 test "ClassySK - upcast chain (methods)":
 	delete {-TestAssignability::withCast::*}
-	set {_inst} to new TestAssignability3
+	set {_inst} to new TestAssignAbilityThird
 
 	TestAssignability::chainWithCast({_inst})
 	assert {-TestAssignability::withCast::1} is {_inst}
@@ -238,7 +238,7 @@ test "ClassySK - upcast chain (methods)":
 	assert {-TestAssignability::withCast::3} is {_inst}
 
 	delete {-TestAssignability::withCast::*}
-	set {_inst} to new TestAssignability2
+	set {_inst} to new TestAssignAbilitySecond
 
 	TestAssignability::chainWithCast({_inst})
 	assert {-TestAssignability::withCast::1} is {_inst}
@@ -246,7 +246,7 @@ test "ClassySK - upcast chain (methods)":
 	assert {-TestAssignability::withCast::3} is not set
 
 	delete {-TestAssignability::withCast::*}
-	set {_inst} to new TestAssignability2
+	set {_inst} to new TestAssignAbilitySecond
 
 	TestAssignability::chainWithCast({_inst})
 	assert {-TestAssignability::withCast::1} is {_inst}
@@ -254,7 +254,7 @@ test "ClassySK - upcast chain (methods)":
 	assert {-TestAssignability::withCast::3} is not set
 
 	delete {-TestAssignability::withCast::*}
-	set {_inst} to new TestAssignability1
+	set {_inst} to new TestAssignAbilityFirst
 
 	TestAssignability::chainWithCast({_inst})
 	assert {-TestAssignability::withCast::1} is {_inst}
@@ -271,7 +271,7 @@ test "ClassySK - upcast chain (methods)":
 
 test "ClassySK - no cast chain (methods)":
 	delete {-TestAssignability::noCast::*}
-	set {_inst} to new TestAssignability3
+	set {_inst} to new TestAssignAbilityThird
 
 	TestAssignability::chainNoCast({_inst})
 	assert {-TestAssignability::noCast::1} is not set
@@ -279,7 +279,7 @@ test "ClassySK - no cast chain (methods)":
 	assert {-TestAssignability::noCast::3} is not set
 
 	delete {-TestAssignability::noCast::*}
-	set {_inst} to new TestAssignability2
+	set {_inst} to new TestAssignAbilitySecond
 
 	TestAssignability::chainNoCast({_inst})
 	assert {-TestAssignability::noCast::1} is not set
@@ -287,7 +287,7 @@ test "ClassySK - no cast chain (methods)":
 	assert {-TestAssignability::noCast::3} is not set
 
 	delete {-TestAssignability::noCast::*}
-	set {_inst} to new TestAssignability2
+	set {_inst} to new TestAssignAbilitySecond
 
 	TestAssignability::chainNoCast({_inst})
 	assert {-TestAssignability::noCast::1} is not set
@@ -295,7 +295,7 @@ test "ClassySK - no cast chain (methods)":
 	assert {-TestAssignability::noCast::3} is not set
 
 	delete {-TestAssignability::noCast::*}
-	set {_inst} to new TestAssignability1
+	set {_inst} to new TestAssignAbilityFirst
 
 	TestAssignability::chainNoCast({_inst})
 	assert {-TestAssignability::noCast::1} is not set
