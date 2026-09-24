@@ -1,0 +1,78 @@
+abstract class TestAnonymous:
+	public abstract1()
+
+	public abstract2() :: boolean
+
+	public concrete() :: string:
+		return "test"
+
+abstract class TestOtherAnonymous:
+	public concrete() :: string:
+		return "not overridden"
+
+class ConcreteClass:
+	public concrete():
+		broadcast "test"
+
+on load:
+	parse:
+		set {_a} to new TestAnonymous
+
+	assert last parse logs are set with "validate abstract methods"
+
+	parse:
+		set {_a} to new TestAnonymous:
+			abstract():
+				broadcast 1
+	assert last parse logs are set with "validate all abstract methods"
+
+	set {_a} to new TestAnonymous:
+		public override abstract1():
+			set {-TestAnonymous::abstract1} to 1
+			
+		public override abstract2() :: boolean:
+			return true
+
+	{_a}::abstract1()
+	assert {-TestAnonymous::abstract1} is 1
+	assert {_a}::abstract2() is true
+	assert {_a}::concrete() is "test"
+
+	parse:
+		set {_a} to new ConcreteClass:
+			public override concrete():
+				broadcast "overridden"
+
+	assert last parse logs are set with "non-abstract class shouldnt be implemented anonymously"
+
+	set {_a} to new TestOtherAnonymous:
+		concrete() :: string:
+			return "overridden"
+
+	assert {_a}::concrete() is "overridden"
+
+	set {_a} to new TestAnonymous:
+		override abstract1():
+			set {-TestAnonymous::abstract1} to 2
+
+		abstract2() :: boolean:
+			return true
+
+	{_a}::abstract1()
+	assert {-TestAnonymous::abstract1} is 2
+	assert {_a}::abstract2() is true
+
+	parse:
+		set {_a} to new TestOtherAnonymous:
+			private override concrete() :: string:
+				stop
+	assert last parse logs are set with "cannot override to lower access-type"
+
+	set {_a} to new TestOtherAnonymous:
+		public concrete() :: string:
+			return "overridden"
+
+	assert {_a}::concrete() is "overridden"
+
+
+	
