@@ -1,7 +1,7 @@
 abstract class TestAnonymous:
-	public abstract1()
+	public abstract abstract1()
 
-	public abstract2() :: boolean
+	public abstract abstract2() :: boolean
 
 	public concrete() :: string:
 		return "test"
