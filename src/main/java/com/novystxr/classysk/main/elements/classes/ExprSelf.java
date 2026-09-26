@@ -35,7 +35,7 @@ public class ExprSelf extends SimpleExpression<Object> implements EventRestricte
     public static void register(SyntaxRegistry registry) {
         registry.register(
             SyntaxRegistry.EXPRESSION,
-            DefaultSyntaxInfos.Expression.builder(ExprSelf.class, Object.class)
+            DefaultSyntaxInfos.Expression.builder(ExprSelf.class,  Object.class)
                 .addPatterns("self", "(this|[the] current) instance")
                 .supplier(ExprSelf::new)
                 .build()
@@ -53,8 +53,7 @@ public class ExprSelf extends SimpleExpression<Object> implements EventRestricte
     @Override
     protected ClassInstance @Nullable [] get(Event event) {
         if (event instanceof MethodEvent methodEvent) {
-            return methodEvent.instance == null
-                ? null : CollectionUtils.array(methodEvent.instance);
+            return methodEvent.instance == null ? null : CollectionUtils.array(methodEvent.instance);
         }
         return null;
     }

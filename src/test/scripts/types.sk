@@ -72,3 +72,112 @@ test "ClassySK - Types":
 	set {_B}::A_instances to {_A}, {_A}, {_B}, {_A}
 
 	assert size of {_B}::A_instances is 3
+
+class TestAssignability:
+
+	public static chain(inst: TestAssignability instance):
+		set {-TestAssignability} to {_inst}
+		TestAssignability::chain1({_inst})
+
+	public static chain1(inst: TestAssignAbilityFirst instance):
+		set {-TestAssignability::chain::1} to {_inst}
+		TestAssignability::chain2({_inst})
+
+	public static chain2(inst: TestAssignAbilitySecond instance):
+		set {-TestAssignability::chain::2} to {_inst}
+		TestAssignability::chain3({_inst})
+
+	public static chain3(inst: TestAssignAbilityThird instance):
+		set {-TestAssignability::chain::3} to {_inst}
+
+	
+
+class TestAssignAbilityFirst extends TestAssignability:
+
+class TestAssignAbilitySecond extends TestAssignAbilityFirst:
+
+class TestAssignAbilityThird extends TestAssignAbilitySecond:
+
+local function chain(inst: TestAssignability instance):
+	set {-TestAssignability} to {_inst}
+	chain1({_inst})
+
+local function chain1(inst: TestAssignAbilityFirst instance):
+	set {-TestAssignability::chain::1} to {_inst}
+	chain2({_inst})
+
+local function chain2(inst: TestAssignAbilitySecond instance):
+	set {-TestAssignability::chain::2} to {_inst}
+	chain3({_inst})
+
+local function chain3(inst: TestAssignAbilityThird instance):
+	set {-TestAssignability::chain::3} to {_inst}
+
+
+test "ClassySK - implicit cast chain (functions)":
+	delete {-TestAssignability::chain::*}
+	set {_inst} to new TestAssignAbilityThird
+
+	chain({_inst})
+	assert {-TestAssignability::chain::1} is {_inst}
+	assert {-TestAssignability::chain::2} is {_inst}
+	assert {-TestAssignability::chain::3} is {_inst}
+
+	delete {-TestAssignability::chain::*}
+	set {_inst} to new TestAssignAbilitySecond
+
+	chain({_inst})
+	assert {-TestAssignability::chain::1} is {_inst}
+	assert {-TestAssignability::chain::2} is {_inst}
+	assert {-TestAssignability::chain::3} is not set
+
+	delete {-TestAssignability::chain::*}
+	set {_inst} to new TestAssignAbilityFirst
+
+	chain({_inst})
+	assert {-TestAssignability::chain::1} is {_inst}
+	assert {-TestAssignability::chain::2} is not set
+	assert {-TestAssignability::chain::3} is not set
+
+	delete {-TestAssignability::chain::*}
+	set {_inst} to new TestAssignability
+
+	chain({_inst})
+	assert size of {-TestAssignability::chain::*} is 0
+	assert {-TestAssignability::chain::1} is not set
+	assert {-TestAssignability::chain::2} is not set
+	assert {-TestAssignability::chain::3} is not set
+
+test "ClassySK - implicit cast chain (methods)":
+	delete {-TestAssignability::chain::*}
+	set {_inst} to new TestAssignAbilityThird
+
+	TestAssignability::chain({_inst})
+	assert {-TestAssignability::chain::1} is {_inst}
+	assert {-TestAssignability::chain::2} is {_inst}
+	assert {-TestAssignability::chain::3} is {_inst}
+
+	delete {-TestAssignability::chain::*}
+	set {_inst} to new TestAssignAbilitySecond
+
+	TestAssignability::chain({_inst})
+	assert {-TestAssignability::chain::1} is {_inst}
+	assert {-TestAssignability::chain::2} is {_inst}
+	assert {-TestAssignability::chain::3} is not set
+
+	delete {-TestAssignability::chain::*}
+	set {_inst} to new TestAssignAbilityFirst
+
+	TestAssignability::chain({_inst})
+	assert {-TestAssignability::chain::1} is {_inst}
+	assert {-TestAssignability::chain::2} is not set
+	assert {-TestAssignability::chain::3} is not set
+
+	delete {-TestAssignability::chain::*}
+	set {_inst} to new TestAssignability
+
+	TestAssignability::chain({_inst})
+	assert size of {-TestAssignability::chain::*} is 0
+	assert {-TestAssignability::chain::1} is not set
+	assert {-TestAssignability::chain::2} is not set
+	assert {-TestAssignability::chain::3} is not set

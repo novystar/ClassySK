@@ -30,7 +30,7 @@ public class MethodParser {
 
     // argument components
     private static final String NAME = "(?<name>[_a-zA-Z0-9]+)";
-    private static final String TYPE = "(?<type>[a-zA-Z ]+)";
+    private static final String TYPE = "(?<type>[a-zA-Z\\d ]+)";
     private static final String VALUE = "(?<value>.+)";
     private static final String OPTIONAL = "(?<optional>\\?)?";
 
@@ -42,7 +42,7 @@ public class MethodParser {
         Pattern.compile("(?:\\s*"+NAME+":\\s)?"+VALUE);
 
     // syntax patterns
-    public static final String METHOD_PATTERN = "%classinstance%\\:\\:<"+NAME_PATTERN+">\\([<.+>]\\)";
+    public static final String METHOD_PATTERN = "(%-classinstance%|:super)\\:\\:<"+NAME_PATTERN+">\\([<.+>]\\)";
     public static final String STATIC_METHOD_PATTERN = "<"+CLASSNAME_PATTERN+">\\:\\:<"+NAME_PATTERN+">\\([<.+>]\\)";
 
     public record ReferenceArgument(
@@ -65,13 +65,14 @@ public class MethodParser {
                 if (arg.name != null) {
                     builder.append(arg.name).append(": ");
                 }
-                builder.append(Classes.getSuperClassInfo(arg.expr.getReturnType()));
+                builder.append(Classes.getExactClassInfo(arg.expr.getReturnType()));
                 if (i != args.size()) {
                     builder.append(", ");
                 }
             }
             return builder.append(")").toString();
         }
+
     }
 
     public static @Nullable MethodReference parseReference(String name, @Nullable String args, boolean isStatic) {
