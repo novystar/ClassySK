@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 
 public class ClassInfoAdvice {
 
-    public static final Pattern pattern = Pattern.compile("("+ Classysk.CLASSNAME_PATTERN +") instances?");
+    public static final Pattern pattern = Pattern.compile("("+ Classysk.CLASSNAME_PATTERN +") (?i)instances?");
 
     @Advice.OnMethodExit
     static void onExit(@Advice.Argument(0) String input, @Advice.Return(readOnly = false) ClassInfo<?> result) {
