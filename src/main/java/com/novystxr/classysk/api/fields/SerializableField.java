@@ -31,6 +31,7 @@ public class SerializableField implements YggdrasilExtendedSerializable {
     }
 
     public boolean canBeSaved() {
+        Object[] newValue = new Object[value.length];
         for (int i = 0; i < value.length; i++) {
             if (value[i] == null) {
                 continue;
@@ -40,12 +41,15 @@ public class SerializableField implements YggdrasilExtendedSerializable {
             if (serializeAs != null) {
                 classInfo = Classes.getExactClassInfo(serializeAs);
                 if (classInfo == null) return false;
-                value[i] = Converters.convert(value[i], serializeAs);
+                newValue[i] = Converters.convert(value[i], serializeAs);
+            } else {
+                newValue[i] = value[i];
             }
             if (classInfo.getSerializer() == null) {
                 return false;
             }
         }
+        value = newValue;
         return true;
     }
 }
