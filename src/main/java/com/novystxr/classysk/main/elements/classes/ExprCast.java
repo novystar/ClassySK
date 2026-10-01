@@ -7,8 +7,10 @@ import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
+import com.novystxr.classysk.api.Validator;
 import com.novystxr.classysk.api.assignability.AssignabilityBridge;
 import com.novystxr.classysk.api.classes.ClassContextHolder;
+import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.util.StringUtils;
@@ -63,26 +65,24 @@ public class ExprCast extends SimpleExpression<Object> implements ClassContextHo
     private SkriptClass skriptClass;
 
     private Class<? extends AssignabilityBridge> type;
-    private Expression<? extends AssignabilityBridge> instanceExpr;
+    private Expression<? extends ClassInstance> instanceExpr;
 
     @Override
     @SuppressWarnings("unchecked")
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result) {
         name = StringUtils.getLowerCase(result.regexes.getFirst());
-
         skriptClass = ClassManager.getClass(name);
         if (skriptClass == null) {
             Skript.error("Class '%s' does not exist", titleCase(name));
             return false;
         }
         type = skriptClass.getSubInterface();
-        instanceExpr = exprs[0].getConvertedExpression(type);
-
-        if (instanceExpr == null) {
-            Skript.error("This expression can't possibly cast to '%s'", titleCase(name));
-            return false;
+        instanceExpr = (Expression<? extends ClassInstance>) exprs[0];
+        if (Validator.getPossibleClasses(instanceExpr).stream().anyMatch(skriptClass::inherits)) {
+            return true;
         }
-        return true;
+        Skript.error("This expression can't possibly cast to '%s'", titleCase(name));
+        return false;
     }
 
     @Override

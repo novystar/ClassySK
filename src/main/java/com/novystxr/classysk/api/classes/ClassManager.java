@@ -62,7 +62,6 @@ public class ClassManager {
     public static void createWrapperConverters(SkriptClass skriptClass) {
         if (Classysk.TYPES_ALLOWED) {
             Class<? extends AssignabilityBridge> bridgeType = skriptClass.getSubInterface();
-            ReflectUtils.registerConverter(skriptClass.getSubclass(), bridgeType, i -> i);
             skriptClass.inheritanceStream().skip(1).forEach(target ->
                 ReflectUtils.registerConverter(bridgeType, target.getSubInterface(), i -> i.wrap(target.name))
             );
