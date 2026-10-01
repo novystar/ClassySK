@@ -61,12 +61,10 @@ public class ClassManager {
 
     public static void createWrapperConverters(SkriptClass skriptClass) {
         if (Classysk.TYPES_ALLOWED) {
-            Class<? extends ClassInstance> directType = skriptClass.getSubclass();
-
-            ReflectUtils.registerConverter(directType, skriptClass.getSubInterface(), i -> i);
+            Class<? extends AssignabilityBridge> bridgeType = skriptClass.getSubInterface();
+            ReflectUtils.registerConverter(skriptClass.getSubclass(), bridgeType, i -> i);
             skriptClass.inheritanceStream().skip(1).forEach(target ->
-                ReflectUtils.registerConverter(directType, target.getSubInterface(),
-                    i -> i.wrap(target.name))
+                ReflectUtils.registerConverter(bridgeType, target.getSubInterface(), i -> i.wrap(target.name))
             );
         }
     }
@@ -86,8 +84,8 @@ public class ClassManager {
     public static void unregisterClass(String name) {
         classMap.remove(name);
 
-        if (Classysk.TYPES_ALLOWED) {
-            ReflectUtils.unregisterAllFrom(ClassInstance.getSubclass(name));
+        if (Classysk.TYPES_ALLOWED) { // unregister wrapper converters
+            ReflectUtils.unregisterAllFrom(AssignabilityBridge.getSubInterface(name), ClassInstance.class);
         }
 
     }

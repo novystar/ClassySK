@@ -9,6 +9,7 @@ import ch.njol.util.*;
 import com.novystxr.classysk.api.assignability.AssignabilityBridge;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.main.elements.Types;
+import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.converter.Converter;
 import org.skriptlang.skript.lang.converter.ConverterInfo;
 import org.skriptlang.skript.lang.converter.Converters;
@@ -116,9 +117,8 @@ public class ReflectUtils {
     @SuppressWarnings("unchecked")
     public static <F, T> void registerConverter(Class<? extends F> fromType, Class<? extends T> toType, Converter<? extends F, ? extends T> converter) {
         if (!Converters.exactConverterExists(fromType, toType)) {
-            allowRegistration();
-
             removeFromQuickAccess(fromType, toType);
+            allowRegistration();
             Converters.registerConverter((Class<F>) fromType, (Class<T>) toType, (Converter<F, T>) converter);
             disableRegistration();
         }
@@ -134,9 +134,13 @@ public class ReflectUtils {
         removeFromQuickAccess(fromType, toType);
     }
 
+    public static void unregisterAllFrom(Class<?> fromType, @Nullable Class<?> excludeTo) {
+        getConverters().removeIf(info -> info.getFrom() == fromType && info.getTo() != excludeTo);
+        getQuickAccessConverters().values().removeIf(info -> info == null || (info.getFrom() == fromType && info.getTo() != excludeTo));
+    }
+
     public static void unregisterAllFrom(Class<?> fromType) {
-        getConverters().removeIf(info -> info.getFrom() == fromType);
-        getQuickAccessConverters().values().removeIf(info -> info != null && info.getFrom() == fromType);
+        unregisterAllFrom(fromType, null);
     }
 
     public static void unregisterAllTo(Class<?> toType) {

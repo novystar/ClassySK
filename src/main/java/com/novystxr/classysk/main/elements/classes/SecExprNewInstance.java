@@ -12,7 +12,7 @@ import ch.njol.util.coll.CollectionUtils;
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.anonymous.AnonymousClass;
-import com.novystxr.classysk.api.anonymous.AnonymousData;
+import com.novystxr.classysk.api.assignability.AssignabilityBridge;
 import com.novystxr.classysk.api.classes.*;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.methods.MethodRegistry.MethodIdentifier;
@@ -156,7 +156,7 @@ public class SecExprNewInstance extends SectionExpression<Object> implements Cla
     @Override
     protected ClassInstance @Nullable [] get(Event event) {
         ClassInstance newInstance = anonymous == null ? skriptClass.createInstance()
-            : anonymous.createInstance().withData(i -> new AnonymousData(i, anonymous, event));
+            : anonymous.createInstance(event);
 
         for (Entry<String, Expression<?>> entry : fields.entrySet()) {
             String fieldName = entry.getKey();
@@ -179,8 +179,8 @@ public class SecExprNewInstance extends SectionExpression<Object> implements Cla
     }
 
     @Override
-    public Class<? extends ClassInstance> getReturnType() {
-        return skriptClass.getSubclass();
+    public Class<? extends AssignabilityBridge> getReturnType() {
+        return skriptClass.getSubInterface();
     }
 
     @Override

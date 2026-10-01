@@ -24,4 +24,9 @@ public class TypedInstanceWrapper implements AssignabilityBridge {
     public ClassInstance unwrap() {
         return instance;
     }
+
+    @Override
+    public AssignabilityBridge wrap(String asName) {
+        return instance.wrap(asName);
+    }
 }

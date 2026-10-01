@@ -28,4 +28,6 @@ public interface AssignabilityBridge {
     }
 
     ClassInstance unwrap();
+
+    AssignabilityBridge wrap(String asName);
 }

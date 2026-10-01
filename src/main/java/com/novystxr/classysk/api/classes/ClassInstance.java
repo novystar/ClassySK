@@ -1,7 +1,6 @@
 package com.novystxr.classysk.api.classes;
 
 import java.util.*;
-import java.util.function.Function;
 
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.assignability.AssignabilityBridge;
@@ -57,32 +56,13 @@ public class ClassInstance implements FieldHolder, AssignabilityBridge {
 
     private final Map<String, TypedInstanceWrapper> wrappers = new HashMap<>();
 
-    public TypedInstanceWrapper wrap(String asName) {
+    @Override
+    public AssignabilityBridge wrap(String asName) {
         return wrappers.computeIfAbsent(asName, k -> TypedInstanceWrapper.newInstance(this, asName));
     }
 
     public SkriptClass getParent() {
-        return data == null ? ClassManager.getClass(name) : data.getDataClass();
+        return ClassManager.getClass(name);
     }
 
-    // instance data
-    // preferring composition because inheritance is not very feasible with generated classes
-
-    public ClassInstance withData(Function<ClassInstance, InstanceData> data) {
-        this.data = data.apply(this);
-        return this;
-    }
-
-    private InstanceData data;
-
-    public <T extends InstanceData> T getData(Class<T> clazz) {
-        return clazz.isInstance(data) ? clazz.cast(data) : null;
-    }
-
-    public class InstanceData {
-
-        public SkriptClass getDataClass() {
-            return ClassManager.getClass(name);
-        }
-    }
 }

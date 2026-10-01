@@ -7,6 +7,7 @@ import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import ch.njol.util.coll.CollectionUtils;
+import com.novystxr.classysk.api.assignability.AssignabilityBridge;
 import com.novystxr.classysk.api.classes.ClassContextHolder;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.SkriptClass;
@@ -69,8 +70,8 @@ public class ExprSelf extends SimpleExpression<Object> implements EventRestricte
     }
 
     @Override
-    public Class<? extends ClassInstance> getReturnType() {
-        return skriptClass.getSubclass();
+    public Class<? extends AssignabilityBridge> getReturnType() {
+        return skriptClass.getSubInterface();
     }
 
     @Override
