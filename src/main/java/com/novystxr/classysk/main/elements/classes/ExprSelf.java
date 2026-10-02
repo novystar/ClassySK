@@ -7,6 +7,7 @@ import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import ch.njol.util.coll.CollectionUtils;
+import com.novystxr.classysk.api.assignability.AssignabilityBridge;
 import com.novystxr.classysk.api.classes.ClassContextHolder;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.SkriptClass;
@@ -35,7 +36,7 @@ public class ExprSelf extends SimpleExpression<Object> implements EventRestricte
     public static void register(SyntaxRegistry registry) {
         registry.register(
             SyntaxRegistry.EXPRESSION,
-            DefaultSyntaxInfos.Expression.builder(ExprSelf.class, Object.class)
+            DefaultSyntaxInfos.Expression.builder(ExprSelf.class,  Object.class)
                 .addPatterns("self", "(this|[the] current) instance")
                 .supplier(ExprSelf::new)
                 .build()
@@ -53,8 +54,7 @@ public class ExprSelf extends SimpleExpression<Object> implements EventRestricte
     @Override
     protected ClassInstance @Nullable [] get(Event event) {
         if (event instanceof MethodEvent methodEvent) {
-            return methodEvent.instance == null
-                ? null : CollectionUtils.array(methodEvent.instance);
+            return methodEvent.instance == null ? null : CollectionUtils.array(methodEvent.instance);
         }
         return null;
     }
@@ -70,8 +70,8 @@ public class ExprSelf extends SimpleExpression<Object> implements EventRestricte
     }
 
     @Override
-    public Class<? extends ClassInstance> getReturnType() {
-        return skriptClass.getSubclass();
+    public Class<? extends AssignabilityBridge> getReturnType() {
+        return skriptClass.getSubInterface();
     }
 
     @Override

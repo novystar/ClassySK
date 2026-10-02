@@ -37,11 +37,8 @@ public class ExprMethodCall extends SimpleExpression<Object> {
     private MethodValidator validator;
     private boolean isStatic;
 
-    private Kleenean shouldBeSingle;
-    private Class<?>[] possibleTypes;
-    private Class<?> bestReturnType;
-
     @Override
+    @SuppressWarnings("unchecked")
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result) {
         isStatic = pattern == 1;
         SkriptClass contextClass = SkriptMethod.getContextClass(getParser());
@@ -53,7 +50,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
         MethodReference reference = MethodParser.parseReference(methodName, args, isStatic);
         if (reference == null) return false;
 
-        validator = new MethodValidator(getErrorSource(), contextClass, reference, true);
+        validator = new MethodValidator(getErrorSource(), contextClass, reference, true, result.hasTag("super"));
         if (isStatic) {
             String className = getLowerCase(result.regexes.getFirst());
             SkriptClass skriptClass = ClassManager.getClass(className);
@@ -63,8 +60,12 @@ public class ExprMethodCall extends SimpleExpression<Object> {
             }
             return validator.validateStatic(skriptClass) && postInit();
         }
-        return validator.validateExpression(exprs[0]) && postInit();
+        return validator.validateExpression((Expression<ClassInstance>) exprs[0]) && postInit();
     }
+
+    private Kleenean shouldBeSingle;
+    private Class<?>[] possibleTypes;
+    private Class<?> bestReturnType;
 
     private boolean postInit() {
         shouldBeSingle = validator.shouldBeSingle();
