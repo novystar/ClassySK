@@ -21,7 +21,7 @@ public class MethodRegistry {
 
         @Override
         public int hashCode() {
-            return Objects.hash(name, Arrays.hashCode(argTypes));
+            return Objects.hash(name, isStatic, Arrays.hashCode(argTypes));
         }
 
         public static MethodIdentifier from(SkriptMethod method) {
