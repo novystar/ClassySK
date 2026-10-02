@@ -139,30 +139,30 @@ test "ClassySK - Assignability (no type hints)":
 
 	set {_i} to new AssignmentD
 	downD({_i})
-	upA({_i})
+	upD({_i})
 	assert size of {-Assignment::down::*} is 4
-	assert size of {-Assignment::up::*} is 4
+	assert size of {-Assignment::up::*} is 1
 	delete {-Assignment::*}
 
 	set {_i} to new AssignmentC
 	downC({_i})
-	upA({_i})
+	upC({_i})
 	assert size of {-Assignment::down::*} is 3
-	assert size of {-Assignment::up::*} is 3
+	assert size of {-Assignment::up::*} is 2
 	delete {-Assignment::*}
 
 	set {_i} to new AssignmentB
 	downB({_i})
-	upA({_i})
+	upB({_i})
 	assert size of {-Assignment::down::*} is 2
-	assert size of {-Assignment::up::*} is 2
+	assert size of {-Assignment::up::*} is 3
 	delete {-Assignment::*}
 
 	set {_i} to new AssignmentA
 	downA({_i})
 	upA({_i})
 	assert size of {-Assignment::down::*} is 1
-	assert size of {-Assignment::up::*} is 1
+	assert size of {-Assignment::up::*} is 4
 	delete {-Assignment::*}
 
 	set {_i} to new AssignmentA
