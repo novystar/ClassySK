@@ -65,7 +65,7 @@ public class MethodParser {
                 if (arg.name != null) {
                     builder.append(arg.name).append(": ");
                 }
-                builder.append(Classes.getExactClassInfo(arg.expr.getReturnType()));
+                builder.append(Classes.getSuperClassInfo(arg.expr.getReturnType()));
                 if (i != args.size()) {
                     builder.append(", ");
                 }
