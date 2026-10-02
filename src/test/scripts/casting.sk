@@ -1,0 +1,71 @@
+using type hints
+
+local function downD(i: AssignmentD instance):
+	add "D" to {-Assignment::down::*}
+	downC({_i})
+	
+local function downC(i: AssignmentC instance):
+	add "C" to {-Assignment::down::*}
+	downB({_i})
+
+local function downB(i: AssignmentB instance):
+	add "B" to {-Assignment::down::*}
+	downA({_i})
+
+local function downA(i: AssignmentA instance):
+	add "A" to {-Assignment::down::*}
+
+# test with casting for type hints
+local function upA(i: AssignmentA instance):
+	add "A" to {-Assignment::up::*}
+	upB({_i} as AssignmentB)
+
+local function upB(i: AssignmentB instance):
+	add "B" to {-Assignment::up::*}
+	upC({_i} as AssignmentC)
+
+local function upC(i: AssignmentC instance):
+	add "C" to {-Assignment::up::*}
+	upD({_i} as AssignmentD)
+
+local function upD(i: AssignmentD instance):
+	add "D" to {-Assignment::up::*}
+
+test "ClassySK - Assignability (with type hints)":
+	delete {-Assignment::*}
+
+	set {_i} to new AssignmentD
+	downD({_i})
+	upA({_i})
+	assert size of {-Assignment::down::*} is 4
+	assert size of {-Assignment::up::*} is 4
+	delete {-Assignment::*}
+
+	set {_i} to new AssignmentC
+	downC({_i})
+	upA({_i})
+	assert size of {-Assignment::down::*} is 3
+	assert size of {-Assignment::up::*} is 3
+	delete {-Assignment::*}
+
+	set {_i} to new AssignmentB
+	downB({_i})
+	upA({_i})
+	assert size of {-Assignment::down::*} is 2
+	assert size of {-Assignment::up::*} is 2
+	delete {-Assignment::*}
+
+	set {_i} to new AssignmentA
+	downA({_i})
+	upA({_i})
+	assert size of {-Assignment::down::*} is 1
+	assert size of {-Assignment::up::*} is 1
+	delete {-Assignment::*}
+
+	set {_i} to new AssignmentA
+	parse:
+		downB({_i})
+	assert last parse logs are set
+	parse:
+		upB({_i})
+	assert last parse logs are set
