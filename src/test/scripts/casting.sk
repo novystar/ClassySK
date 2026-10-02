@@ -1,70 +1,95 @@
 using type hints
 
 local function downD(i: AssignmentD instance):
-	add "D" to {-Assignment::down::*}
+	add {_i} to {-Assignment::down::*}
 	downC({_i})
 	
 local function downC(i: AssignmentC instance):
-	add "C" to {-Assignment::down::*}
+	add {_i} to {-Assignment::down::*}
 	downB({_i})
 
 local function downB(i: AssignmentB instance):
-	add "B" to {-Assignment::down::*}
+	add {_i} to {-Assignment::down::*}
 	downA({_i})
 
 local function downA(i: AssignmentA instance):
-	add "A" to {-Assignment::down::*}
+	add {_i} to {-Assignment::down::*}
 
-# test with casting for type hints
+# should work implicitly without type hints
 local function upA(i: AssignmentA instance):
-	add "A" to {-Assignment::up::*}
+	add {_i} to {-Assignment::up::*}
 	upB({_i} as AssignmentB)
 
 local function upB(i: AssignmentB instance):
-	add "B" to {-Assignment::up::*}
+	add {_i} to {-Assignment::up::*}
 	upC({_i} as AssignmentC)
 
 local function upC(i: AssignmentC instance):
-	add "C" to {-Assignment::up::*}
+	add {_i} to {-Assignment::up::*}
 	upD({_i} as AssignmentD)
 
 local function upD(i: AssignmentD instance):
-	add "D" to {-Assignment::up::*}
+	add {_i} to {-Assignment::up::*}
 
 test "ClassySK - Assignability (with type hints)":
-	delete {-Assignment::*}
-
 	set {_i} to new AssignmentD
+	delete {-Assignment::*}
 	downD({_i})
-	upD({_i})
 	assert size of {-Assignment::down::*} is 4
-	assert size of {-Assignment::up::*} is 1
-	delete {-Assignment::*}
 
-	set {_i} to new AssignmentC
-	downC({_i})
-	upC({_i})
-	assert size of {-Assignment::down::*} is 3
-	assert size of {-Assignment::up::*} is 2
 	delete {-Assignment::*}
-
-	set {_i} to new AssignmentB
-	downB({_i})
-	upB({_i})
-	assert size of {-Assignment::down::*} is 2
-	assert size of {-Assignment::up::*} is 3
-	delete {-Assignment::*}
-
-	set {_i} to new AssignmentA
-	downA({_i})
 	upA({_i})
-	assert size of {-Assignment::down::*} is 1
 	assert size of {-Assignment::up::*} is 4
 	delete {-Assignment::*}
+	upB({_i})
+	assert size of {-Assignment::up::*} is 3
+	delete {-Assignment::*}
+	upC({_i})
+	assert size of {-Assignment::up::*} is 2
+	delete {-Assignment::*}
+	upD({_i})
+	assert size of {-Assignment::up::*} is 1
+
+
+	set {_i} to new AssignmentC
+	delete {-Assignment::*}
+	downC({_i})
+	assert size of {-Assignment::down::*} is 3
+
+	delete {-Assignment::*}
+	upA({_i})
+	assert size of {-Assignment::up::*} is 3
+	delete {-Assignment::*}
+	upB({_i})
+	assert size of {-Assignment::up::*} is 2
+	delete {-Assignment::*}
+	upC({_i})
+	assert size of {-Assignment::up::*} is 1
+
+	set {_i} to new AssignmentB
+	delete {-Assignment::*}
+	downB({_i})
+	assert size of {-Assignment::down::*} is 2
+
+	delete {-Assignment::*}
+	upA({_i})
+	assert size of {-Assignment::up::*} is 2
+	delete {-Assignment::*}
+	upB({_i})
+	assert size of {-Assignment::up::*} is 1
 
 	set {_i} to new AssignmentA
-	downB({_i})
-	upB({_i})
-	assert size of {-Assignment::down::*} is 0
-	assert size of {-Assignment::up::*} is 0
 	delete {-Assignment::*}
+	downA({_i})
+	assert size of {-Assignment::down::*} is 1
+
+	delete {-Assignment::*}
+	upA({_i})
+	assert size of {-Assignment::up::*} is 1
+
+	parse:
+		upB({_i})
+	assert last parse logs are set
+	parse:
+		downB({_i})
+	assert last parse logs are set
