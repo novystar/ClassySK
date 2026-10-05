@@ -13,6 +13,7 @@ import com.novystxr.classysk.api.methods.MethodRegistry;
 import com.novystxr.classysk.api.methods.MethodRegistry.MethodIdentifier;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.api.util.StringUtils;
+import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -109,7 +110,7 @@ public class SkriptClass implements FieldHolder, ModifierHolder {
         return ClassManager.getClass(name);
     }
 
-    public ClassInstance createInstance() {
+    public ClassInstance createInstance(Event event) {
         ClassInstance newInstance = ClassInstance.newInstance(name);
         newInstance.setDefaults();
         return newInstance;

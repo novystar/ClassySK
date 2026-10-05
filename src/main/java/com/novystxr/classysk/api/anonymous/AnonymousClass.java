@@ -10,8 +10,14 @@ public class AnonymousClass extends SkriptClass {
         super(name, name, Modifier.none());
     }
 
+    @Override
     public AnonymousInstance createInstance(Event event) {
         return AnonymousInstance.newInstance(name, this, event);
+    }
+
+    @Override
+    public Class<? extends AnonymousInstance> getSubclass() {
+        return AnonymousInstance.getSubclass(name);
     }
 
     @Override

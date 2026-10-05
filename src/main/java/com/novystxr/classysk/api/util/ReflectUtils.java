@@ -63,20 +63,19 @@ public class ReflectUtils {
 
     @SuppressWarnings("unchecked")
     public static <T extends AssignabilityBridge> void registerClassInfo(String name, Class<T> clazz) {
-        if (Classes.getExactClassInfo(clazz) == null) {
-            name = StringUtils.getLowerCase(name);
-            createLanguageNode(name);
-            ClassInfo<?> info = new ClassInfo<>(clazz, name + "classinstance")
-                .serializeAs(ClassInstance.class)
-                .parser((Parser<? extends T>) Types.classParser);
-            try {
+        if (Classes.getExactClassInfo(clazz) != null) return;
 
-                var exactClassInfosMap = (Map<Class<?>, ClassInfo<?>>) exactClassInfos.get(null);
-                exactClassInfosMap.put(clazz, info);
+        name = StringUtils.getLowerCase(name);
+        createLanguageNode(name);
+        ClassInfo<T> info = new ClassInfo<>(clazz, name + "classinstance")
+            .serializeAs(ClassInstance.class)
+            .parser((Parser<? extends T>) Types.classParser);
+        try {
+            var exactClassInfosMap = (Map<Class<?>, ClassInfo<?>>) exactClassInfos.get(null);
+            exactClassInfosMap.put(clazz, info);
 
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException(e);
-            }
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
         }
     }
 

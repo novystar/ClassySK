@@ -11,6 +11,10 @@ public class AnonymousInstance extends ClassInstance {
     private static final SubclassManager<AnonymousInstance> subclassManager =
         new SubclassManager<>(AnonymousInstance.class, "anonymous", String.class, SkriptClass.class, Event.class);
 
+    public static Class<? extends AnonymousInstance> getSubclass(String name) {
+        return subclassManager.getSubclass(name);
+    }
+
     public static AnonymousInstance newInstance(String name, SkriptClass parent, Event event) {
         return subclassManager.newInstance(name, name, parent, event);
     }

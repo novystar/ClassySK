@@ -12,7 +12,6 @@ import ch.njol.util.coll.CollectionUtils;
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.anonymous.AnonymousClass;
-import com.novystxr.classysk.api.assignability.AssignabilityBridge;
 import com.novystxr.classysk.api.classes.*;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.methods.MethodRegistry.MethodIdentifier;
@@ -45,14 +44,14 @@ import java.util.regex.Pattern;
     \tbalance: 5000
     """)
 @Since("1.0.0")
-public class SecExprNewInstance extends SectionExpression<Object> implements ClassContextHolder {
+public class SecExprNewInstance extends SectionExpression<ClassInstance> implements ClassContextHolder {
 
     private static final Pattern VALID_NODE_PATTERN = Pattern.compile("("+ Classysk.NAME_PATTERN +"): (.+)");
 
     public static void register(SyntaxRegistry registry) {
         registry.register(
             SyntaxRegistry.EXPRESSION,
-            DefaultSyntaxInfos.Expression.builder(SecExprNewInstance.class, Object.class)
+            DefaultSyntaxInfos.Expression.builder(SecExprNewInstance.class, ClassInstance.class)
                 .addPattern("[a] new [instance of] <"+ Classysk.CLASSNAME_PATTERN +">")
                 .supplier(SecExprNewInstance::new)
                 .priority(SyntaxInfo.COMBINED)
@@ -63,7 +62,6 @@ public class SecExprNewInstance extends SectionExpression<Object> implements Cla
     private SkriptClass skriptClass;
     private final Map<String, Expression<?>> fields = new HashMap<>();
 
-    private AnonymousClass anonymous = null;
     private String name;
 
     @Override
@@ -129,12 +127,12 @@ public class SecExprNewInstance extends SectionExpression<Object> implements Cla
                     if (!method.validateOverride(target)) {
                         return false;
                     }
-                    if (anonymous == null) {
-                        anonymous = new AnonymousClass(name);
+                    if (!(skriptClass instanceof AnonymousClass)) {
+                        skriptClass = new AnonymousClass(name);
                     }
                     method.modifiers = Modifier.collect(target.accessType(), Modifier.OVERRIDE);
                     secMethod.result = new AnonymousMethod(method);
-                    if (!secMethod.register(anonymous)) {
+                    if (!secMethod.register(skriptClass)) {
                         Skript.error("That method has already been implemented here");
                         return false;
                     }
@@ -149,14 +147,12 @@ public class SecExprNewInstance extends SectionExpression<Object> implements Cla
             Skript.error("%s abstract method(s) need to be implemented anonymously to create an instance of '%s'", abstractMethods.size(), StringUtils.titleCase(name));
             return false;
         }
-
         return true;
     }
 
     @Override
     protected ClassInstance @Nullable [] get(Event event) {
-        ClassInstance newInstance = anonymous == null ? skriptClass.createInstance()
-            : anonymous.createInstance(event);
+        ClassInstance newInstance = skriptClass.createInstance(event);
 
         for (Entry<String, Expression<?>> entry : fields.entrySet()) {
             String fieldName = entry.getKey();
@@ -179,12 +175,12 @@ public class SecExprNewInstance extends SectionExpression<Object> implements Cla
     }
 
     @Override
-    public Class<? extends AssignabilityBridge> getReturnType() {
-        return skriptClass.getSubInterface();
+    public Class<? extends ClassInstance> getReturnType() {
+        return skriptClass.getSubclass();
     }
 
     @Override
     public String toString(@Nullable Event event, boolean debug) {
-        return "new instance of class "+StringUtils.titleCase(name);
+        return "new instance of "+StringUtils.titleCase(name);
     }
 }

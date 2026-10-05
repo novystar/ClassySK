@@ -76,6 +76,7 @@ public class StructClass extends Structure {
 
     @Override
     public boolean init(Literal<?>[] args, int pattern, ParseResult result, @UnknownNullability EntryContainer entryContainer) {
+        if (entryContainer == null) return false;
         name = StringUtils.getLowerCase(result.regexes.getFirst());
         extendsName = result.hasTag("extends") ? StringUtils.getLowerCase(result.regexes.get(1)) : null;
 

@@ -92,13 +92,11 @@ public class MethodValidator extends Validator<ValidReference> {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public boolean validateExpression(Expression<ClassInstance> expr) {
         if (isSuper) {
-            Expression<?> superExpr = new ExprSuper();
-            if (!superExpr.init(null, 0, null, null))
+            expr = new ExprSuper();
+            if (!expr.init(null, 0, null, null))
                 return false;
-            expr = (Expression<ClassInstance>) superExpr.getConvertedExpression(superExpr.getReturnType());
         }
         return super.validateExpression(expr);
     }

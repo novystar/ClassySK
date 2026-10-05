@@ -30,15 +30,16 @@ public class SubclassManager<T> {
     private final Map<String, Class<? extends T>> subclasses = new HashMap<>();
 
     public Class<? extends T> getSubclass(String key) {
-        Class<? extends AssignabilityBridge> bridge = AssignabilityBridge.getSubInterface(key);
-        return subclasses.computeIfAbsent(key, k -> new ByteBuddy()
-            .subclass(fromType)
-            .implement(bridge)
-            .name("com.novystxr.generated."+packageID+"."+key)
-            .make()
-            .load(bridge.getClassLoader(), Default.WRAPPER)
-            .getLoaded()
-        );
+        return subclasses.computeIfAbsent(key, k -> {
+            Class<? extends AssignabilityBridge> bridge = AssignabilityBridge.getSubInterface(key);
+            return new ByteBuddy()
+                .subclass(fromType)
+                .implement(bridge)
+                .name("com.novystxr.generated." + packageID + "." + key)
+                .make()
+                .load(bridge.getClassLoader(), Default.WRAPPER)
+                .getLoaded();
+        });
     }
 
     public T newInstance(String key, Object... args) {

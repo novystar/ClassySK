@@ -86,7 +86,7 @@ public class ExprCast extends SimpleExpression<Object> implements ClassContextHo
     }
 
     @Override
-    protected Object @Nullable [] get(Event event) {
+    protected AssignabilityBridge @Nullable [] get(Event event) {
         return instanceExpr.getArray(event);
     }
 
