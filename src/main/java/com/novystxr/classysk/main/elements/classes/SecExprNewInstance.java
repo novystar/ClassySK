@@ -73,9 +73,11 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> impleme
             return false;
         }
         SkriptClass contextClass = SkriptMethod.getContextClass(getParser());
+        SkriptClass anonymous = null;
 
         List<SecMethod> methods = new ArrayList<>();
         List<SkriptMethod> abstractMethods = skriptClass.methodRegistry.getAbstract();
+
         if (sectionNode != null) {
             for (Node node : sectionNode) {
                 String key = node.getKey();
@@ -113,26 +115,24 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> impleme
                     }
                     SkriptMethod method = secMethod.result;
                     SkriptMethod target = skriptClass.getExactMethod(MethodIdentifier.from(method));
-                    abstractMethods.remove(target);
-
                     if (target == null) {
                         Skript.error("Anonymous methods must override an existing method");
                         return false;
                     }
-                    if (method.accessType() != null && target.accessType() != method.accessType()) {
+                    abstractMethods.remove(target);
+                    method.addModifiers(target.accessType(), Modifier.OVERRIDE);
+                    if (target.accessType() != method.accessType()) {
                         Skript.error("Access type cannot be changed on an anonymous override.");
                         return false;
                     }
-                    method.modifiers = Modifier.collect(target.accessType(), Modifier.OVERRIDE);
                     if (!method.validateOverride(target)) {
                         return false;
                     }
-                    if (!(skriptClass instanceof AnonymousClass)) {
-                        skriptClass = new AnonymousClass(name);
+                    if (anonymous == null) {
+                        anonymous = new AnonymousClass(name);
                     }
-                    method.modifiers = Modifier.collect(target.accessType(), Modifier.OVERRIDE);
                     secMethod.result = new AnonymousMethod(method);
-                    if (!secMethod.register(skriptClass)) {
+                    if (!secMethod.register(anonymous)) {
                         Skript.error("That method has already been implemented here");
                         return false;
                     }
@@ -147,6 +147,7 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> impleme
             Skript.error("%s abstract method(s) need to be implemented anonymously to create an instance of '%s'", abstractMethods.size(), StringUtils.titleCase(name));
             return false;
         }
+        if (anonymous != null) skriptClass = anonymous;
         return true;
     }
 
@@ -165,11 +166,6 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> impleme
     }
 
     @Override
-    public SkriptClass getContextClass() {
-        return skriptClass;
-    }
-
-    @Override
     public boolean isSingle() {
         return true;
     }
@@ -177,6 +173,11 @@ public class SecExprNewInstance extends SectionExpression<ClassInstance> impleme
     @Override
     public Class<? extends ClassInstance> getReturnType() {
         return skriptClass.getSubclass();
+    }
+
+    @Override
+    public SkriptClass getContextClass() {
+        return skriptClass;
     }
 
     @Override

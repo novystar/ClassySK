@@ -19,4 +19,12 @@ public interface ModifierHolder {
         return Arrays.stream(modifiers)
             .anyMatch(this::hasModifier);
     }
+
+    default void addModifiers(Modifier... modifiers) {
+        for (Modifier modifier : modifiers) {
+            if (modifiers()[modifier.index] == null) {
+                modifiers()[modifier.index] = modifier;
+            }
+        }
+    }
 }
