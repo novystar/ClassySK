@@ -14,7 +14,7 @@ class ConcreteClass:
 	public concrete():
 		broadcast "test"
 
-on load:
+test "ClassySK - Anonymous Classes":
 	parse:
 		set {_a} to new TestAnonymous
 
