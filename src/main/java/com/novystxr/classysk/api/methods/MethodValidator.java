@@ -13,6 +13,8 @@ import com.novystxr.classysk.api.methods.MethodParser.ReferenceArgument;
 import com.novystxr.classysk.api.methods.MethodRegistry.MethodIdentifier;
 import com.novystxr.classysk.api.methods.MethodValidator.ValidReference;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
+import com.novystxr.classysk.api.util.DefaultValue;
+import com.novystxr.classysk.main.elements.methods.ExprSuper;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
@@ -21,24 +23,29 @@ import org.skriptlang.skript.log.runtime.ErrorSource;
 import java.util.*;
 
 import static com.novystxr.classysk.api.Modifier.PRIVATE;
+import static com.novystxr.classysk.api.Modifier.PROTECTED;
 
 public class MethodValidator extends Validator<ValidReference> {
 
     private final MethodReference reference;
     private final boolean expectsReturn;
+    private final boolean isSuper;
 
-    public MethodValidator(ErrorSource errorSource, SkriptClass contextClass, @NotNull MethodReference reference, boolean expectsReturn) {
+    public MethodValidator(ErrorSource errorSource, SkriptClass contextClass, @NotNull MethodReference reference, boolean expectsReturn, boolean isSuper) {
         super(errorSource, contextClass);
+
         this.reference = reference;
         this.expectsReturn = expectsReturn;
+        this.isSuper = isSuper;
     }
 
     @Override
     protected @Nullable ValidReference getProductFromClass(SkriptClass skriptClass) {
-        List<SkriptMethod> candidates = skriptClass.methodRegistry.candidates(reference);
+        if (isSuper) skriptClass = skriptClass.getExtends();
 
+        List<SkriptMethod> candidates = skriptClass.getCandidates(reference);
         if (candidates.isEmpty()) {
-            Skript.error("Could not identify method signature from reference: "+reference);
+            Skript.error("Could not identify method %s", reference);
             return null;
         }
         if (candidates.size() == 1) {
@@ -46,7 +53,7 @@ public class MethodValidator extends Validator<ValidReference> {
         } else {
             ValidReference reference = validateFromCandidates(candidates);
             if (reference == null) {
-                Skript.error("Could not identify method out of %s overloads", candidates.size());
+                Skript.error("Could not identify method %s out of %s overloads", this.reference, candidates.size());
                 return null;
             }
             return reference;
@@ -56,11 +63,10 @@ public class MethodValidator extends Validator<ValidReference> {
     @Override
     protected @Nullable ValidReference getProductFromInstance(ClassInstance instance) {
         SkriptClass parent = instance.getParent();
-        // TODO: for inheritance this should be changed to an 'inherits' check because methods of subclasses will also have the same signature
-        if (product() == null || parent != product().getOrigin()) {
+        if (product() == null || !parent.inherits(product().getOrigin())) {
             return getProductFromClass(parent);
         }
-        SkriptMethod method = instance.getParent().methodRegistry.getExactMethod(MethodIdentifier.from(product().method));
+        SkriptMethod method = (isSuper ? parent.getExtends() : parent).getExactMethod(MethodIdentifier.from(product().method));
         if (method == null) {
             return getProductFromClass(parent);
             }
@@ -74,11 +80,25 @@ public class MethodValidator extends Validator<ValidReference> {
             Skript.error("This method can't return anything");
             return false;
         }
-        if (reference.accessType() == PRIVATE && origin != contextClass) {
+        if (reference.hasModifier(PRIVATE) && contextClass != origin) {
             Skript.error("Private methods can only be accessed from within their own class");
             return false;
         }
+        if (reference.hasModifier(PROTECTED) && (contextClass == null || !contextClass.inherits(origin))) {
+            Skript.error("Protected methods can only be accessed from inheritors");
+            return false;
+        }
         return true;
+    }
+
+    @Override
+    public boolean validateExpression(Expression<ClassInstance> expr) {
+        if (isSuper) {
+            expr = new ExprSuper();
+            if (!expr.init(null, 0, null, null))
+                return false;
+        }
+        return super.validateExpression(expr);
     }
 
     private @Nullable ValidReference validateReference(SkriptMethod target, boolean printErrors) {
@@ -143,7 +163,7 @@ public class MethodValidator extends Validator<ValidReference> {
             String name = entry.getKey();
             if (referenceArgNames.contains(name)) continue;
 
-            Expression<?> defaultValue = entry.getValue().defaultValue();
+            DefaultValue<?> defaultValue = entry.getValue().defaultValue();
             if (defaultValue == null) {
                 Skript.error("Could not resolve some argument(s) for this method call");
                 return null;
@@ -187,7 +207,7 @@ public class MethodValidator extends Validator<ValidReference> {
         }
 
         public Object @Nullable [] run(Event event, ClassInstance instance) {
-            return method.run(event, instance, args);
+            return method.run(event, new MethodEvent(instance), args);
         }
     }
 }
