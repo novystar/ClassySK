@@ -44,14 +44,14 @@ import java.util.regex.Pattern;
     \tbalance: 5000
     """)
 @Since("1.0.0")
-public class SecExprNewInstance extends SectionExpression<ClassInstance> implements ClassContextHolder {
+public class SecExprNewInstance extends SectionExpression<Object> implements ClassContextHolder {
 
     private static final Pattern VALID_NODE_PATTERN = Pattern.compile("("+ Classysk.NAME_PATTERN +"): (.+)");
 
     public static void register(SyntaxRegistry registry) {
         registry.register(
             SyntaxRegistry.EXPRESSION,
-            DefaultSyntaxInfos.Expression.builder(SecExprNewInstance.class, ClassInstance.class)
+            DefaultSyntaxInfos.Expression.builder(SecExprNewInstance.class, Object.class)
                 .addPattern("[a] new [instance of] <"+ Classysk.CLASSNAME_PATTERN +">")
                 .supplier(SecExprNewInstance::new)
                 .priority(SyntaxInfo.COMBINED)

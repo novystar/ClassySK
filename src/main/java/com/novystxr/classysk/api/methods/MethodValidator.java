@@ -96,12 +96,8 @@ public class MethodValidator extends Validator<ValidReference> {
 
     @Override
     public boolean validateExpression(Expression<ClassInstance> expr) {
-        if (isSuper) {
-            expr = new ExprSuper();
-            if (!expr.init(null, 0, null, null))
-                return false;
-        }
-        return super.validateExpression(expr);
+        if (isSuper) expr = ExprSuper.newInstance();
+        return expr != null && super.validateExpression(expr);
     }
 
     private @Nullable ValidReference validateReference(SkriptMethod target, boolean printErrors) {
