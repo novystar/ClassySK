@@ -22,8 +22,7 @@ import org.skriptlang.skript.log.runtime.ErrorSource;
 
 import java.util.*;
 
-import static com.novystxr.classysk.api.Modifier.PRIVATE;
-import static com.novystxr.classysk.api.Modifier.PROTECTED;
+import static com.novystxr.classysk.api.Modifier.*;
 
 public class MethodValidator extends Validator<ValidReference> {
 
@@ -86,6 +85,10 @@ public class MethodValidator extends Validator<ValidReference> {
         }
         if (reference.hasModifier(PROTECTED) && (contextClass == null || !contextClass.inherits(origin))) {
             Skript.error("Protected methods can only be accessed from inheritors");
+            return false;
+        }
+        if (isSuper && reference.method().hasModifier(ABSTRACT)) {
+            Skript.error("You cannot call abstract methods directly");
             return false;
         }
         return true;
