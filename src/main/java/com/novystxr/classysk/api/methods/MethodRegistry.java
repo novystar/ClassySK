@@ -1,10 +1,12 @@
 package com.novystxr.classysk.api.methods;
 
+import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class MethodRegistry {
 
@@ -39,10 +41,10 @@ public class MethodRegistry {
         return registry.get(identifier);
     }
 
-    public List<SkriptMethod> candidates(MethodReference reference) {
+    public Map<MethodIdentifier, SkriptMethod> candidates(MethodReference reference) {
         int refArgs = reference.args().size();
 
-        List<SkriptMethod> result = new ArrayList<>();
+        Map<MethodIdentifier, SkriptMethod> result = new HashMap<>();
         for (var entry : registry.entrySet()) {
             MethodIdentifier key = entry.getKey();
             SkriptMethod method = entry.getValue();
@@ -56,9 +58,15 @@ public class MethodRegistry {
             if (reference.isStatic() != method.isStatic())
                 continue;
 
-            result.add(method);
+            result.put(key, method);
         }
         return result;
+    }
+
+    public List<SkriptMethod> getAbstract() {
+        return registry.values().stream()
+            .filter(method -> method.hasModifier(Modifier.ABSTRACT))
+            .collect(Collectors.toList());
     }
 
     public boolean registerMethod(SkriptMethod method) {

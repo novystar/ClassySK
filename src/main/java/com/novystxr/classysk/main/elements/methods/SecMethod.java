@@ -10,11 +10,11 @@ import ch.njol.skript.util.ClassInfoReference;
 import ch.njol.util.Kleenean;
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.Modifier;
+import com.novystxr.classysk.api.methods.MethodEvent;
 import com.novystxr.classysk.api.methods.MethodParser;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.classes.SkriptClass;
-import com.novystxr.classysk.api.methods.MethodEvent;
 import com.novystxr.classysk.api.util.DefaultValue;
 import com.novystxr.classysk.api.util.StringUtils;
 import com.novystxr.classysk.api.util.ExprUtils;
@@ -53,7 +53,7 @@ import java.util.*;
     set {_player} to {_myClass}::getPlayer()
     """)
 @Since("1.0.0")
-public class SecMethod extends Section implements ReturnHandler<Object> {
+public class SecMethod extends EffectSection implements ReturnHandler<Object> {
 
     public static void register(SyntaxRegistry registry) {
         //noinspection ThrowableInstanceNeverThrown
@@ -62,8 +62,13 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
         registry.register(SyntaxRegistry.SECTION, INFO);
     }
 
+    public static SyntaxInfo<SecMethod> ANONYMOUS_INFO = SyntaxInfo.builder(SecMethod.class)
+        .addPattern("[:public|:protected|:private] [override] <"+ Classysk.NAME_PATTERN +">\\([<.+>]\\) [(\\:\\:|returns|->) %-*classinfo%]")
+        .supplier(SecMethod::new)
+        .build();
+
     public static SyntaxInfo<SecMethod> INFO = SyntaxInfo.builder(SecMethod.class)
-        .addPattern("(:public|:private) [:static] <"+ Classysk.NAME_PATTERN +">\\([<.+>]\\) [(\\:\\:|returns|->) %-*classinfo%]")
+        .addPattern("(:public|:protected|:private) [:final] [:static|:abstract|:override] <"+ Classysk.NAME_PATTERN +">\\([<.+>]\\) [(\\:\\:|returns|->) %-*classinfo%]")
         .supplier(SecMethod::new)
         .build();
 
@@ -74,6 +79,28 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
 
     @Override
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result, SectionNode sectionNode, List<TriggerItem> triggerItems) {
+        Modifier[] modifiers = Modifier.collect(result.tags);
+
+        if (modifiers[2] == Modifier.FINAL && modifiers[1] != null && modifiers[1] != Modifier.OVERRIDE) {
+            Skript.error("Modifier 'final' cannot be combined with '%s'.", modifiers[1].name().toLowerCase(Locale.ENGLISH));
+            return false;
+        }
+        if (modifiers[1] == Modifier.ABSTRACT && sectionNode != null) {
+            Skript.error("Abstract methods cannot have a body.");
+            return false;
+        }
+        if (modifiers[1] != Modifier.ABSTRACT && sectionNode == null) {
+            Skript.error("This method has no body. If you meant to leave it unimplemented, mark it as 'abstract'.");
+            return false;
+        }
+        if (modifiers[1] == Modifier.ABSTRACT && modifiers[0] == Modifier.PRIVATE) {
+            Skript.error("A private method can't be overridden, so it cannot be abstract.");
+            return false;
+        }
+        if (modifiers[0] == Modifier.PRIVATE && modifiers[2] == Modifier.FINAL) {
+            Skript.warning("Modifier 'final' is redundant in private methods.");
+        }
+
         boolean returnPlural = false;
         Class<?> returnType = null;
 
@@ -93,7 +120,7 @@ public class SecMethod extends Section implements ReturnHandler<Object> {
             }
         }
 
-        this.result = new SkriptMethod(methodName, args, Modifier.collect(result.tags), returnType, returnPlural);
+        this.result = new SkriptMethod(methodName, args, modifiers, returnType, returnPlural);
         this.sectionNode = sectionNode;
         return true;
     }

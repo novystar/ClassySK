@@ -28,7 +28,7 @@ public class EffField extends Effect {
     }
 
     public static SyntaxInfo<EffField> INFO = SyntaxInfo.builder(EffField.class)
-        .addPattern("(:public|:private) [:static] [:const] <"+ Classysk.NAME_PATTERN +">\\: %*classinfo% [= <.+>]")
+        .addPattern("(:public|:protected|:private) [:static] [:const] <"+ Classysk.NAME_PATTERN +">\\: %*classinfo% [= <.+>]")
         .supplier(EffField::new)
         .build();
 
