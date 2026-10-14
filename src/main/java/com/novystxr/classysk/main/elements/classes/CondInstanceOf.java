@@ -32,8 +32,6 @@ public class CondInstanceOf extends Condition {
             SyntaxInfo.builder(CondInstanceOf.class)
                 .addPattern("%classinstance% is [a[n]] [:exact] instance of <"+ CLASSNAME_PATTERN +">")
                 .addPattern("%classinstance% (isn't|is not) [a[n]] [:exact] instance of <"+ CLASSNAME_PATTERN +">")
-                .addPattern("%classinstance% belongs to <"+ CLASSNAME_PATTERN+">")
-                .addPattern("%classinstance% (doesn't|does not) belong to <"+ CLASSNAME_PATTERN+">")
                 .supplier(CondInstanceOf::new)
                 .build()
         );
