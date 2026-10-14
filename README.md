@@ -1,6 +1,6 @@
 ClassySK is an addon that adds proper object orientation capabilities to skript in the form of classes. Allowing you to write powerful, defensive code and explore OOP concepts within skript!
 
-#### [Wiki](https://github.com/novystar/ClassySK/wiki) | [Download](https://github.com/novystar/ClassySK/releases) | [Report a bug](https://github.com/novystar/ClassySK/issues)
+#### [Wiki](https://github.com/novystar/ClassySK/wiki) | [Download](https://github.com/novystar/ClassySK/releases) | [Report a bug](https://github.com/novystar/ClassySK/issues) | [Support Discord](https://discord.gg/DKDcF53jD3)
 
 [![SkriptHubViewTheDocs](http://skripthub.net/static/addon/ViewTheDocsButton.png)](http://skripthub.net/docs/?addon=ClassySK) 
 [![SkriptDocs](http://skdocs.org/viewdocs.png)](https://skdocs.org/docs?addon=ClassySK)
