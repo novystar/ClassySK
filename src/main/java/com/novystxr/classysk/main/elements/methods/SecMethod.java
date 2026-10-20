@@ -137,8 +137,9 @@ public class SecMethod extends EffectSection implements ReturnHandler<Object> {
     }
 
     public boolean register(SkriptClass contextClass) {
+        if (result.origin == null)
+            result.origin = contextClass.name;
         this.contextClass = contextClass;
-        result.origin = contextClass.name;
         return contextClass.methodRegistry.registerMethod(result);
     }
 
