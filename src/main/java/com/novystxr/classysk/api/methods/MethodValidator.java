@@ -65,7 +65,7 @@ public class MethodValidator extends Validator<ValidReference> {
         if (product() == null || !parent.inherits(product().getOrigin())) {
             return getProductFromClass(parent);
         }
-        SkriptMethod method = (isSuper ? parent.getExtends() : parent).getExactMethod(MethodIdentifier.from(product().method));
+        SkriptMethod method = (isSuper ? contextClass().getExtends() : parent).getExactMethod(MethodIdentifier.from(product().method));
         if (method == null) {
             return getProductFromClass(parent);
             }
