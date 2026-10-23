@@ -8,6 +8,7 @@ import com.novystxr.classysk.api.AccessModifiable;
 import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
+import com.novystxr.classysk.api.methods.MethodParser.ReferenceArgument;
 import com.novystxr.classysk.api.util.DefaultValue;
 import com.novystxr.classysk.main.elements.methods.SecMethod;
 import org.bukkit.event.Event;
@@ -19,15 +20,20 @@ import java.util.*;
 public class SkriptMethod implements AccessModifiable {
 
     public record MethodArgument(
+        String name,
         Class<?> type,
 
         @Nullable DefaultValue<?> defaultValue,
         boolean isPlural
-    ) {}
+    ) {
+        public ReferenceArgument toDefaultRef() {
+            return new ReferenceArgument(null, defaultValue);
+        }
+    }
 
     public final String name;
     public Modifier[] modifiers;
-    public final SequencedMap<String, MethodArgument> arguments;
+    public final MethodArgument[] arguments;
     public final Class<?> type;
     public final boolean isPlural;
 
@@ -35,32 +41,33 @@ public class SkriptMethod implements AccessModifiable {
     public String origin;
     public final int minArgCount;
 
-    public SkriptMethod(String name, SequencedMap<String, MethodArgument> arguments, Modifier[] modifiers, Class<?> type, boolean isPlural, String origin) {
+    public SkriptMethod(String name, MethodArgument[] arguments, Modifier[] modifiers, Class<?> type, boolean isPlural, String origin) {
         this(name, arguments, modifiers, type, isPlural);
         this.origin = origin;
 
     }
 
-    public SkriptMethod(String name, SequencedMap<String, MethodArgument> arguments, Modifier[] modifiers, Class<?> type, boolean isPlural) {
+    public SkriptMethod(String name, MethodArgument[] arguments, Modifier[] modifiers, Class<?> type, boolean isPlural) {
         this.name = name;
         this.arguments = arguments;
         this.modifiers = modifiers;
         this.type = type;
         this.isPlural = isPlural;
 
-        this.minArgCount = arguments.values().stream()
+        this.minArgCount = Arrays.stream(arguments)
             .filter(arg -> arg.defaultValue() == null)
             .mapToInt(arg -> 1).sum();
 
     }
 
-    public MethodEvent run(Event contextEvent, MethodEvent methodEvent, @NotNull Map<String, Expression<?>> args) {
+    public MethodEvent run(Event contextEvent, MethodEvent methodEvent, @NotNull Expression<?>[] args) {
         if (trigger == null) return null;
-        for (var entry : args.entrySet()) {
-            Expression<?> expr = entry.getValue();
-            String key = entry.getKey();
+        for (int i = 0; i < args.length; i++) {
+            MethodArgument arg = this.arguments[i];
+            Expression<?> expr = args[i];
+            String key = arg.name;
 
-            if (arguments.get(key).isPlural()) {
+            if (arg.isPlural) {
                 Object[] values = expr.getArray(contextEvent);
                 String[] keys = KeyProviderExpression.areKeysRecommended(expr) ?
                     ((KeyProviderExpression<?>) expr).getArrayKeys(contextEvent) : null;
@@ -102,7 +109,7 @@ public class SkriptMethod implements AccessModifiable {
             Skript.error("The return type of this override does not match the target.");
             return false;
         }
-        if (!new ArrayList<>(arguments.sequencedKeySet()).equals(new ArrayList<>(target.arguments.sequencedKeySet()))) {
+        if (!Arrays.equals(arguments, target.arguments)) {
             Skript.error("Argument names must match when overriding a method.");
             return false;
         }

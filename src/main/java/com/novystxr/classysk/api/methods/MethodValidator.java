@@ -13,7 +13,6 @@ import com.novystxr.classysk.api.methods.MethodParser.ReferenceArgument;
 import com.novystxr.classysk.api.methods.MethodRegistry.MethodIdentifier;
 import com.novystxr.classysk.api.methods.MethodValidator.ValidReference;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
-import com.novystxr.classysk.api.util.DefaultValue;
 import com.novystxr.classysk.main.elements.methods.ExprSuper;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.NotNull;
@@ -101,73 +100,40 @@ public class MethodValidator extends Validator<ValidReference> {
     }
 
     private @Nullable ValidReference validateReference(SkriptMethod target, boolean printErrors) {
-        SequencedMap<String, MethodArgument> arguments = target.arguments;
+        MethodArgument[] targetArgs = target.arguments;
+        List<String> targetNames = Arrays.stream(targetArgs).map(MethodArgument::name).toList();
 
-        Map<String, Expression<?>> result = new HashMap<>();
-        if (arguments.isEmpty()) {
-            return new ValidReference(target, result);
-        }
-        List<String> argNames = new ArrayList<>(arguments.sequencedKeySet());
+        ReferenceArgument[] refArgs = reference.args();
+        Expression<?>[] result = new Expression<?>[targetArgs.length];
 
-        boolean hasUnnamedArgs = false;
-        boolean hasNamedArgs = false;
-
-        int i = -1;
-        for (ReferenceArgument arg : reference.args()) {
-            i++;
-            String name = arg.name();
-            if (name == null) {
-                name = argNames.get(i);
-                hasUnnamedArgs = true;
-            } else {
-                if (!arguments.containsKey(name)) {
-                    if (printErrors) Skript.error("Unknown method argument: "+name);
-                    return null;
-                }
-                hasNamedArgs = true;
+        for (int i = 0; i < targetArgs.length; i++) {
+            ReferenceArgument refArg = (i >= refArgs.length) ? targetArgs[i].toDefaultRef() : refArgs[i];
+            String name = refArg.name();
+            int index = name == null || targetArgs[i].name().equals(name) ? i : targetNames.indexOf(name);
+            if (index == -1) { // there are no arguments with this name
+                if (printErrors) Skript.error("Unknown argument '%s'", name);
+                return null;
             }
-            MethodArgument targetArg = arguments.get(name);
-            Class<?> toClass = targetArg.type();
-
+            MethodArgument targetArg = targetArgs[index];
+            if (result[index] != null) { // argument already populated means duplicate/order issue
+                if (printErrors) Skript.error("Duplicate/out of order argument '%s'", targetArg.name());
+                return null;
+            }
+            if (refArg.expr() == null) {
+                if (printErrors) Skript.error("Could not resolve 1 or more arguments for this method call");
+                return null;
+            }
             //noinspection unchecked
-            Expression<?> convertedExpr = arg.expr().getConvertedExpression(toClass);
-            if (convertedExpr == null) {
-                if (printErrors) Skript.error("Argument '%s' is not of required type: %s", name, Classes.getSuperClassInfo(toClass));
+            Expression<?> expr = refArg.expr().getConvertedExpression(targetArg.type());
+            if (expr == null) {
+                if (printErrors) Skript.error("Argument '%s' could not convert to required type '%s'", targetArg.name(), Classes.getSuperClassInfo(targetArg.type()));
                 return null;
             }
-            if (!convertedExpr.isSingle() && !targetArg.isPlural()) {
-                if (printErrors) Skript.error("Argument '%s' is single but given expression is plural", name);
+            if (!expr.isSingle() && !targetArg.isPlural()) {
+                if (printErrors) Skript.error("Argument '%s' only accepts single values", targetArg.name());
                 return null;
             }
-
-            if (result.putIfAbsent(name, convertedExpr) != null) {
-                if (printErrors) Skript.error("Reference contains duplicate arguments");
-                return null;
-            }
-        }
-        List<String> referenceArgNames = new ArrayList<>(result.keySet());
-
-        if (hasNamedArgs && hasUnnamedArgs) {
-            i = -1; // check mixed arguments order
-            for (String name : argNames) {
-                i++;
-                if (!referenceArgNames.get(i).equals(name)) {
-                    Skript.error("Mixed method arguments must be in order");
-                    return null;
-                }
-            }
-        }
-        // attempt to resolve remaining defaults
-        for (var entry : arguments.entrySet()) {
-            String name = entry.getKey();
-            if (referenceArgNames.contains(name)) continue;
-
-            DefaultValue<?> defaultValue = entry.getValue().defaultValue();
-            if (defaultValue == null) {
-                Skript.error("Could not resolve some argument(s) for this method call");
-                return null;
-            }
-            result.put(name, defaultValue);
+            result[index] = expr;
         }
         return new ValidReference(target, result);
     }
@@ -187,7 +153,7 @@ public class MethodValidator extends Validator<ValidReference> {
         return reference;
     }
 
-    public record ValidReference(@NotNull SkriptMethod method, @NotNull Map<String, Expression<?>> args) implements AccessModifiable {
+    public record ValidReference(@NotNull SkriptMethod method, @NotNull Expression<?>[] args) implements AccessModifiable {
         @Override
         public boolean isPlural() {
             return method.isPlural();

@@ -6,15 +6,13 @@ import com.novystxr.classysk.api.methods.SkriptMethod;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Map;
-
 public class AnonymousMethod extends SkriptMethod {
     public AnonymousMethod(SkriptMethod method) {
         super(method.name, method.arguments, method.modifiers, method.type, method.isPlural, method.origin);
     }
 
     @Override
-    public MethodEvent run(Event contextEvent, MethodEvent runEvent, @NotNull Map<String, Expression<?>> args) {
+    public MethodEvent run(Event contextEvent, MethodEvent runEvent, @NotNull Expression<?>[] args) {
         // assume not null because anonymous methods can't be static
         ((AnonymousInstance) runEvent.instance).setLocalVariables(runEvent);
         return super.run(contextEvent, runEvent, args);

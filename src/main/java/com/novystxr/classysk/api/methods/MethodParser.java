@@ -5,24 +5,21 @@ import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.lang.SkriptParser;
-import ch.njol.skript.lang.Variable;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.util.LiteralUtils;
 import ch.njol.skript.util.Utils;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
+import com.novystxr.classysk.api.util.ArgumentIterator;
 import com.novystxr.classysk.api.util.DefaultValue;
-import com.novystxr.classysk.api.util.StringUtils;
+import com.novystxr.classysk.api.util.DefaultValue.Empty;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NonNull;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.SequencedMap;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.novystxr.classysk.api.util.StringUtils.splitArgs;
 import static com.novystxr.classysk.Classysk.CLASSNAME_PATTERN;
 import static com.novystxr.classysk.Classysk.NAME_PATTERN;
 
@@ -52,7 +49,7 @@ public class MethodParser {
 
     public record MethodReference(
         String name,
-        List<ReferenceArgument> args,
+        ReferenceArgument[] args,
         boolean isStatic
     ) {
         @Override
@@ -66,7 +63,7 @@ public class MethodParser {
                     builder.append(arg.name).append(": ");
                 }
                 builder.append(Classes.getSuperClassInfo(arg.expr.getReturnType()));
-                if (i != args.size()) {
+                if (i != args.length) {
                     builder.append(", ");
                 }
             }
@@ -75,17 +72,13 @@ public class MethodParser {
 
     }
 
-    public static @Nullable MethodReference parseReference(String name, @Nullable String args, boolean isStatic) {
-        List<ReferenceArgument> referenceArguments = new ArrayList<>();
-        if (args == null) {
-            return new MethodReference(name, new ArrayList<>(), isStatic);
-        }
-        List<String> rawArgs = splitArgs(args);
-        if (rawArgs == null) {
-            Skript.error("Invalid text/variables/parentheses in the arguments of this method call.");
-            return null;
-        }
-        for (String arg : rawArgs) {
+    public static @Nullable MethodReference parseReference(String name, @NotNull String args, boolean isStatic) {
+        List<ReferenceArgument> result = new ArrayList<>();
+        for (String arg : new ArgumentIterator(args)) {
+            if (arg == null) {
+                Skript.error("Invalid text/variables/parentheses in the arguments of this method call.");
+                return null;
+            }
             Matcher matcher = REF_ARG_PATTERN.matcher(arg);
             if (!matcher.matches()) {
                 Skript.error("Invalid argument pattern: "+ arg);
@@ -101,19 +94,20 @@ public class MethodParser {
                 Skript.error("Can't understand this expression: "+unparsedExpr);
                 return null;
             }
-            referenceArguments.add(new ReferenceArgument(argName, expr));
+            result.add(new ReferenceArgument(argName, expr));
         }
-        return new MethodReference(name, referenceArguments, isStatic);
+        return new MethodReference(name, result.toArray(ReferenceArgument[]::new), isStatic);
     }
 
-    public static @Nullable SequencedMap<String, MethodArgument> parseArguments(String argsString) {
-        SequencedMap<String, MethodArgument> arguments = new LinkedHashMap<>();
-        List<String> args = StringUtils.splitArgs(argsString);
-        if (args == null) {
-            Skript.error("Invalid text/variables/parentheses in the arguments of this method");
-            return null;
-        }
-        for (String arg : args) {
+    public static @Nullable MethodArgument[] parseArguments(String args) {
+        List<MethodArgument> arguments = new ArrayList<>();
+        Set<String> nameSet = new HashSet<>(); // for checking duplicates
+
+        for (String arg : new ArgumentIterator(args)) {
+            if (arg == null) {
+                Skript.error("Invalid text/variables/parentheses in the arguments of this method");
+                return null;
+            }
             Matcher matcher = DEF_ARG_PATTERN.matcher(arg);
             if (!matcher.matches()) {
                 Skript.error("Invalid method argument(s)");
@@ -124,7 +118,7 @@ public class MethodParser {
             String unparsedDefault = matcher.group("value");
             boolean optional = matcher.group("optional") != null;
 
-            if (arguments.containsKey(name)) {
+            if (!nameSet.add(name)) {
                 Skript.error("Duplicate method arguments");
                 return null;
             }
@@ -135,22 +129,12 @@ public class MethodParser {
                 return null;
             }
             Class<?> type = Utils.getComponentType(classInfo.getC());
-            DefaultValue<?> defaultValue = null;
+            DefaultValue<?> defaultValue = unparsedDefault != null
+                ? new DefaultValue.Dynamic<>(unparsedDefault, type, isPlural)
+                : optional ? new Empty<>(type) : null;
 
-            if (unparsedDefault != null) {
-                defaultValue = new DefaultValue.Dynamic<>(unparsedDefault, type, isPlural);
-                String variableName = unparsedDefault.endsWith("*") ? unparsedDefault.substring(0, unparsedDefault.length() - 3) + (!isPlural ? "::1" : "") : unparsedDefault;
-
-                if (!Variable.isValidVariableName(variableName, true, false)) {
-                    Skript.error("Invalid argument name: %s", variableName);
-                    return null;
-                }
-            } else if (optional) {
-                defaultValue = new DefaultValue.Empty<>(type);
-            }
-            MethodArgument argument = new MethodArgument(type, defaultValue, isPlural);
-            arguments.put(name, argument);
+            arguments.add(new MethodArgument(name, type, defaultValue, isPlural));
         }
-        return arguments;
+        return arguments.toArray(MethodArgument[]::new);
     }
 }

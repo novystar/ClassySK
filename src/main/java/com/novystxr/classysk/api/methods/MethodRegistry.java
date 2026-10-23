@@ -27,7 +27,7 @@ public class MethodRegistry {
         }
 
         public static MethodIdentifier from(SkriptMethod method) {
-            Class<?>[] argTypes = method.arguments.sequencedValues().stream()
+            Class<?>[] argTypes = Arrays.stream(method.arguments)
                 .map(MethodArgument::type)
                 .toArray(Class[]::new);
 
@@ -42,7 +42,7 @@ public class MethodRegistry {
     }
 
     public Map<MethodIdentifier, SkriptMethod> candidates(MethodReference reference) {
-        int refArgs = reference.args().size();
+        int refArgs = reference.args().length;
 
         Map<MethodIdentifier, SkriptMethod> result = new HashMap<>();
         for (var entry : registry.entrySet()) {

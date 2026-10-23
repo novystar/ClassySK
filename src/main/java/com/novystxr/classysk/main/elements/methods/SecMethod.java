@@ -110,14 +110,15 @@ public class SecMethod extends EffectSection implements ReturnHandler<Object> {
             returnType = reference.getClassInfo().getC();
         }
         String methodName = StringUtils.getConfigLowerCase(result.regexes.get(0));
-        SequencedMap<String, MethodArgument> args = new LinkedHashMap<>();
 
+        MethodArgument[] args;
         if (result.regexes.size() == 2) {
-            String argsString = result.regexes.get(1).group();
-            args = MethodParser.parseArguments(argsString);
+            args = MethodParser.parseArguments(result.regexes.get(1).group());
             if (args == null) {
                 return false;
             }
+        } else {
+            args = new MethodArgument[0];
         }
 
         this.result = new SkriptMethod(methodName, args, modifiers, returnType, returnPlural);
@@ -127,7 +128,7 @@ public class SecMethod extends EffectSection implements ReturnHandler<Object> {
 
     public boolean parseDefaults() {
         SkriptLogger.setNode(getNode());
-        for (MethodArgument arg : result.arguments.values()) {
+        for (MethodArgument arg : result.arguments) {
             DefaultValue<?> defaultValue = arg.defaultValue();
             if (defaultValue != null && !defaultValue.parse()) {
                 return false;
