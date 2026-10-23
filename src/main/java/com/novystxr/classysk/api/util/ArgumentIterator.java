@@ -13,22 +13,29 @@ public class ArgumentIterator implements Iterator<String>, Iterable<String> {
     }
 
     private final String args;
-    private int next = 0;
     private int start = 0;
+    private int end = 0;
+    private boolean hasNext = true;
 
     @Override
     public boolean hasNext() {
-        return next != -1 && next < args.length();
+        return args != null && hasNext;
     }
 
     @Override
     public String next() {
-        while (next != args.length() && args.charAt(next) != ',') {
-            next = SkriptParser.next(args, next, ParseContext.DEFAULT);
-            if (next == -1) return null; // invalid brackets
+        while (end != args.length() && args.charAt(end) != ',') {
+            end = SkriptParser.next(args, end, ParseContext.DEFAULT);
+            if (end == -1) {
+                hasNext = false;
+                return null;
+            }
         }
-        String result = args.substring(start, next);
-        start = next + 1;
+        String result = args.substring(start, end);
+        if (end == args.length())
+            hasNext = false;
+        else
+            start = end++ + 1;
         return result;
 
     }

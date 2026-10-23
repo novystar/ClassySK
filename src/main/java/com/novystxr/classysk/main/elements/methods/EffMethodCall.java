@@ -44,7 +44,7 @@ public class EffMethodCall extends Effect {
 
         String methodName = getConfigLowerCase(result.regexes.get(pattern));
         String args = result.regexes.size() > pattern + 1
-            ? result.regexes.get(pattern + 1).group() : "";
+            ? result.regexes.get(pattern + 1).group() : null;
 
         MethodReference reference = MethodParser.parseReference(methodName, args, isStatic);
         if (reference == null) return false;

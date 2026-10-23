@@ -12,7 +12,6 @@ import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.api.util.ArgumentIterator;
 import com.novystxr.classysk.api.util.DefaultValue;
 import com.novystxr.classysk.api.util.DefaultValue.Empty;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NonNull;
 
@@ -72,7 +71,7 @@ public class MethodParser {
 
     }
 
-    public static @Nullable MethodReference parseReference(String name, @NotNull String args, boolean isStatic) {
+    public static @Nullable MethodReference parseReference(String name, @Nullable String args, boolean isStatic) {
         List<ReferenceArgument> result = new ArrayList<>();
         for (String arg : new ArgumentIterator(args)) {
             if (arg == null) {
@@ -99,7 +98,7 @@ public class MethodParser {
         return new MethodReference(name, result.toArray(ReferenceArgument[]::new), isStatic);
     }
 
-    public static @Nullable MethodArgument[] parseArguments(String args) {
+    public static @Nullable MethodArgument[] parseArguments(@Nullable String args) {
         List<MethodArgument> arguments = new ArrayList<>();
         Set<String> nameSet = new HashSet<>(); // for checking duplicates
 
