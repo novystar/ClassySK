@@ -158,8 +158,11 @@ public class SecMethod extends EffectSection implements ReturnHandler<Object> {
 
     @Override
     public void returnValues(Event event, Expression<?> value) {
-        if (event instanceof MethodEvent runEvent) {
-            runEvent.returnObject = value.getArray(event);
+        if (event instanceof MethodEvent methodEvent) {
+            methodEvent.returnValues = value.getArray(event);
+            if (value instanceof KeyProviderExpression<?> keyedValue && keyedValue.canReturnKeys()) {
+                methodEvent.returnKeys = keyedValue.getArrayKeys(event);
+            }
         }
     }
 

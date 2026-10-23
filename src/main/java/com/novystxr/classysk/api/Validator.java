@@ -21,6 +21,7 @@ import org.skriptlang.skript.lang.converter.Converters;
 import org.skriptlang.skript.log.runtime.ErrorSource;
 import org.skriptlang.skript.log.runtime.RuntimeErrorProducer;
 
+import java.lang.reflect.Array;
 import java.util.*;
 
 public abstract class Validator<T extends AccessModifiable> implements RuntimeErrorProducer {
@@ -80,6 +81,23 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
         if (isSingle && value.length > 1) {
             return null;
         }
+        return value;
+    }
+
+    /**
+     *
+     * Provides some assurances of {@link getSafeConverted(Object[], boolean)} but without creating a new array.
+     * The resulting array is not safe to return but inconvertible values will be null.
+     * @see ch.njol.skript.lang.function.ExprFunctionCall
+     * @see org.apache.commons.lang3.ArrayUtils#removeAllOccurrences(Object[], Object)
+     */
+    @SuppressWarnings("unchecked")
+    public <To> @Nullable Object[] getConverted(Object @NotNull [] value, boolean isSingle, Class<?>[] possibleTypes) {
+        if (isSingle && value.length > 1)
+            return null;
+
+        To[] convertTo = (To[]) Array.newInstance(product().type(), value.length);
+        Converters.convert(value, convertTo, possibleTypes);
         return value;
     }
 

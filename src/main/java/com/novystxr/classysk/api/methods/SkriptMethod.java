@@ -54,7 +54,7 @@ public class SkriptMethod implements AccessModifiable {
 
     }
 
-    public Object @Nullable [] run(Event contextEvent, MethodEvent runEvent, @NotNull Map<String, Expression<?>> args) {
+    public MethodEvent run(Event contextEvent, MethodEvent methodEvent, @NotNull Map<String, Expression<?>> args) {
         if (trigger == null) return null;
         for (var entry : args.entrySet()) {
             Expression<?> expr = entry.getValue();
@@ -67,13 +67,13 @@ public class SkriptMethod implements AccessModifiable {
                 KeyedValue<?>[] keyedValues = KeyedValue.zip(values, keys);
 
                 for (KeyedValue<?> keyedValue : keyedValues) {
-                    Variables.setVariable(key+"::"+keyedValue.key(), keyedValue.value(), runEvent, true);
+                    Variables.setVariable(key+"::"+keyedValue.key(), keyedValue.value(), methodEvent, true);
                 }
             } else {
-                Variables.setVariable(key, expr.getSingle(contextEvent), runEvent, true);
+                Variables.setVariable(key, expr.getSingle(contextEvent), methodEvent, true);
             }
         }
-        return trigger.execute(runEvent) ? runEvent.returnObject : null;
+        return trigger.execute(methodEvent) ? methodEvent : null;
     }
 
     public SkriptClass getOrigin() {

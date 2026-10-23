@@ -205,7 +205,7 @@ public class MethodValidator extends Validator<ValidReference> {
             return method.getOrigin();
         }
 
-        public Object @Nullable [] run(Event event, ClassInstance instance) {
+        public MethodEvent run(Event event, ClassInstance instance) {
             return method.run(event, new MethodEvent(instance), args);
         }
     }
