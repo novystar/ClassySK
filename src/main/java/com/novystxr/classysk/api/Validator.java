@@ -92,7 +92,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
      * @see org.apache.commons.lang3.ArrayUtils#removeAllOccurrences(Object[], Object)
      */
     @SuppressWarnings("unchecked")
-    public <To> @Nullable Object[] getConverted(Object @NotNull [] value, boolean isSingle, Class<?>[] possibleTypes) {
+    public <To> @Nullable Object @Nullable [] getConverted(Object @NotNull [] value, boolean isSingle, Class<?>[] possibleTypes) {
         if (isSingle && value.length > 1)
             return null;
 
