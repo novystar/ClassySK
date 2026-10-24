@@ -12,7 +12,9 @@ public class AnonymousClass extends SkriptClass {
 
     @Override
     public AnonymousInstance createInstance(Event event) {
-        return AnonymousInstance.newInstance(name, this, event);
+        AnonymousInstance instance = AnonymousInstance.newInstance(name, this, event);
+        instance.setDefaults();
+        return instance;
     }
 
     @Override
