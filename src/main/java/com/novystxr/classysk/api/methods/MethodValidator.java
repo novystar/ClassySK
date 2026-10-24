@@ -101,17 +101,23 @@ public class MethodValidator extends Validator<ValidReference> {
 
     private @Nullable ValidReference validateReference(SkriptMethod target, boolean printErrors) {
         MethodArgument[] targetArgs = target.arguments;
-        List<String> targetNames = Arrays.stream(targetArgs).map(MethodArgument::name).toList();
+        List<String> targetNames = null;
 
         ReferenceArgument[] refArgs = reference.args();
         Expression<?>[] result = new Expression<?>[targetArgs.length];
 
         for (int i = 0; i < refArgs.length; i++) {
+            int index = i;
             String name = refArgs[i].name();
-            int index = name == null || targetArgs[i].name().equals(name) ? i : targetNames.indexOf(name);
-            if (index == -1) { // there are no arguments with this name
-                if (printErrors) Skript.error("Unknown argument '%s'", name);
-                return null;
+            if (name != null && !targetArgs[i].name().equals(name)) {
+                if (targetNames == null) {
+                    targetNames = Arrays.stream(targetArgs).map(MethodArgument::name).toList();
+                }
+                index = targetNames.indexOf(name);
+                if (index == -1) { // there are no arguments with this name
+                    if (printErrors) Skript.error("Unknown argument '%s'", name);
+                    return null;
+                }
             }
             MethodArgument targetArg = targetArgs[index];
             if (result[index] != null) { // argument already populated means duplicate/order issue
@@ -130,13 +136,15 @@ public class MethodValidator extends Validator<ValidReference> {
             }
             result[index] = expr;
         }
-        for (int i = 0; i < targetArgs.length; i++) { // fill in unpopulated defaults
-            if (result[i] != null) continue;
-            if (targetArgs[i].defaultValue() == null) {
-                if (printErrors) Skript.error("Could not resolve 1 or more arguments for this method call");
-                return null;
+        if (targetArgs.length != refArgs.length) { // fill in unpopulated defaults
+            for (int i = 0; i < targetArgs.length; i++) {
+                if (result[i] != null) continue;
+                if (targetArgs[i].defaultValue() == null) {
+                    if (printErrors) Skript.error("Could not resolve argument '%s'", targetArgs[i].name());
+                    return null;
+                }
+                result[i] = targetArgs[i].defaultValue();
             }
-            result[i] = targetArgs[i].defaultValue();
         }
         return new ValidReference(target, result);
     }
