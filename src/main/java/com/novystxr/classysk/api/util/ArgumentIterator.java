@@ -32,10 +32,12 @@ public class ArgumentIterator implements Iterator<String>, Iterable<String> {
             }
         }
         String result = args.substring(start, end);
-        if (end == args.length())
+        if (end == args.length()) {
             hasNext = false;
-        else
-            start = end++ + 1;
+        } else {
+            end++;
+            start = end;
+        }
         return result;
 
     }
