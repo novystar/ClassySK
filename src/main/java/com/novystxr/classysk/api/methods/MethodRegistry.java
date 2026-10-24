@@ -2,11 +2,11 @@ package com.novystxr.classysk.api.methods;
 
 import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
-import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class MethodRegistry {
 
@@ -25,52 +25,43 @@ public class MethodRegistry {
         public int hashCode() {
             return Objects.hash(name, isStatic, Arrays.hashCode(argTypes));
         }
-
-        public static MethodIdentifier from(SkriptMethod method) {
-            Class<?>[] argTypes = Arrays.stream(method.arguments)
-                .map(MethodArgument::type)
-                .toArray(Class[]::new);
-
-            return new MethodIdentifier(method.name, argTypes, method.isStatic());
-        }
     }
 
-    private final Map<MethodIdentifier, SkriptMethod> registry = new HashMap<>();
+    private final Map<String, Map<MethodIdentifier, SkriptMethod>> registry = new HashMap<>();
 
     public @Nullable SkriptMethod getExactMethod(MethodIdentifier identifier) {
-        return registry.get(identifier);
+        return registry.get(identifier.name).get(identifier);
     }
 
-    public Map<MethodIdentifier, SkriptMethod> candidates(MethodReference reference) {
-        int refArgs = reference.args().length;
+    public Stream<SkriptMethod> methodStream() {
+        return registry.values().stream()
+            .mapMulti((a, b) -> a.values().forEach(b));
+    }
 
-        Map<MethodIdentifier, SkriptMethod> result = new HashMap<>();
-        for (var entry : registry.entrySet()) {
-            MethodIdentifier key = entry.getKey();
-            SkriptMethod method = entry.getValue();
-
-            if (!key.name.equals(reference.name()))
-                continue;
-            if (refArgs < method.minArgCount)
-                continue;
-            if (refArgs > key.argTypes.length)
-                continue;
-            if (reference.isStatic() != method.isStatic())
-                continue;
-
-            result.put(key, method);
+    public List<SkriptMethod> getOverloadCandidates(MethodReference reference) {
+        List<SkriptMethod> candidates = new ArrayList<>();
+        Map<?, SkriptMethod> map = registry.get(reference.name());
+        if (map != null) {
+            int refArgs = reference.args().length;
+            for (SkriptMethod method : map.values()) {
+                if (reference.isStatic() != method.isStatic()) continue;
+                if (refArgs < method.minArgCount) continue;
+                if (refArgs > method.maxArgCount) continue;
+                candidates.add(method);
+            }
         }
-        return result;
+        return candidates;
     }
 
     public List<SkriptMethod> getAbstract() {
-        return registry.values().stream()
+        return methodStream()
             .filter(method -> method.hasModifier(Modifier.ABSTRACT))
             .collect(Collectors.toList());
     }
 
     public boolean registerMethod(SkriptMethod method) {
-        return registry.putIfAbsent(MethodIdentifier.from(method), method) == null;
+        return registry.computeIfAbsent(method.name, (k) -> new HashMap<>())
+            .putIfAbsent(method.identifier, method) == null;
     }
 
 }

@@ -10,7 +10,6 @@ import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.MethodParser.ReferenceArgument;
-import com.novystxr.classysk.api.methods.MethodRegistry.MethodIdentifier;
 import com.novystxr.classysk.api.methods.MethodValidator.ValidReference;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.main.elements.methods.ExprSuper;
@@ -41,17 +40,17 @@ public class MethodValidator extends Validator<ValidReference> {
     protected @Nullable ValidReference getProductFromClass(SkriptClass skriptClass) {
         if (isSuper) skriptClass = skriptClass.getExtends();
 
-        List<SkriptMethod> candidates = skriptClass.getCandidates(reference);
-        if (candidates.isEmpty()) {
+        SkriptMethod[] candidates = skriptClass.getCandidates(reference);
+        if (candidates.length == 0) {
             Skript.error("Could not identify method %s", reference);
             return null;
         }
-        if (candidates.size() == 1) {
-            return validateReference(candidates.getFirst(), true);
+        if (candidates.length == 1) {
+            return validateReference(candidates[0], true);
         } else {
             ValidReference reference = validateFromCandidates(candidates);
             if (reference == null) {
-                Skript.error("Could not identify method %s out of %s overloads", this.reference, candidates.size());
+                Skript.error("Could not identify method %s out of %s overloads", this.reference, candidates.length);
                 return null;
             }
             return reference;
@@ -64,7 +63,7 @@ public class MethodValidator extends Validator<ValidReference> {
         if (product() == null || !parent.inherits(product().getOrigin())) {
             return getProductFromClass(parent);
         }
-        SkriptMethod method = (isSuper ? contextClass().getExtends() : parent).getExactMethod(MethodIdentifier.from(product().method));
+        SkriptMethod method = (isSuper ? contextClass().getExtends() : parent).getExactMethod(product().method.identifier);
         if (method == null) {
             return getProductFromClass(parent);
             }
@@ -149,16 +148,12 @@ public class MethodValidator extends Validator<ValidReference> {
         return new ValidReference(target, result);
     }
 
-    private @Nullable ValidReference validateFromCandidates(List<SkriptMethod> candidates) {
+    private @Nullable ValidReference validateFromCandidates(SkriptMethod[] candidates) {
         ValidReference reference = null;
         for (SkriptMethod candidate : candidates) {
-            var result = validateReference(candidate, false);
-            if (result == null) {
-                continue;
-            }
-            if (reference != null) {
-                return null;
-            }
+            ValidReference result = validateReference(candidate, false);
+            if (result == null) continue;
+            if (reference != null) return null;
             reference = result;
         }
         return reference;

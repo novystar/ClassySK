@@ -90,20 +90,28 @@ public class SkriptClass implements FieldHolder, ModifierHolder {
     }
 
     public SkriptMethod getExactMethod(MethodIdentifier identifier) {
+        if (identifier.isStatic()) return methodRegistry.getExactMethod(identifier);
         return inheritanceStream()
             .map(target -> target.methodRegistry.getExactMethod(identifier))
             .filter(Objects::nonNull)
             .findFirst().orElse(null);
     }
 
-    public List<SkriptMethod> getCandidates(MethodReference reference) {
-        if (reference.isStatic()) return methodRegistry.candidates(reference).values().stream().toList();
+    public SkriptMethod[] getCandidates(MethodReference reference) {
+        List<SkriptMethod> result = methodRegistry.getOverloadCandidates(reference);
+        if (!reference.isStatic()) {
+            Set<MethodIdentifier> seen = new HashSet<>();
+            result.forEach(method -> seen.add(method.identifier));
 
-        Map<MethodIdentifier, SkriptMethod> result = new HashMap<>();
-        for (SkriptClass target : inheritanceStream().toList().reversed()) {
-            result.putAll(target.methodRegistry.candidates(reference));
+            inheritanceStream().skip(1).forEach(target -> {
+                for (SkriptMethod method : target.methodRegistry.getOverloadCandidates(reference)) {
+                    if (seen.add(method.identifier)) {
+                        result.add(method);
+                    }
+                }
+            });
         }
-        return result.values().stream().toList();
+        return result.toArray(SkriptMethod[]::new);
     }
 
     public SkriptClass refresh() {

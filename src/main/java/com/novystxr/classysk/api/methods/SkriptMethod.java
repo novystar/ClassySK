@@ -8,7 +8,7 @@ import com.novystxr.classysk.api.AccessModifiable;
 import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
-import com.novystxr.classysk.api.methods.MethodParser.ReferenceArgument;
+import com.novystxr.classysk.api.methods.MethodRegistry.MethodIdentifier;
 import com.novystxr.classysk.api.util.DefaultValue;
 import com.novystxr.classysk.main.elements.methods.SecMethod;
 import org.bukkit.event.Event;
@@ -25,11 +25,7 @@ public class SkriptMethod implements AccessModifiable {
 
         @Nullable DefaultValue<?> defaultValue,
         boolean isPlural
-    ) {
-        public ReferenceArgument toDefaultRef() {
-            return new ReferenceArgument(null, defaultValue);
-        }
-    }
+    ) {}
 
     public final String name;
     public Modifier[] modifiers;
@@ -39,7 +35,11 @@ public class SkriptMethod implements AccessModifiable {
 
     public Trigger trigger;
     public String origin;
+
     public final int minArgCount;
+    public final int maxArgCount;
+
+    public final MethodIdentifier identifier;
 
     public SkriptMethod(String name, MethodArgument[] arguments, Modifier[] modifiers, Class<?> type, boolean isPlural, String origin) {
         this(name, arguments, modifiers, type, isPlural);
@@ -54,6 +54,12 @@ public class SkriptMethod implements AccessModifiable {
         this.type = type;
         this.isPlural = isPlural;
 
+        Class<?>[] argTypes = Arrays.stream(arguments)
+            .map(MethodArgument::type)
+            .toArray(Class[]::new);
+
+        this.identifier = new MethodIdentifier(name, argTypes, isStatic());
+        this.maxArgCount = identifier.argTypes().length;
         this.minArgCount = Arrays.stream(arguments)
             .filter(arg -> arg.defaultValue() == null)
             .mapToInt(arg -> 1).sum();
