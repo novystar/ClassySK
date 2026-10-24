@@ -30,7 +30,8 @@ public class MethodRegistry {
     private final Map<String, Map<MethodIdentifier, SkriptMethod>> registry = new HashMap<>();
 
     public @Nullable SkriptMethod getExactMethod(MethodIdentifier identifier) {
-        return registry.get(identifier.name).get(identifier);
+        Map<MethodIdentifier, SkriptMethod> map = registry.get(identifier.name);
+        return map == null ? null : map.get(identifier);
     }
 
     public Stream<SkriptMethod> methodStream() {
