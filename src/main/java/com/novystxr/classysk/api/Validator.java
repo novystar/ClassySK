@@ -8,6 +8,7 @@ import ch.njol.skript.log.LogEntry;
 import ch.njol.skript.util.Utils;
 import ch.njol.skript.variables.HintManager;
 import ch.njol.util.Kleenean;
+import com.novystxr.classysk.api.assignability.AssignabilityBridge;
 import com.novystxr.classysk.api.classes.ClassContextHolder;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.ClassManager;
@@ -20,6 +21,7 @@ import org.skriptlang.skript.lang.converter.Converters;
 import org.skriptlang.skript.log.runtime.ErrorSource;
 import org.skriptlang.skript.log.runtime.RuntimeErrorProducer;
 
+import java.lang.reflect.Array;
 import java.util.*;
 
 public abstract class Validator<T extends AccessModifiable> implements RuntimeErrorProducer {
@@ -52,6 +54,10 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
     protected abstract @Nullable T getProductFromClass(SkriptClass skriptClass);
     protected abstract @Nullable T getProductFromInstance(ClassInstance instance);
 
+    protected SkriptClass contextClass() {
+        return contextClass == null ? null : contextClass.refresh();
+    }
+
     /**
      *
      * Assures that the resulting array can be safely returned from a syntax, given the product type and reported plurality.
@@ -79,12 +85,29 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
     }
 
     /**
+     *
+     * Provides some assurances of {@link getSafeConverted(Object[], boolean)} but without creating a new array.
+     * The resulting array is not safe to return but inconvertible values will be null.
+     * @see ch.njol.skript.lang.function.ExprFunctionCall
+     * @see org.apache.commons.lang3.ArrayUtils#removeAllOccurrences(Object[], Object)
+     */
+    @SuppressWarnings("unchecked")
+    public <To> @Nullable Object @Nullable [] getConverted(Object @NotNull [] value, boolean isSingle, Class<?>[] possibleTypes) {
+        if (isSingle && value.length > 1)
+            return null;
+
+        To[] convertTo = (To[]) Array.newInstance(product().type(), value.length);
+        Converters.convert(value, convertTo, possibleTypes);
+        return value;
+    }
+
+    /**
      * Gets the inferred classes (if possible) from the target expression.
      * If any specific classes could not be inferred, this returns a collection of every class.
      */
     @SuppressWarnings("UnstableApiUsage")
-    public static Collection<SkriptClass> getPossibleClasses(Expression<?> expr) {
-        if (expr instanceof ClassContextHolder holder) {
+    public static Collection<SkriptClass> getPossibleClasses(Expression<? extends ClassInstance> expr) {
+        if (expr.getSource() instanceof ClassContextHolder holder) {
             return List.of(holder.getContextClass());
         }
         List<SkriptClass> possibleClasses = new ArrayList<>();
@@ -99,7 +122,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
         for (Class<?> type : possibleTypes) {
             if (type == ClassInstance.class || type == Object.class) {
                 return ClassManager.getClasses();
-            } else if (ClassInstance.class.isAssignableFrom(type)) {
+            } else if (AssignabilityBridge.class.isAssignableFrom(type)) {
                 possibleClasses.add(ClassManager.getClass(type.getSimpleName()));
             }
         }
@@ -138,7 +161,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
 
     public final Class<?> exactTypeOr(@Nullable Class<?> type) {
         if (product == null) return type;
-        return product.type();
+        return product().type();
     }
 
     /**
@@ -148,7 +171,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
      * UNKNOWN if the correct class could not be determined at parse time
      */
     public final Kleenean shouldBeSingle() {
-        if (product != null) return Kleenean.get(!product.isPlural());
+        if (product != null) return Kleenean.get(!product().isPlural());
         if (guesses.isEmpty()) return Kleenean.UNKNOWN;
 
         boolean hasSingle = false;
@@ -171,18 +194,16 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
         ClassInstance newInstance = instanceExpr.getSingle(event);
         return validateInstance(newInstance) ? newInstance : null;
     }
-
     /**
      * Used for validating instances via expression at parse time
      */
-    public final boolean validateExpression(Expression<?> expr) {
-        //noinspection unchecked
-        this.instanceExpr = (Expression<ClassInstance>) expr;
+    public boolean validateExpression(Expression<ClassInstance> expr) {
+        this.instanceExpr = expr;
         LogEntry error;
         try (var handler = new SimpleErrorHandler().start()) {
             for (SkriptClass skriptClass : getPossibleClasses(expr)) {
                 T product = getProductFromClass(skriptClass);
-                if (product == null || !validate(product, contextClass))
+                if (product == null || !validate(product, contextClass()))
                     continue;
                 guesses.add(product);
             }
@@ -209,7 +230,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
         this.product = getProductFromClass(skriptClass);
         if (product == null) return false;
 
-        return validate(product, contextClass);
+        return validate(product, contextClass());
     }
 
     /**
@@ -236,7 +257,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
         try (var handler = new SimpleErrorHandler().start()) {
             this.product = getProductFromInstance(newInstance);
             if (product != null) {
-                if (validate(product, contextClass)) {
+                if (validate(product, contextClass())) {
                     this.instance = newInstance;
                     return true;
                 }

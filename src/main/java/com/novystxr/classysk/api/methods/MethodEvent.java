@@ -8,7 +8,9 @@ import org.jetbrains.annotations.NotNull;
 public class MethodEvent extends Event {
 
     public final ClassInstance instance;
-    public Object[] returnObject;
+
+    public Object[] returnValues;
+    public String[] returnKeys;
 
     public MethodEvent(ClassInstance instance) {
         this.instance = instance;
