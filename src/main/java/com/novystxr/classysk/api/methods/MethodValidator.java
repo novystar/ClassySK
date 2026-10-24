@@ -106,9 +106,8 @@ public class MethodValidator extends Validator<ValidReference> {
         ReferenceArgument[] refArgs = reference.args();
         Expression<?>[] result = new Expression<?>[targetArgs.length];
 
-        for (int i = 0; i < targetArgs.length; i++) {
-            ReferenceArgument refArg = (i >= refArgs.length) ? targetArgs[i].toDefaultRef() : refArgs[i];
-            String name = refArg.name();
+        for (int i = 0; i < refArgs.length; i++) {
+            String name = refArgs[i].name();
             int index = name == null || targetArgs[i].name().equals(name) ? i : targetNames.indexOf(name);
             if (index == -1) { // there are no arguments with this name
                 if (printErrors) Skript.error("Unknown argument '%s'", name);
@@ -119,12 +118,8 @@ public class MethodValidator extends Validator<ValidReference> {
                 if (printErrors) Skript.error("Duplicate/out of order argument '%s'", targetArg.name());
                 return null;
             }
-            if (refArg.expr() == null) {
-                if (printErrors) Skript.error("Could not resolve 1 or more arguments for this method call");
-                return null;
-            }
             //noinspection unchecked
-            Expression<?> expr = refArg.expr().getConvertedExpression(targetArg.type());
+            Expression<?> expr = refArgs[i].expr().getConvertedExpression(targetArg.type());
             if (expr == null) {
                 if (printErrors) Skript.error("Argument '%s' could not convert to required type '%s'", targetArg.name(), Classes.getSuperClassInfo(targetArg.type()));
                 return null;
@@ -134,6 +129,14 @@ public class MethodValidator extends Validator<ValidReference> {
                 return null;
             }
             result[index] = expr;
+        }
+        for (int i = 0; i < targetArgs.length; i++) { // fill in unpopulated defaults
+            if (result[i] != null) continue;
+            if (targetArgs[i].defaultValue() == null) {
+                if (printErrors) Skript.error("Could not resolve 1 or more arguments for this method call");
+                return null;
+            }
+            result[i] = targetArgs[i].defaultValue();
         }
         return new ValidReference(target, result);
     }
