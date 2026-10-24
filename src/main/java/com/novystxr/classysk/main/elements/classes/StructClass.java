@@ -12,7 +12,6 @@ import ch.njol.skript.log.SkriptLogger;
 import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.classes.ClassManager;
-import com.novystxr.classysk.api.methods.MethodRegistry.MethodIdentifier;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.api.util.ParserUtils;
 import com.novystxr.classysk.api.util.StringUtils;
@@ -211,7 +210,7 @@ public class StructClass extends Structure {
             SkriptLogger.setNode(methodSyntax.getNode());
 
             SkriptMethod method = methodSyntax.result;
-            SkriptMethod overridden = target.getExactMethod(MethodIdentifier.from(method));
+            SkriptMethod overridden = target.getExactMethod(method.identifier);
 
             if (overridden == null) {
                 if (method.hasModifier(Modifier.OVERRIDE)) {

@@ -14,7 +14,6 @@ import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.anonymous.AnonymousClass;
 import com.novystxr.classysk.api.classes.*;
 import com.novystxr.classysk.api.fields.SkriptField;
-import com.novystxr.classysk.api.methods.MethodRegistry.MethodIdentifier;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.api.anonymous.AnonymousMethod;
 import com.novystxr.classysk.api.util.ParserUtils;
@@ -114,7 +113,7 @@ public class SecExprNewInstance extends SectionExpression<Object> implements Cla
                         return false;
                     }
                     SkriptMethod method = secMethod.result;
-                    SkriptMethod target = skriptClass.getExactMethod(MethodIdentifier.from(method));
+                    SkriptMethod target = skriptClass.getExactMethod(method.identifier);
                     if (target == null) {
                         Skript.error("Anonymous methods must override an existing method");
                         return false;
