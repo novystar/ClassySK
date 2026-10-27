@@ -2,6 +2,7 @@ package com.novystxr.classysk.main.elements.methods;
 
 import ch.njol.skript.Skript;
 import ch.njol.skript.lang.Expression;
+import ch.njol.skript.lang.KeyProviderExpression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
@@ -10,18 +11,21 @@ import com.novystxr.classysk.api.Validator;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
+import com.novystxr.classysk.api.methods.MethodEvent;
 import com.novystxr.classysk.api.methods.MethodParser;
 import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.MethodValidator;
 import com.novystxr.classysk.api.methods.SkriptMethod;
+import org.apache.commons.lang3.ArrayUtils;
 import org.bukkit.event.Event;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
 import static com.novystxr.classysk.api.util.StringUtils.*;
 
-public class ExprMethodCall extends SimpleExpression<Object> {
+public class ExprMethodCall extends SimpleExpression<Object> implements KeyProviderExpression<Object> {
 
     public static void register(SyntaxRegistry registry) {
         registry.register(
@@ -37,11 +41,8 @@ public class ExprMethodCall extends SimpleExpression<Object> {
     private MethodValidator validator;
     private boolean isStatic;
 
-    private Kleenean shouldBeSingle;
-    private Class<?>[] possibleTypes;
-    private Class<?> bestReturnType;
-
     @Override
+    @SuppressWarnings("unchecked")
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result) {
         isStatic = pattern == 1;
         SkriptClass contextClass = SkriptMethod.getContextClass(getParser());
@@ -53,7 +54,7 @@ public class ExprMethodCall extends SimpleExpression<Object> {
         MethodReference reference = MethodParser.parseReference(methodName, args, isStatic);
         if (reference == null) return false;
 
-        validator = new MethodValidator(getErrorSource(), contextClass, reference, true);
+        validator = new MethodValidator(getErrorSource(), contextClass, reference, true, result.hasTag("super"));
         if (isStatic) {
             String className = getLowerCase(result.regexes.getFirst());
             SkriptClass skriptClass = ClassManager.getClass(className);
@@ -63,8 +64,12 @@ public class ExprMethodCall extends SimpleExpression<Object> {
             }
             return validator.validateStatic(skriptClass) && postInit();
         }
-        return validator.validateExpression(exprs[0]) && postInit();
+        return validator.validateExpression((Expression<ClassInstance>) exprs[0]) && postInit();
     }
+
+    private Kleenean shouldBeSingle;
+    private Class<?>[] possibleTypes;
+    private Class<?> bestReturnType;
 
     private boolean postInit() {
         shouldBeSingle = validator.shouldBeSingle();
@@ -73,19 +78,53 @@ public class ExprMethodCall extends SimpleExpression<Object> {
         return true;
     }
 
+    private String[] keys;
+
     @Override
     protected Object @Nullable [] get(Event event) {
+        this.keys = null;
+
         ClassInstance instance = isStatic ? null : validator.getValidInstance(event);
         if (!isStatic && instance == null) return null;
 
-        Object[] result = validator.product().run(event, instance);
-        if (result == null) return null;
+        MethodEvent result = validator.product().run(event, instance);
 
-        result = validator.getSafeConverted(result, shouldBeSingle.isTrue());
-        if (result == null) {
-            error("The result of this method call couldn't convert to its reported type.");
+        Object[] values = result.returnValues;
+        String[] keys = result.returnKeys;
+
+        if (values == null) return null;
+
+        boolean isSingle = shouldBeSingle.isTrue();
+        if (keys == null) {
+            values = validator.getSafeConverted(values, isSingle);
+            if (values == null) {
+                error("The result of this method call couldn't convert to its reported type.");
+            }
+            this.keys = generateNumericalKeys(values == null ? 0 : values.length);
+            return values;
+        } else {
+            values = validator.getConverted(values, isSingle, possibleTypes);
+            this.keys = ArrayUtils.removeAllOccurrences(keys, null);
+            return ArrayUtils.removeAllOccurrences(values, null);
         }
-        return result;
+    }
+
+    @Override
+    public boolean areKeysRecommended() {
+        return false;
+    }
+
+    @Override
+    public @NotNull String @NotNull [] getArrayKeys(Event event) throws IllegalStateException {
+        return keys == null ? new String[0] : keys;
+    }
+
+    private String[] generateNumericalKeys(int length) {
+        String[] keys = new String[length];
+        for (int i = 0; i < length; i++) {
+            keys[i] = String.valueOf(i);
+        }
+        return keys;
     }
 
     @Override

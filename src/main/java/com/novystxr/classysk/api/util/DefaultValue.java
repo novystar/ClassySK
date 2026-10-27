@@ -98,6 +98,14 @@ public abstract class DefaultValue<T> extends SimpleExpression<T> {
         public Class<? extends T> getReturnType() {
             return parseAs;
         }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof DefaultValue.Dynamic<?> dynamic) {
+                return rawExpr.equals(dynamic.rawExpr);
+            }
+            return false;
+        }
     }
 
     public static class Empty<T> extends DefaultValue<T> {
@@ -125,6 +133,11 @@ public abstract class DefaultValue<T> extends SimpleExpression<T> {
         @Override
         public Class<? extends T> getReturnType() {
             return type;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return obj instanceof DefaultValue.Empty<?>;
         }
     }
 }

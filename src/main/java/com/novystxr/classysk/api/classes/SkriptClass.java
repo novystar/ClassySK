@@ -1,24 +1,37 @@
 package com.novystxr.classysk.api.classes;
 
 import java.util.*;
+import java.util.stream.Stream;
 
+import com.novystxr.classysk.api.Modifier;
+import com.novystxr.classysk.api.ModifierHolder;
+import com.novystxr.classysk.api.assignability.AssignabilityBridge;
 import com.novystxr.classysk.api.fields.FieldHolder;
 import com.novystxr.classysk.api.fields.SkriptField;
+import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.MethodRegistry;
+import com.novystxr.classysk.api.methods.MethodRegistry.MethodIdentifier;
+import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.api.util.StringUtils;
+import org.bukkit.event.Event;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * The single non-instance version of a class
  */
-public class SkriptClass implements FieldHolder {
+public class SkriptClass implements FieldHolder, ModifierHolder {
 
     public final String name;
+    public final String extendsName;
+    public final Modifier[] modifiers;
 
     public final MethodRegistry methodRegistry = new MethodRegistry();
     public final Map<String, SkriptField> fields = new HashMap<>();
 
-    public SkriptClass(String name) {
+    public SkriptClass(String name, String extendsName, Modifier[] modifiers) {
         this.name = name;
+        this.extendsName = extendsName;
+        this.modifiers = modifiers;
     }
 
     public Set<ClassInstance> instances() {
@@ -26,23 +39,32 @@ public class SkriptClass implements FieldHolder {
             Collections.newSetFromMap(new WeakHashMap<>()));
     }
 
-    public ClassInstance createInstance() {
-        ClassInstance newInstance = ClassManager.getNewInstance(name);
-        newInstance.setDefaults();
-        return newInstance;
+    public Stream<SkriptClass> inheritanceStream() {
+        return Stream.iterate(this, Objects::nonNull, SkriptClass::getExtends);
     }
 
-    public Class<? extends ClassInstance> getSubclass() {
-        return ClassManager.getSubclass(name);
+    public SkriptClass getExtends() {
+        return extendsName != null ? ClassManager.getClass(extendsName) : null;
     }
 
-    public String getEffectiveName() {
-        return StringUtils.titleCase(name);
+    public boolean inherits(@Nullable SkriptClass otherClass) {
+        if (otherClass == null) return false;
+        return inheritanceStream()
+            .anyMatch(target -> target == otherClass);
     }
-
     @Override
     public Map<String, Object[]> fieldValueMap() {
         return ClassManager.staticFieldMaps.computeIfAbsent(name, key -> new HashMap<>());
+    }
+
+    @Override
+    public SkriptField getField(String key) {
+        SkriptField firstField = fields.get(key);
+        return (firstField != null) ? firstField : inheritanceStream().skip(1)
+            .map(target -> target.fields.get(key))
+            .filter(Objects::nonNull)
+            .filter(field -> !field.isStatic())
+            .findFirst().orElse(null);
     }
 
     @Override
@@ -55,8 +77,55 @@ public class SkriptClass implements FieldHolder {
         }
     }
 
+    public Class<? extends AssignabilityBridge> getSubInterface() {
+        return AssignabilityBridge.getSubInterface(name);
+    }
+
+    public Class<? extends ClassInstance> getSubclass() {
+        return ClassInstance.getSubclass(name);
+    }
+
+    public String getEffectiveName() {
+        return StringUtils.titleCase(name);
+    }
+
+    public SkriptMethod getExactMethod(MethodIdentifier identifier) {
+        if (identifier.isStatic()) return methodRegistry.getExactMethod(identifier);
+        return inheritanceStream()
+            .map(target -> target.methodRegistry.getExactMethod(identifier))
+            .filter(Objects::nonNull)
+            .findFirst().orElse(null);
+    }
+
+    public SkriptMethod[] getCandidates(MethodReference reference) {
+        List<SkriptMethod> result = methodRegistry.getOverloadCandidates(reference);
+        if (!reference.isStatic()) {
+            Set<MethodIdentifier> seen = new HashSet<>();
+            result.forEach(method -> seen.add(method.identifier));
+
+            inheritanceStream().skip(1).forEach(target -> {
+                for (SkriptMethod method : target.methodRegistry.getOverloadCandidates(reference)) {
+                    if (seen.add(method.identifier)) {
+                        result.add(method);
+                    }
+                }
+            });
+        }
+        return result.toArray(SkriptMethod[]::new);
+    }
+
+    public SkriptClass refresh() {
+        return ClassManager.getClass(name);
+    }
+
+    public ClassInstance createInstance(Event event) {
+        ClassInstance newInstance = ClassInstance.newInstance(name);
+        newInstance.setDefaults();
+        return newInstance;
+    }
+
     @Override
-    public SkriptField getField(String key) {
-        return fields.get(key);
+    public Modifier[] modifiers() {
+        return modifiers;
     }
 }
