@@ -116,7 +116,7 @@ public class SkriptMethod implements AccessModifiable {
             return false;
         }
         if (!Arrays.equals(arguments, target.arguments)) {
-            Skript.error("Argument names must match when overriding a method.");
+            Skript.error("Arguments must be functionally identical to that of the super method");
             return false;
         }
         return true;
