@@ -25,7 +25,6 @@ import java.lang.reflect.Array;
 import java.util.*;
 
 public abstract class Validator<T extends AccessModifiable> implements RuntimeErrorProducer {
-    private ClassInstance instance;
     private final SkriptClass contextClass;
 
     private T product = null;
@@ -34,6 +33,23 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
     private final ErrorSource errorSource;
     private Expression<ClassInstance> instanceExpr;
 
+    protected SkriptClass parent;
+
+    /**
+     * This is set before validation, so it will be up to date for the relevant instance
+     * @return The last known parent class to this validator
+     */
+    public final SkriptClass parent() {
+        return parent;
+    }
+
+    /**
+     * The product of a validator is the result of its respective validation steps.
+     * This should only be called at runtime in a syntax after {@link getValidInstance(Event)} or {@link validateInstance(ClassInstance)} has been checked.
+     * @return The product of the latest validation call.
+     * @see getProductFromClass
+     * @see getProductFromInstance
+     */
     public final T product() {
         return product;
     }
@@ -200,12 +216,15 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
     public boolean validateExpression(Expression<ClassInstance> expr) {
         this.instanceExpr = expr;
         LogEntry error;
+
+        SkriptClass lastGuessedClass = null;
         try (var handler = new SimpleErrorHandler().start()) {
             for (SkriptClass skriptClass : getPossibleClasses(expr)) {
                 T product = getProductFromClass(skriptClass);
                 if (product == null || !validate(product, contextClass()))
                     continue;
                 guesses.add(product);
+                lastGuessedClass = skriptClass;
             }
             error = handler.getLastError();
         }
@@ -217,7 +236,9 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
         if (guesses.size() != 1) {
             return true; // unknown, exact resolution happens at runtime
         }
+        // only one possible product and class
         this.product = guesses.getFirst();
+        this.parent = lastGuessedClass;
         return true;
     }
 
@@ -228,6 +249,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
      */
     public final boolean validateStatic(@NotNull SkriptClass skriptClass) {
         this.product = getProductFromClass(skriptClass);
+        this.parent = skriptClass;
         if (product == null) return false;
 
         return validate(product, contextClass());
@@ -250,15 +272,16 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
             error("Target instance has no parent class");
             return false;
         }
-        if (this.instance == newInstance)
+        if (parent == this.parent) // if the parent is still the same object, assume nothing has changed
             return true;
+
+        this.parent = parent;
 
         LogEntry error;
         try (var handler = new SimpleErrorHandler().start()) {
             this.product = getProductFromInstance(newInstance);
             if (product != null) {
                 if (validate(product, contextClass())) {
-                    this.instance = newInstance;
                     return true;
                 }
             }
