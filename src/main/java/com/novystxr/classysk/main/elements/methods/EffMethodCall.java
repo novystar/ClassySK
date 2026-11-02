@@ -9,6 +9,7 @@ import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
+import com.novystxr.classysk.api.methods.MethodEvent;
 import com.novystxr.classysk.api.methods.MethodParser;
 import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.MethodValidator;
@@ -67,7 +68,7 @@ public class EffMethodCall extends Effect {
         ClassInstance instance = isStatic ? null : validator.getValidInstance(event);
         if (!isStatic && instance == null) return;
 
-        validator.product().run(event, instance);
+        validator.product().run(event, new MethodEvent(instance), validator.getArgs());
     }
 
     @Override

@@ -87,7 +87,7 @@ public class ExprMethodCall extends SimpleExpression<Object> implements KeyProvi
         ClassInstance instance = isStatic ? null : validator.getValidInstance(event);
         if (!isStatic && instance == null) return null;
 
-        MethodEvent result = validator.product().run(event, instance);
+        MethodEvent result = validator.product().run(event, new MethodEvent(instance), validator.getArgs());
 
         Object[] values = result.returnValues;
         String[] keys = result.returnKeys;

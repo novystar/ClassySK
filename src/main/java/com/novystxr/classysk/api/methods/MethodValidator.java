@@ -3,17 +3,13 @@ package com.novystxr.classysk.api.methods;
 import ch.njol.skript.Skript;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.registrations.Classes;
-import com.novystxr.classysk.api.AccessModifiable;
-import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.Validator;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.MethodParser.ReferenceArgument;
-import com.novystxr.classysk.api.methods.MethodValidator.ValidReference;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
 import com.novystxr.classysk.main.elements.methods.ExprSuper;
-import org.bukkit.event.Event;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
 import org.skriptlang.skript.log.runtime.ErrorSource;
@@ -22,11 +18,17 @@ import java.util.*;
 
 import static com.novystxr.classysk.api.Modifier.*;
 
-public class MethodValidator extends Validator<ValidReference> {
+public class MethodValidator extends Validator<SkriptMethod> {
 
     private final MethodReference reference;
     private final boolean expectsReturn;
     private final boolean isSuper;
+
+    private Expression<?>[] args;
+
+    public @NotNull Expression<?>[] getArgs() {
+        return args;
+    }
 
     public MethodValidator(ErrorSource errorSource, SkriptClass contextClass, @NotNull MethodReference reference, boolean expectsReturn, boolean isSuper) {
         super(errorSource, contextClass);
@@ -37,7 +39,7 @@ public class MethodValidator extends Validator<ValidReference> {
     }
 
     @Override
-    protected @Nullable ValidReference getProductFromClass(SkriptClass skriptClass) {
+    protected @Nullable SkriptMethod getProductFromClass(SkriptClass skriptClass) {
         if (isSuper) skriptClass = skriptClass.getExtends();
 
         SkriptMethod[] candidates = skriptClass.getCandidates(reference);
@@ -45,47 +47,56 @@ public class MethodValidator extends Validator<ValidReference> {
             Skript.error("Could not identify method %s", reference);
             return null;
         }
+        SkriptMethod method;
         if (candidates.length == 1) {
-            return validateReference(candidates[0], true);
+             args = validateArgs(candidates[0].arguments, true);
+             method = candidates[0];
         } else {
-            ValidReference reference = validateFromCandidates(candidates);
-            if (reference == null) {
-                Skript.error("Could not identify method %s out of %s overloads", this.reference, candidates.length);
+            method = resolveOverload(candidates);
+            if (method == null) {
+                Skript.error("Could not identify method %s out of %s overloads", reference, candidates.length);
                 return null;
             }
-            return reference;
         }
+        return args == null ? null : method;
     }
 
     @Override
-    protected @Nullable ValidReference getProductFromInstance(ClassInstance instance) {
-        SkriptClass parent = instance.getParent();
-        if (product() == null || !parent.inherits(product().getOrigin())) {
+    protected @Nullable SkriptMethod getProductFromInstance(ClassInstance instance) {
+        SkriptMethod product = product(); SkriptClass parent = parent();
+
+        // if exact method is not yet known, or it can't possibly assign this instance's concrete type, completely re-validate at runtime using the class
+        if (parent == null || !parent.inherits(product.getOrigin())) {
             return getProductFromClass(parent);
         }
-        SkriptMethod method = (isSuper ? contextClass().getExtends() : parent).getExactMethod(product().method.identifier);
-        if (method == null) {
+        // if we are at this validation stage the parent class isn't identical but still assignable
+        // so we try to shortcut to the new method using information from the previous known one
+        SkriptClass target = isSuper ? contextClass().getExtends() : parent;
+        SkriptMethod method = target.getExactMethod(product.identifier);
+
+        if (method == null) { // if that failed completely re-validate
             return getProductFromClass(parent);
-            }
-        return new ValidReference(method, product().args);
+        }
+
+        return method;
     }
 
     @Override
-    protected boolean validate(ValidReference reference, SkriptClass contextClass) {
-        SkriptClass origin = reference.getOrigin();
-        if (expectsReturn && reference.type() == null) {
+    protected boolean validate(SkriptMethod method, SkriptClass contextClass) {
+        SkriptClass origin = method.getOrigin();
+        if (expectsReturn && method.type() == null) {
             Skript.error("This method can't return anything");
             return false;
         }
-        if (reference.hasModifier(PRIVATE) && contextClass != origin) {
+        if (method.hasModifier(PRIVATE) && contextClass != origin) {
             Skript.error("Private methods can only be accessed from within their own class");
             return false;
         }
-        if (reference.hasModifier(PROTECTED) && (contextClass == null || !contextClass.inherits(origin))) {
+        if (method.hasModifier(PROTECTED) && (contextClass == null || !contextClass.inherits(origin))) {
             Skript.error("Protected methods can only be accessed from inheritors");
             return false;
         }
-        if (isSuper && reference.method().hasModifier(ABSTRACT)) {
+        if (isSuper && method.hasModifier(ABSTRACT)) {
             Skript.error("You cannot call abstract methods directly");
             return false;
         }
@@ -98,8 +109,22 @@ public class MethodValidator extends Validator<ValidReference> {
         return expr != null && super.validateExpression(expr);
     }
 
-    private @Nullable ValidReference validateReference(SkriptMethod target, boolean printErrors) {
-        MethodArgument[] targetArgs = target.arguments;
+    private @Nullable SkriptMethod resolveOverload(SkriptMethod[] candidates) {
+        SkriptMethod overload = null;
+        for (SkriptMethod candidate : candidates) {
+            Expression<?>[] result = validateArgs(candidate.arguments, false);
+            if (result != null) {
+                // if already found a valid candidate and this is also valid we can't determine which one to target
+                if (overload != null) return null;
+
+                overload = candidate;
+                args = result;
+            }
+        }
+        return overload;
+    }
+
+    private @Nullable Expression<?>[] validateArgs(MethodArgument[] targetArgs, boolean printErrors) {
         List<String> targetNames = null;
 
         ReferenceArgument[] refArgs = reference.args();
@@ -145,40 +170,6 @@ public class MethodValidator extends Validator<ValidReference> {
                 result[i] = targetArgs[i].defaultValue();
             }
         }
-        return new ValidReference(target, result);
-    }
-
-    private @Nullable ValidReference validateFromCandidates(SkriptMethod[] candidates) {
-        ValidReference reference = null;
-        for (SkriptMethod candidate : candidates) {
-            ValidReference result = validateReference(candidate, false);
-            if (result == null) continue;
-            if (reference != null) return null;
-            reference = result;
-        }
-        return reference;
-    }
-
-    public record ValidReference(@NotNull SkriptMethod method, @NotNull Expression<?>[] args) implements AccessModifiable {
-        @Override
-        public boolean isPlural() {
-            return method.isPlural();
-        }
-        @Override
-        public Modifier[] modifiers() {
-            return method.modifiers();
-        }
-        @Override
-        public Class<?> type() {
-            return method.type();
-        }
-        @Override
-        public SkriptClass getOrigin() {
-            return method.getOrigin();
-        }
-
-        public MethodEvent run(Event event, ClassInstance instance) {
-            return method.run(event, new MethodEvent(instance), args);
-        }
+        return result;
     }
 }
