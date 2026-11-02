@@ -66,7 +66,7 @@ public class MethodValidator extends Validator<SkriptMethod> {
         SkriptMethod product = product(); SkriptClass parent = parent();
 
         // if exact method is not yet known, or it can't possibly assign this instance's concrete type, completely re-validate at runtime using the class
-        if (parent == null || !parent.inherits(product.getOrigin())) {
+        if (product == null || !parent.inherits(product.getOrigin())) {
             return getProductFromClass(parent);
         }
         // if we are at this validation stage the parent class isn't identical but still assignable
