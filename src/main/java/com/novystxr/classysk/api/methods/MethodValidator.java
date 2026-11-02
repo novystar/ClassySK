@@ -65,7 +65,7 @@ public class MethodValidator extends Validator<SkriptMethod> {
     protected @Nullable SkriptMethod getProductFromInstance(ClassInstance instance) {
         SkriptMethod product = product(); SkriptClass parent = parent();
 
-        // if exact method is not yet known, or it can't possibly assign this instance's concrete type, completely re-validate at runtime using the class
+        // full validation if exact method is not yet known, or it can't possibly assign to this instance's concrete type
         if (product == null || !parent.inherits(product.getOrigin())) {
             return getProductFromClass(parent);
         }
