@@ -45,7 +45,7 @@ public class CondInstanceOf extends Condition {
     @SuppressWarnings("unchecked")
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result) {
         instanceExpr = (Expression<ClassInstance>) exprs[0];
-        setNegated(pattern == 1 || pattern == 3);
+        setNegated(pattern == 1);
 
         String name = StringUtils.getLowerCase(result.regexes.getFirst());
         targetClass = ClassManager.getClass(name);
@@ -61,10 +61,10 @@ public class CondInstanceOf extends Condition {
     @Override
     public boolean check(Event event) {
         ClassInstance instance = instanceExpr.getSingle(event);
-        if (instance == null) return false;
+        if (instance == null) return isNegated();
 
         SkriptClass parent = instance.getParent();
-        if (parent == null) return false;
+        if (parent == null) return isNegated();
 
         boolean isInstanceOf = isExact ? parent == targetClass : parent.inherits(targetClass);
         return isNegated() != isInstanceOf;
