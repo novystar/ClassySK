@@ -56,16 +56,12 @@ public interface FieldHolder {
             return;
         }
 
-        if (keys == null) {
-            values = Converters.convert(values, field.type);
-        } else {
-            values = Validator.getConverted(values, field.type);
+        values = Validator.getConverted(values, field.type);
+        if (keys != null && keys.length != 0) {
             keys = ExprUtils.filterKeys(keys, values);
-
-            values = ArrayUtils.removeAllOccurrences(values, null);
-
             fieldKeys().put(fieldName, keys);
         }
+        values = ArrayUtils.removeAllOccurrences(values, null);
         if (values.length == 0) return;
 
         fieldValues().put(fieldName, values);
