@@ -11,10 +11,11 @@ import java.util.*;
 
 public class ClassManager {
 
-    private static final Map<String, SkriptClass> classMap = new HashMap<>();
-    static final Map<String, Map<String, Object[]>> staticFieldMaps = new HashMap<>();
-
+    private static final Map<String, SkriptClass> classes = new HashMap<>();
     static final Map<String, Set<ClassInstance>> instances = new HashMap<>();
+
+    static final Map<String, Map<String, Object[]>> staticFieldValues = new HashMap<>();
+    static final Map<String, Map<String, String[]>> staticFieldKeys = new HashMap<>();
 
     public static <T extends ClassInstance> T trackInstance(T instance) {
         Set<ClassInstance> instances = ClassManager.instances.computeIfAbsent(instance.name, key -> Collections.newSetFromMap(new WeakHashMap<>()));
@@ -24,7 +25,7 @@ public class ClassManager {
 
     public static void revalidateFields(SkriptClass skriptClass) {
         // static fields
-        skriptClass.fieldValueMap().entrySet().removeIf(entry -> {
+        skriptClass.fieldValues().entrySet().removeIf(entry -> {
             SkriptField field = skriptClass.getField(entry.getKey());
 
             // if field no longer exists or constant, remove it
@@ -35,7 +36,7 @@ public class ClassManager {
             if (converted.length == 0) {
                 return true;
             }
-            skriptClass.fieldValueMap().put(field.name, converted);
+            skriptClass.fieldValues().put(field.name, converted);
             return false;
 
         });
@@ -43,7 +44,7 @@ public class ClassManager {
 
         // attempt to convert non-static fields to the new structure
         for (ClassInstance instance : skriptClass.instances()) {
-            for (var entry : instance.fieldValueMap.entrySet()) {
+            for (var entry : instance.fieldValues.entrySet()) {
                 SkriptField field = skriptClass.getField(entry.getKey());
 
                 // if field no longer exists, skip it
@@ -53,7 +54,7 @@ public class ClassManager {
                 // attempt to convert, if failed the field is left in an illegal state which may have limited access.
                 Object[] converted = Converters.convert(entry.getValue(), field.type());
                 if (converted.length != 0) {
-                    instance.fieldValueMap.put(field.name, converted);
+                    instance.fieldValues.put(field.name, converted);
                 }
             }
         }
@@ -70,7 +71,7 @@ public class ClassManager {
 
     public static void registerClass(SkriptClass skriptClass) {
         String name = skriptClass.name;
-        classMap.put(name, skriptClass);
+        classes.put(name, skriptClass);
 
         if (Classysk.TYPES_ALLOWED) {
             Class<? extends AssignabilityBridge> bridgeClass = skriptClass.getSubInterface();
@@ -81,7 +82,7 @@ public class ClassManager {
 
 
     public static void unregisterClass(String name) {
-        classMap.remove(name);
+        classes.remove(name);
 
         if (Classysk.TYPES_ALLOWED) { // unregister wrapper converters
             ReflectUtils.unregisterAllFrom(AssignabilityBridge.getSubInterface(name), ClassInstance.class);
@@ -90,15 +91,15 @@ public class ClassManager {
     }
 
     public static SkriptClass getClass(String name) {
-        return classMap.get(name);
+        return classes.get(name);
     }
 
     public static boolean classExists(String name) {
-        return classMap.containsKey(name);
+        return classes.containsKey(name);
     }
 
     public static Collection<SkriptClass> getClasses() {
-        return classMap.values();
+        return classes.values();
     }
 
 }

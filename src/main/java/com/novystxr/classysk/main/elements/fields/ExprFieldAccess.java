@@ -3,11 +3,11 @@ package com.novystxr.classysk.main.elements.fields;
 import ch.njol.skript.Skript;
 import ch.njol.skript.classes.Changer.ChangeMode;
 import ch.njol.skript.lang.Expression;
+import ch.njol.skript.lang.KeyProviderExpression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.Variable;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
-import ch.njol.util.coll.CollectionUtils;
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.Validator;
 import com.novystxr.classysk.api.fields.FieldHolder;
@@ -18,18 +18,21 @@ import com.novystxr.classysk.api.fields.FieldValidator;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.api.util.ExprUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.bukkit.event.Event;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
 import static ch.njol.skript.classes.Changer.ChangeMode.*;
+import static ch.njol.util.coll.CollectionUtils.array;
 import static com.novystxr.classysk.Classysk.CLASSNAME_PATTERN;
 import static com.novystxr.classysk.Classysk.NAME_PATTERN;
 import static com.novystxr.classysk.api.Modifier.CONST;
 import static com.novystxr.classysk.api.util.StringUtils.*;
 
-public class ExprFieldAccess extends SimpleExpression<Object> {
+public class ExprFieldAccess extends SimpleExpression<Object> implements KeyProviderExpression<Object> {
     public static void register(SyntaxRegistry registry) {
         registry.register(SyntaxRegistry.EXPRESSION,
             DefaultSyntaxInfos.Expression.builder(ExprFieldAccess.class, Object.class)
@@ -44,7 +47,12 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
     private String fieldName;
 
     private SkriptClass skriptClass;
+
     private Variable<?> variable;
+    private KeyProviderExpression<?> keyProvider;
+
+    private String[] keys;
+    private int toGenerate;
 
     @Override
     @SuppressWarnings("unchecked")
@@ -66,6 +74,9 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
         if (exprs[0].getSource() instanceof Variable<?> var) {
             variable = var;
         }
+        if (exprs[0].getSource() instanceof KeyProviderExpression<?> keyExpr) {
+            keyProvider = keyExpr;
+        }
         return validator.validateExpression((Expression<ClassInstance>) exprs[0]) && postInit();
     }
 
@@ -83,13 +94,35 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
     @Override
     protected Object @Nullable [] get(Event event) {
         FieldHolder holder = isStatic ? skriptClass : validator.getValidInstance(event);
-        if (holder == null) return null;
+        if (holder == null) return escape();
 
-        Object[] value = validator.getSafeConverted(holder.getFieldValue(fieldName), shouldBeSingle.isTrue());
-        if (value == null) {
+        Object[] values = holder.getFieldValue(fieldName);
+        String[] keys = holder.getFieldKeys(fieldName);
+
+        if (keys == null) {
+            values = validator.getSafeConverted(values, shouldBeSingle.isTrue());
+            this.toGenerate = values == null ? 0 : values.length;
+        } else {
+            values = validator.getConverted(values, shouldBeSingle.isTrue(), possibleTypes);
+            keys = ExprUtils.filterKeys(keys, values);
+            values = ArrayUtils.removeAllOccurrences(values, null);
+        }
+        this.keys = keys;
+        if (values == null) {
             error("The result of this field call couldn't convert to its reported type.");
         }
-        return value;
+        return values;
+    }
+
+    private Object @Nullable [] escape() {
+        this.keys = null;
+        this.toGenerate = 0;
+        return null;
+    }
+
+    @Override
+    public @NotNull String @NotNull [] getArrayKeys(Event event) throws IllegalStateException {
+        return keys != null ? keys : ExprUtils.generateNumericalKeys(toGenerate);
     }
 
     @Override
@@ -100,14 +133,14 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
             return null;
         }
         if (mode == DELETE || mode == RESET) {
-            return new Class[]{};
+            return new Class[0];
         }
         Class<?> type = validator.exactTypeOr(Object.class);
         boolean isPlural = !canBeSingle();
         if (isPlural) {
             type = type.arrayType();
         }
-        Class<?>[] typeArray = CollectionUtils.array(type);
+        Class<?>[] typeArray = array(type);
 
         if ((mode == REMOVE_ALL && isPlural) || mode == SET || mode == ADD || mode == REMOVE) {
             return typeArray;
@@ -125,8 +158,19 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
             error("Constant fields can't be changed after definition");
             return;
         }
+
+        String[] keys;
+        if (keyProvider != null && keyProvider.canReturnKeys() && keyProvider.areKeysRecommended()) {
+            keys = keyProvider.getArrayKeys(event);
+        } else {
+            keys = null;
+        }
+
         switch (mode) {
-            case SET -> setValueAndSave(delta, holder, event);
+            case SET -> {
+                holder.setFieldValue(fieldName, delta, keys);
+                save(event);
+            }
             case DELETE -> {
                 holder.removeField(fieldName);
                 save(event);
@@ -140,20 +184,18 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
                 Object[] initialValue = holder.getFieldValue(fieldName);
 
                 if (field.isPlural()) {
-                    ExprUtils.mutatePlural(initialValue, delta, mode, result ->
-                        setValueAndSave(result, holder, event));
+                    ExprUtils.mutatePlural(initialValue, delta, mode, result -> {
+                       holder.setFieldValue(fieldName, result, keys);
+                       save(event);
+                    });
                 } else {
                     Object singleValue = initialValue.length == 1 ? initialValue[0] : null;
-                    ExprUtils.mutateSingle(singleValue, delta, mode, value ->
-                        setValueAndSave(new Object[]{value}, holder, event));
+                    ExprUtils.mutateSingle(singleValue, delta, mode, value -> {
+                       holder.setFieldValue(fieldName, array(value), keys);
+                       save(event);
+                    });
                 }
             }
-        }
-    }
-
-    private void setValueAndSave(Object[] value, FieldHolder holder, Event event) {
-        if (holder.setFieldValue(fieldName, value)) {
-            save(event);
         }
     }
 

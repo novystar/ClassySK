@@ -7,6 +7,7 @@ import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.Literal;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.util.ClassInfoReference;
+import org.apache.commons.lang3.ArrayUtils;
 import org.skriptlang.skript.lang.arithmetic.Arithmetics;
 import org.skriptlang.skript.lang.arithmetic.Operator;
 import org.skriptlang.skript.lang.comparator.Comparators;
@@ -107,5 +108,22 @@ public class ExprUtils {
             Object[] convertedDelta = Converters.convert(delta, singularAcceptedClasses, Object.class);
             Changer.ChangerUtils.change(changer, originalValueArray, convertedDelta, mode);
         }
+    }
+
+    public static String[] filterKeys(String[] keys, Object[] values) {
+        if (values == null) return keys;
+        for (int i = 0; i < values.length; i++) {
+            if (values[i] == null)
+                keys[i] = null;
+        }
+        return ArrayUtils.removeAllOccurrences(keys, null);
+    }
+
+    public static String[] generateNumericalKeys(int length) {
+        String[] keys = new String[length];
+        for (int i = 0; i < length; i++) {
+            keys[i] = String.valueOf(i);
+        }
+        return keys;
     }
 }

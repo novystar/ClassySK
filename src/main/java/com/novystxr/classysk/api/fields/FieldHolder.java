@@ -1,7 +1,10 @@
 package com.novystxr.classysk.api.fields;
 
 import ch.njol.skript.SkriptConfig;
+import com.novystxr.classysk.api.Validator;
 import com.novystxr.classysk.api.util.DefaultValue;
+import com.novystxr.classysk.api.util.ExprUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -13,18 +16,20 @@ import java.util.Map;
 
 public interface FieldHolder {
 
-    Map<String, Object[]> fieldValueMap();
+    Map<String, Object[]> fieldValues();
+    Map<String, String[]> fieldKeys();
 
     void setDefaults();
 
     @Nullable SkriptField getField(String fieldName);
 
     default void removeField(String fieldName) {
-        fieldValueMap().remove(fieldName);
+        fieldValues().remove(fieldName);
+        fieldKeys().remove(fieldName);
     }
 
     default boolean fieldExists(String fieldName) {
-        return fieldValueMap().containsKey(fieldName);
+        return fieldValues().containsKey(fieldName);
     }
 
     default void resetField(String fieldName) {
@@ -38,32 +43,43 @@ public interface FieldHolder {
             Object[] convertedValue = Converters.convert(defaultValue.getArray(), field.type());
             if (convertedValue.length == 0) return;
 
-            fieldValueMap().put(fieldName, convertedValue);
+            fieldValues().put(fieldName, convertedValue);
         }
     }
 
-    default boolean setFieldValue(String fieldName, @Nullable Object[] value) {
+    default void setFieldValue(String fieldName, Object @Nullable [] values, String @Nullable [] keys) {
         SkriptField field = getField(fieldName);
-        if (field == null) return false;
+        if (field == null) return;
 
-        if (value == null || value.length == 0) {
+        if (values == null || values.length == 0) {
             removeField(fieldName); // field was set to null
-            return true;
-        }
-        Object[] convertedValue = Converters.convert(value, field.type());
-        if (convertedValue.length == 0) {
-            return false;
+            return;
         }
 
-        fieldValueMap().put(fieldName, convertedValue);
-        return true;
+        if (keys == null) {
+            values = Converters.convert(values, field.type);
+        } else {
+            values = Validator.getConverted(values, field.type);
+            keys = ExprUtils.filterKeys(keys, values);
+
+            values = ArrayUtils.removeAllOccurrences(values, null);
+
+            fieldKeys().put(fieldName, keys);
+        }
+        if (values.length == 0) return;
+
+        fieldValues().put(fieldName, values);
     }
 
     default @NotNull Object[] getFieldValue(String fieldName) {
-        Object[] value = fieldValueMap().get(fieldName);
+        Object[] value = fieldValues().get(fieldName);
         if (value == null) return new Object[0];
 
         return convertIfOldPlayer(fieldName, Arrays.copyOf(value, value.length));
+    }
+
+    default String @Nullable [] getFieldKeys(String fieldName) {
+        return fieldKeys().get(fieldName);
     }
 
     @SuppressWarnings("unchecked")
@@ -79,7 +95,7 @@ public interface FieldHolder {
             }
         }
         if (anyChanged)
-            setFieldValue(fieldName, objects);
+            setFieldValue(fieldName, objects, getFieldKeys(fieldName));
         return objects;
     }
 }

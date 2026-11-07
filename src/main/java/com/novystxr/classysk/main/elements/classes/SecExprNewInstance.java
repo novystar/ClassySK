@@ -159,7 +159,12 @@ public class SecExprNewInstance extends SectionExpression<Object> implements Cla
             Expression<?> valueExpr = entry.getValue();
 
             Object[] value = valueExpr.getArray(event);
-            newInstance.setFieldValue(fieldName, value);
+            String[] keys = null;
+            if (valueExpr instanceof KeyProviderExpression<?> keyExpr && keyExpr.canReturnKeys() && keyExpr.areKeysRecommended()) {
+                keys = keyExpr.getArrayKeys(event);
+            }
+
+            newInstance.setFieldValue(fieldName, value, keys);
         }
         return CollectionUtils.array(newInstance);
     }

@@ -25,15 +25,21 @@ public class ClassInstance implements FieldHolder, AssignabilityBridge {
     }
 
     public final String name;
-    public final Map<String, Object[]> fieldValueMap = new HashMap<>();
+    public final Map<String, Object[]> fieldValues = new HashMap<>();
+    public final Map<String, String[]> fieldKeys = new HashMap<>();
 
     public ClassInstance(String name) {
         this.name = name;
     }
 
     @Override
-    public Map<String, Object[]> fieldValueMap() {
-        return fieldValueMap;
+    public Map<String, Object[]> fieldValues() {
+        return fieldValues;
+    }
+
+    @Override
+    public Map<String, String[]> fieldKeys() {
+        return fieldKeys;
     }
 
     @Override
