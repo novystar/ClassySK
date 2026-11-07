@@ -53,8 +53,7 @@ public class ExprSelf extends SimpleExpression<Object> implements EventRestricte
     @Override
     protected ClassInstance @Nullable [] get(Event event) {
         if (event instanceof MethodEvent methodEvent) {
-            return methodEvent.instance == null
-                ? null : CollectionUtils.array(methodEvent.instance);
+            return methodEvent.instance == null ? null : CollectionUtils.array(methodEvent.instance);
         }
         return null;
     }
