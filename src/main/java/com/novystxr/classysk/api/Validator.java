@@ -8,6 +8,7 @@ import ch.njol.skript.log.LogEntry;
 import ch.njol.skript.util.Utils;
 import ch.njol.skript.variables.HintManager;
 import ch.njol.util.Kleenean;
+import com.novystxr.classysk.api.assignability.AssignabilityBridge;
 import com.novystxr.classysk.api.classes.ClassContextHolder;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.ClassManager;
@@ -20,10 +21,10 @@ import org.skriptlang.skript.lang.converter.Converters;
 import org.skriptlang.skript.log.runtime.ErrorSource;
 import org.skriptlang.skript.log.runtime.RuntimeErrorProducer;
 
+import java.lang.reflect.Array;
 import java.util.*;
 
 public abstract class Validator<T extends AccessModifiable> implements RuntimeErrorProducer {
-    private ClassInstance instance;
     private final SkriptClass contextClass;
 
     private T product = null;
@@ -32,6 +33,23 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
     private final ErrorSource errorSource;
     private Expression<ClassInstance> instanceExpr;
 
+    protected SkriptClass parent;
+
+    /**
+     * This is set before validation, so it will be up to date for the relevant instance
+     * @return The last known parent class to this validator
+     */
+    public final SkriptClass parent() {
+        return parent;
+    }
+
+    /**
+     * The product of a validator is the result of its respective validation steps.
+     * This should only be called at runtime in a syntax after {@link getValidInstance(Event)} or {@link validateInstance(ClassInstance)} has been checked.
+     * @return The product of the latest validation call.
+     * @see getProductFromClass
+     * @see getProductFromInstance
+     */
     public final T product() {
         return product;
     }
@@ -51,6 +69,10 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
 
     protected abstract @Nullable T getProductFromClass(SkriptClass skriptClass);
     protected abstract @Nullable T getProductFromInstance(ClassInstance instance);
+
+    protected SkriptClass contextClass() {
+        return contextClass == null ? null : contextClass.refresh();
+    }
 
     /**
      *
@@ -79,12 +101,29 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
     }
 
     /**
+     *
+     * Provides some assurances of {@link getSafeConverted(Object[], boolean)} but without creating a new array.
+     * The resulting array is not safe to return but inconvertible values will be null.
+     * @see ch.njol.skript.lang.function.ExprFunctionCall
+     * @see org.apache.commons.lang3.ArrayUtils#removeAllOccurrences(Object[], Object)
+     */
+    @SuppressWarnings("unchecked")
+    public <To> @Nullable Object @Nullable [] getConverted(Object @NotNull [] value, boolean isSingle, Class<?>[] possibleTypes) {
+        if (isSingle && value.length > 1)
+            return null;
+
+        To[] convertTo = (To[]) Array.newInstance(product().type(), value.length);
+        Converters.convert(value, convertTo, possibleTypes);
+        return value;
+    }
+
+    /**
      * Gets the inferred classes (if possible) from the target expression.
      * If any specific classes could not be inferred, this returns a collection of every class.
      */
     @SuppressWarnings("UnstableApiUsage")
-    public static Collection<SkriptClass> getPossibleClasses(Expression<?> expr) {
-        if (expr instanceof ClassContextHolder holder) {
+    public static Collection<SkriptClass> getPossibleClasses(Expression<? extends ClassInstance> expr) {
+        if (expr.getSource() instanceof ClassContextHolder holder) {
             return List.of(holder.getContextClass());
         }
         List<SkriptClass> possibleClasses = new ArrayList<>();
@@ -99,7 +138,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
         for (Class<?> type : possibleTypes) {
             if (type == ClassInstance.class || type == Object.class) {
                 return ClassManager.getClasses();
-            } else if (ClassInstance.class.isAssignableFrom(type)) {
+            } else if (AssignabilityBridge.class.isAssignableFrom(type)) {
                 possibleClasses.add(ClassManager.getClass(type.getSimpleName()));
             }
         }
@@ -138,7 +177,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
 
     public final Class<?> exactTypeOr(@Nullable Class<?> type) {
         if (product == null) return type;
-        return product.type();
+        return product().type();
     }
 
     /**
@@ -148,7 +187,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
      * UNKNOWN if the correct class could not be determined at parse time
      */
     public final Kleenean shouldBeSingle() {
-        if (product != null) return Kleenean.get(!product.isPlural());
+        if (product != null) return Kleenean.get(!product().isPlural());
         if (guesses.isEmpty()) return Kleenean.UNKNOWN;
 
         boolean hasSingle = false;
@@ -171,20 +210,21 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
         ClassInstance newInstance = instanceExpr.getSingle(event);
         return validateInstance(newInstance) ? newInstance : null;
     }
-
     /**
      * Used for validating instances via expression at parse time
      */
-    public final boolean validateExpression(Expression<?> expr) {
-        //noinspection unchecked
-        this.instanceExpr = (Expression<ClassInstance>) expr;
+    public boolean validateExpression(Expression<ClassInstance> expr) {
+        this.instanceExpr = expr;
         LogEntry error;
+
+        SkriptClass lastGuessedClass = null;
         try (var handler = new SimpleErrorHandler().start()) {
             for (SkriptClass skriptClass : getPossibleClasses(expr)) {
                 T product = getProductFromClass(skriptClass);
-                if (product == null || !validate(product, contextClass))
+                if (product == null || !validate(product, contextClass()))
                     continue;
                 guesses.add(product);
+                lastGuessedClass = skriptClass;
             }
             error = handler.getLastError();
         }
@@ -196,7 +236,9 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
         if (guesses.size() != 1) {
             return true; // unknown, exact resolution happens at runtime
         }
+        // only one possible product and class
         this.product = guesses.getFirst();
+        this.parent = lastGuessedClass;
         return true;
     }
 
@@ -207,9 +249,10 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
      */
     public final boolean validateStatic(@NotNull SkriptClass skriptClass) {
         this.product = getProductFromClass(skriptClass);
+        this.parent = skriptClass;
         if (product == null) return false;
 
-        return validate(product, contextClass);
+        return validate(product, contextClass());
     }
 
     /**
@@ -229,15 +272,16 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
             error("Target instance has no parent class");
             return false;
         }
-        if (this.instance == newInstance)
+        if (parent == this.parent) // if the parent is still the same object, assume nothing has changed
             return true;
+
+        this.parent = parent;
 
         LogEntry error;
         try (var handler = new SimpleErrorHandler().start()) {
             this.product = getProductFromInstance(newInstance);
             if (product != null) {
-                if (validate(product, contextClass)) {
-                    this.instance = newInstance;
+                if (validate(product, contextClass())) {
                     return true;
                 }
             }

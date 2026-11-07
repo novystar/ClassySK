@@ -6,10 +6,15 @@ import java.util.Locale;
 
 public enum Modifier {
     PUBLIC(0),
+    PROTECTED(0),
     PRIVATE(0),
 
     STATIC(1),
-    CONST(2);
+    OVERRIDE(1),
+    ABSTRACT(1),
+
+    CONST(2),
+    FINAL(2);
 
     public final int index;
 
@@ -19,13 +24,6 @@ public enum Modifier {
 
     Modifier(int index) {
         this.index = index;
-    }
-
-    public static Modifier[] without(Modifier[] modifiers, Modifier... without) {
-        List<Modifier> withoutList = Arrays.asList(without);
-        return Arrays.stream(modifiers)
-            .map(modifier -> withoutList.contains(modifier) ? null : modifier)
-            .toArray(Modifier[]::new);
     }
 
     /**
@@ -44,6 +42,10 @@ public enum Modifier {
             result[i] = modifier;
         }
         return result;
+    }
+
+    public static Modifier[] none() {
+        return new Modifier[MAX_SIZE];
     }
 
     /**

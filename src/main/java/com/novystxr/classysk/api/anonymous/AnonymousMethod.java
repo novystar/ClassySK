@@ -1,0 +1,20 @@
+package com.novystxr.classysk.api.anonymous;
+
+import ch.njol.skript.lang.Expression;
+import com.novystxr.classysk.api.methods.MethodEvent;
+import com.novystxr.classysk.api.methods.SkriptMethod;
+import org.bukkit.event.Event;
+import org.jetbrains.annotations.NotNull;
+
+public class AnonymousMethod extends SkriptMethod {
+    public AnonymousMethod(SkriptMethod method) {
+        super(method.name, method.arguments, method.modifiers, method.type, method.isPlural, method.origin);
+    }
+
+    @Override
+    public MethodEvent run(Event contextEvent, MethodEvent runEvent, @NotNull Expression<?>[] args) {
+        // assume not null because anonymous methods can't be static
+        ((AnonymousInstance) runEvent.instance).setLocalVariables(runEvent);
+        return super.run(contextEvent, runEvent, args);
+    }
+}
