@@ -16,6 +16,7 @@ import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.util.StringUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.lang.converter.Converters;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
@@ -87,7 +88,7 @@ public class ExprCast extends SimpleExpression<Object> implements ClassContextHo
 
     @Override
     protected AssignabilityBridge @Nullable [] get(Event event) {
-        return instanceExpr.getArray(event);
+        return Converters.convert(instanceExpr.getArray(event), type);
     }
 
     @Override
