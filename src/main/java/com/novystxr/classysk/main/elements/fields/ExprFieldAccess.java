@@ -4,6 +4,7 @@ import ch.njol.skript.Skript;
 import ch.njol.skript.classes.Changer.ChangeMode;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.KeyProviderExpression;
+import ch.njol.skript.lang.KeyReceiverExpression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.Variable;
 import ch.njol.skript.lang.util.SimpleExpression;
@@ -32,7 +33,7 @@ import static com.novystxr.classysk.Classysk.NAME_PATTERN;
 import static com.novystxr.classysk.api.Modifier.CONST;
 import static com.novystxr.classysk.api.util.StringUtils.*;
 
-public class ExprFieldAccess extends SimpleExpression<Object> implements KeyProviderExpression<Object> {
+public class ExprFieldAccess extends SimpleExpression<Object> implements KeyProviderExpression<Object>, KeyReceiverExpression<Object> {
     public static void register(SyntaxRegistry registry) {
         registry.register(SyntaxRegistry.EXPRESSION,
             DefaultSyntaxInfos.Expression.builder(ExprFieldAccess.class, Object.class)
@@ -49,7 +50,6 @@ public class ExprFieldAccess extends SimpleExpression<Object> implements KeyProv
     private SkriptClass skriptClass;
 
     private Variable<?> variable;
-    private KeyProviderExpression<?> keyProvider;
 
     private String[] keys;
     private int toGenerate;
@@ -73,9 +73,6 @@ public class ExprFieldAccess extends SimpleExpression<Object> implements KeyProv
         }
         if (exprs[0].getSource() instanceof Variable<?> var) {
             variable = var;
-        }
-        if (exprs[0].getSource() instanceof KeyProviderExpression<?> keyExpr) {
-            keyProvider = keyExpr;
         }
         return validator.validateExpression((Expression<ClassInstance>) exprs[0]) && postInit();
     }
@@ -150,6 +147,11 @@ public class ExprFieldAccess extends SimpleExpression<Object> implements KeyProv
 
     @Override
     public void change(Event event, Object @Nullable [] delta, ChangeMode mode) {
+        change(event, delta, mode, null);
+    }
+
+    @Override
+    public void change(Event event, Object @Nullable [] delta, ChangeMode mode, @NotNull String @Nullable [] keys) {
         FieldHolder holder = isStatic ? skriptClass : validator.getValidInstance(event);
         if (holder == null) return;
 
@@ -157,13 +159,6 @@ public class ExprFieldAccess extends SimpleExpression<Object> implements KeyProv
         if (field.hasModifier(CONST)) {
             error("Constant fields can't be changed after definition");
             return;
-        }
-
-        String[] keys;
-        if (keyProvider != null && keyProvider.canReturnKeys() && keyProvider.areKeysRecommended()) {
-            keys = keyProvider.getArrayKeys(event);
-        } else {
-            keys = null;
         }
 
         switch (mode) {
