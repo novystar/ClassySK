@@ -8,6 +8,7 @@ import ch.njol.skript.log.LogEntry;
 import ch.njol.skript.util.Utils;
 import ch.njol.skript.variables.HintManager;
 import ch.njol.util.Kleenean;
+import ch.njol.util.coll.CollectionUtils;
 import com.novystxr.classysk.api.assignability.AssignabilityBridge;
 import com.novystxr.classysk.api.classes.ClassContextHolder;
 import com.novystxr.classysk.api.classes.ClassInstance;
@@ -100,21 +101,20 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
         return value;
     }
 
-    /**
-     *
-     * Provides some assurances of {@link getSafeConverted(Object[], boolean)} but without creating a new array.
-     * The resulting array is not safe to return but inconvertible values will be null.
-     * @see ch.njol.skript.lang.function.ExprFunctionCall
-     * @see org.apache.commons.lang3.ArrayUtils#removeAllOccurrences(Object[], Object)
-     */
-    @SuppressWarnings("unchecked")
-    public <To> @Nullable Object @Nullable [] getConverted(Object @NotNull [] value, boolean isSingle, Class<?>[] possibleTypes) {
+
+    public @Nullable Object @Nullable [] getConverted(Object @NotNull [] value, boolean isSingle, Class<?>... possibleTypes) {
         if (isSingle && value.length > 1)
             return null;
 
-        To[] convertTo = (To[]) Array.newInstance(product().type(), value.length);
-        Converters.convert(value, convertTo, possibleTypes);
-        return value;
+        return getConverted(value, product().type(), possibleTypes);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <To> @Nullable To @Nullable [] getConverted(Object @NotNull [] value, Class<?> arrayType, Class<?>... possibleTypes) {
+        To[] converted = (To[]) Array.newInstance(arrayType, value.length);
+        if (possibleTypes.length == 0) possibleTypes = CollectionUtils.array(arrayType);
+        Converters.convert(value, converted, possibleTypes);
+        return converted;
     }
 
     /**

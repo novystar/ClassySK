@@ -4,16 +4,20 @@ import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.yggdrasil.Fields;
 import ch.njol.yggdrasil.YggdrasilSerializable.YggdrasilExtendedSerializable;
+import com.novystxr.classysk.api.util.ExprUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.converter.Converters;
 
 import java.io.StreamCorruptedException;
 
 public class SerializableField implements YggdrasilExtendedSerializable {
     public Object[] value;
+    public String @Nullable [] keys;
 
-    public SerializableField(Object[] value) {
+    public SerializableField(Object[] value, String @Nullable [] keys) {
         this.value = value;
+        this.keys = keys;
     }
 
     public SerializableField() {}
@@ -22,6 +26,9 @@ public class SerializableField implements YggdrasilExtendedSerializable {
     public Fields serialize() {
         Fields fields = new Fields();
         fields.putObject("value", value);
+        if (keys != null) {
+            fields.putObject("keys", keys);
+        }
         return fields;
     }
 
@@ -50,6 +57,7 @@ public class SerializableField implements YggdrasilExtendedSerializable {
             }
         }
         value = newValue;
+        keys = ExprUtils.filterKeys(keys, value);
         return true;
     }
 }

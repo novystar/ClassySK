@@ -53,8 +53,13 @@ public class SkriptClass implements FieldHolder, ModifierHolder {
             .anyMatch(target -> target == otherClass);
     }
     @Override
-    public Map<String, Object[]> fieldValueMap() {
-        return ClassManager.staticFieldMaps.computeIfAbsent(name, key -> new HashMap<>());
+    public Map<String, Object[]> fieldValues() {
+        return ClassManager.staticFieldValues.computeIfAbsent(name, key -> new HashMap<>());
+    }
+
+    @Override
+    public Map<String, String[]> fieldKeys() {
+        return ClassManager.staticFieldKeys.computeIfAbsent(name, key -> new HashMap<>());
     }
 
     @Override

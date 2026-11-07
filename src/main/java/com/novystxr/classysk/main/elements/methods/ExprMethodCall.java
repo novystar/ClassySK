@@ -16,6 +16,7 @@ import com.novystxr.classysk.api.methods.MethodParser;
 import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.MethodValidator;
 import com.novystxr.classysk.api.methods.SkriptMethod;
+import com.novystxr.classysk.api.util.ExprUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.NotNull;
@@ -79,34 +80,42 @@ public class ExprMethodCall extends SimpleExpression<Object> implements KeyProvi
     }
 
     private String[] keys;
+    private int toGenerate;
 
     @Override
     protected Object @Nullable [] get(Event event) {
         this.keys = null;
 
         ClassInstance instance = isStatic ? null : validator.getValidInstance(event);
-        if (!isStatic && instance == null) return null;
+        if (!isStatic && instance == null) return escape();
 
         MethodEvent result = validator.product().run(event, new MethodEvent(instance), validator.getArgs());
 
         Object[] values = result.returnValues;
         String[] keys = result.returnKeys;
 
-        if (values == null) return null;
-
+        if (values == null) return escape();
         boolean isSingle = shouldBeSingle.isTrue();
+
         if (keys == null) {
             values = validator.getSafeConverted(values, isSingle);
-            if (values == null) {
-                error("The result of this method call couldn't convert to its reported type.");
-            }
-            this.keys = generateNumericalKeys(values == null ? 0 : values.length);
-            return values;
+            this.toGenerate = values == null ? 0 : values.length;
         } else {
             values = validator.getConverted(values, isSingle, possibleTypes);
-            this.keys = ArrayUtils.removeAllOccurrences(keys, null);
-            return ArrayUtils.removeAllOccurrences(values, null);
+            keys = ExprUtils.filterKeys(keys, values);
+            values = ArrayUtils.removeAllOccurrences(values, null);
         }
+        this.keys = keys;
+        if (values == null) {
+            error("The result of this method call couldn't convert to its reported type.");
+        }
+        return values;
+    }
+
+    private Object @Nullable [] escape() {
+        this.keys = null;
+        this.toGenerate = 0;
+        return null;
     }
 
     @Override
@@ -116,15 +125,7 @@ public class ExprMethodCall extends SimpleExpression<Object> implements KeyProvi
 
     @Override
     public @NotNull String @NotNull [] getArrayKeys(Event event) throws IllegalStateException {
-        return keys == null ? new String[0] : keys;
-    }
-
-    private String[] generateNumericalKeys(int length) {
-        String[] keys = new String[length];
-        for (int i = 0; i < length; i++) {
-            keys[i] = String.valueOf(i);
-        }
-        return keys;
+        return keys != null ? keys : ExprUtils.generateNumericalKeys(toGenerate);
     }
 
     @Override

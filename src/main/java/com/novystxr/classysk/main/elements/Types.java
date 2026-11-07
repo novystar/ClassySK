@@ -87,11 +87,13 @@ public class Types {
                     Fields fields = new Fields();
                     fields.putObject("name", o.name);
 
-                    for (var entry : o.fieldValueMap().entrySet()) {
-                        SerializableField sField = new SerializableField(entry.getValue());
+                    for (var entry : o.fieldValues().entrySet()) {
+                        String fieldName = entry.getKey();
+                        Object[] value = entry.getValue();
+                        SerializableField sField = new SerializableField(value, o.fieldKeys.get(fieldName));
 
                         if (sField.canBeSaved()) {
-                            fields.putObject("field:" + entry.getKey(), sField);
+                            fields.putObject("field:" + fieldName, sField);
                         }
                     }
                     return fields;
@@ -110,7 +112,10 @@ public class Types {
                         SerializableField sField = context.getObject(SerializableField.class);
                         if (sField == null) throw new StreamCorruptedException();
 
-                        instance.fieldValueMap.put(fieldName, sField.value);
+                        instance.fieldValues.put(fieldName, sField.value);
+                        if (sField.keys != null) {
+                            instance.fieldKeys.put(fieldName, sField.keys);
+                        }
                     }
                     return instance;
                 }
