@@ -7,10 +7,9 @@ ClassySK is an addon that adds proper object orientation capabilities to skript 
 
 ## Roadmap
 Nothing here is set in stone but these are my future ambitions regarding the project (in no particular order)
--  Inheritance: extending other classes
--  Abstract Methods: unimplemented methods that should be implemented by inheritors
 -  Transient fields: Fields that don't get saved
 -  Enums
+-  Interfaces (multi inheritance)
 -  Rust style 'impl' block for adding methods to skript types
 -  Method and field reflection
 -  Custom namespaces (maybe)
