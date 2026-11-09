@@ -294,3 +294,66 @@ test "ClassySK - Constant Fields":
 	parse:
 		set {_inst}::const_undef to 2
 	assert last parse logs are set
+
+class KeyedFields:
+	public keyed_ints: integers
+	public static keyed_strings: strings
+
+test "ClassySK - Keyed Fields":
+	set {_instance} to new KeyedFields
+
+	# check non keyed default ordering (regression test)
+	set {_data::*} to 1, 2, 3
+	set {_instance}::keyed_ints to {_data:*}
+
+	assert 1st element of {_instance}::keyed_ints is 1
+	assert 2nd element of {_instance}::keyed_ints is 2
+	assert 3rd element of {_instance}::keyed_ints is 3
+
+	set {_result::*} to {_instance}::keyed_ints
+	assert {_result::1} is 1
+	assert {_result::2} is 2
+	assert {_result::3} is 3
+
+	# check numerical ordering
+	set {_data::1} to 1
+	set {_data::3} to 3
+	set {_data::5} to 5
+
+	# check not using 'keyed' wont insert keys
+	set {_instance}::keyed_ints to {_data::*}
+	assert 2nd element of {_instance}::keyed_ints is 3
+
+	set {_instance}::keyed_ints to keyed {_data::*}
+	assert 1st element of {_instance}::keyed_ints is 1
+	assert 3rd element of {_instance}::keyed_ints is 3
+	assert 5th element of {_instance}::keyed_ints is 5
+
+	set {_result::*} to {_instance}::keyed_ints
+	assert {_result::1} is 1
+	assert {_result::3} is 3
+	assert {_result::5} is 5
+
+	# test string keys
+	set {_data::one} to 1
+	set {_data::two} to 2
+	set {_data::three} to 3
+
+	set {_instance}::keyed_ints to keyed {_data::*}
+	set {_result} to {_instance}::keyed_ints
+	
+	assert {_result::one} is 1
+	assert {_result::two} is 2
+	assert {_result::three} is 3
+
+	# test static keyed fields
+	set {_data::one} to "one"
+	set {_data::two} to "two"
+	set {_data::three} to "three"
+
+	set KeyedFields::keyed_strings to keyed {_data::*}
+	set {_result::*} to keyed KeyedFields::keyed_strings
+	
+	assert {_result::one} is "one"
+	assert {_result::two} is "two"
+	assert {_Result::three} is "three"
