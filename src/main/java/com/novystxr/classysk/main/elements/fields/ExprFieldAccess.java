@@ -202,6 +202,11 @@ public class ExprFieldAccess extends SimpleExpression<Object> implements KeyProv
     }
 
     @Override
+    public boolean areKeysRecommended() {
+        return false;
+    }
+
+    @Override
     public boolean isSingle() {
         return shouldBeSingle.isTrue();
     }
