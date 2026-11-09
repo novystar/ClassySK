@@ -1,9 +1,8 @@
 package com.novystxr.classysk.api.fields;
 
 import ch.njol.skript.SkriptConfig;
-import com.novystxr.classysk.api.Validator;
+import com.novystxr.classysk.api.util.ConverterUtils;
 import com.novystxr.classysk.api.util.DefaultValue;
-import com.novystxr.classysk.api.util.ExprUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -11,8 +10,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.converter.Converters;
 
-import java.util.Arrays;
-import java.util.Map;
+import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public interface FieldHolder {
 
@@ -23,6 +23,10 @@ public interface FieldHolder {
 
     @Nullable SkriptField getField(String fieldName);
 
+    default List<String> activeFieldNames() {
+        return new ArrayList<>(fieldValues().keySet());
+    }
+
     default void removeField(String fieldName) {
         fieldValues().remove(fieldName);
         fieldKeys().remove(fieldName);
@@ -30,6 +34,29 @@ public interface FieldHolder {
 
     default boolean fieldExists(String fieldName) {
         return fieldValues().containsKey(fieldName);
+    }
+
+    /**
+     *
+     * @param fieldName The name of the target field
+     * @param toType The desired conversion type
+     * @param safe When true, the field won't be modified if no values were able to convert
+     * @see ConverterUtils#convertInPlace(Object[], String[], Class, boolean, BiConsumer)
+     */
+    default <To> void convertFieldInPlace(String fieldName, Class<To> toType, boolean safe) {
+        BiConsumer<To[], String @Nullable []> setter = (values, keys) -> {
+            if (values.length == 0) {
+                removeField(fieldName);
+                return;
+            }
+
+            if (keys == null) fieldKeys().remove(fieldName); else fieldKeys().put(fieldName, keys);
+            fieldValues().put(fieldName, values);
+        };
+
+        Object[] values = fieldValues().get(fieldName);
+        if (values == null) return;
+        ConverterUtils.convertInPlace(values, fieldKeys().get(fieldName), toType, safe, setter);
     }
 
     default void resetField(String fieldName) {
@@ -56,9 +83,9 @@ public interface FieldHolder {
             return;
         }
 
-        values = Validator.getConverted(values, field.type);
+        values = ConverterUtils.getConverted(values, field.type);
         if (keys != null && keys.length != 0) {
-            keys = ExprUtils.filterKeys(keys, values);
+            keys = ConverterUtils.filterKeys(keys, values);
             fieldKeys().put(fieldName, keys);
         }
         values = ArrayUtils.removeAllOccurrences(values, null);
@@ -67,7 +94,7 @@ public interface FieldHolder {
         fieldValues().put(fieldName, values);
     }
 
-    default @NotNull Object[] getFieldValue(String fieldName) {
+    default Object @NotNull [] getFieldValue(String fieldName) {
         Object[] value = fieldValues().get(fieldName);
         if (value == null) return new Object[0];
 

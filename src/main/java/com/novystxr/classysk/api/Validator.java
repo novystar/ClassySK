@@ -14,6 +14,7 @@ import com.novystxr.classysk.api.classes.ClassContextHolder;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
+import com.novystxr.classysk.api.util.ConverterUtils;
 import com.novystxr.classysk.api.util.SimpleErrorHandler;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.NotNull;
@@ -69,52 +70,11 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
     protected abstract boolean validate(T product, @Nullable SkriptClass contextClass);
 
     protected abstract @Nullable T getProductFromClass(SkriptClass skriptClass);
+
     protected abstract @Nullable T getProductFromInstance(ClassInstance instance);
 
     protected SkriptClass contextClass() {
         return contextClass == null ? null : contextClass.refresh();
-    }
-
-    /**
-     *
-     * Assures that the resulting array can be safely returned from a syntax, given the product type and reported plurality.
-     * Attempts to convert to the product type if some values within did not match the target type.
-     *
-     * @param value The array to return
-     * @param isSingle If this syntax reports to be single or plural
-     * @return null if the conversion/validation failed, otherwise the safe converted array
-     */
-    public Object @Nullable [] getSafeConverted(Object @NotNull [] value, boolean isSingle) {
-        Class<?> convertTo = product().type();
-
-        if (!Arrays.stream(value).allMatch(convertTo::isInstance)) {
-            value = Converters.convert(value, product().type());
-
-            if (value.length == 0) { // failed to convert any values, error
-                return null;
-            }
-        }
-
-        if (isSingle && value.length > 1) {
-            return null;
-        }
-        return value;
-    }
-
-
-    public @Nullable Object @Nullable [] getConverted(Object @NotNull [] value, boolean isSingle, Class<?>... possibleTypes) {
-        if (isSingle && value.length > 1)
-            return null;
-
-        return getConverted(value, product().type(), possibleTypes);
-    }
-
-    @SuppressWarnings("unchecked")
-    public static <To> @Nullable To @Nullable [] getConverted(Object @NotNull [] value, Class<?> arrayType, Class<?>... possibleTypes) {
-        To[] converted = (To[]) Array.newInstance(arrayType, value.length);
-        if (possibleTypes.length == 0) possibleTypes = CollectionUtils.array(arrayType);
-        Converters.convert(value, converted, possibleTypes);
-        return converted;
     }
 
     /**

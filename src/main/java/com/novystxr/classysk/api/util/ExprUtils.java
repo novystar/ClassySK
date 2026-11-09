@@ -110,15 +110,6 @@ public class ExprUtils {
         }
     }
 
-    public static String[] filterKeys(String[] keys, Object[] values) {
-        if (values == null) return keys;
-        for (int i = 0; i < values.length; i++) {
-            if (values[i] == null)
-                keys[i] = null;
-        }
-        return ArrayUtils.removeAllOccurrences(keys, null);
-    }
-
     public static String[] generateNumericalKeys(int length) {
         String[] keys = new String[length];
         for (int i = 0; i < length; i++) {

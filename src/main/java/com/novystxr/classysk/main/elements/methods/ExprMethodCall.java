@@ -16,6 +16,7 @@ import com.novystxr.classysk.api.methods.MethodParser;
 import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
 import com.novystxr.classysk.api.methods.MethodValidator;
 import com.novystxr.classysk.api.methods.SkriptMethod;
+import com.novystxr.classysk.api.util.ConverterUtils;
 import com.novystxr.classysk.api.util.ExprUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.bukkit.event.Event;
@@ -94,21 +95,21 @@ public class ExprMethodCall extends SimpleExpression<Object> implements KeyProvi
         Object[] values = result.returnValues;
         String[] keys = result.returnKeys;
 
-        if (values == null) return escape();
-        boolean isSingle = shouldBeSingle.isTrue();
+        if (values == null || values.length == 0) return escape();
 
-        if (keys == null) {
-            values = validator.getSafeConverted(values, isSingle);
-            this.toGenerate = values == null ? 0 : values.length;
-        } else {
-            values = validator.getConverted(values, isSingle, possibleTypes);
-            keys = ExprUtils.filterKeys(keys, values);
-            values = ArrayUtils.removeAllOccurrences(values, null);
+        values = ConverterUtils.getConverted(values, bestReturnType, possibleTypes);
+        keys = ConverterUtils.filterKeys(keys, values);
+        values = ArrayUtils.removeAllOccurrences(values, null);
+
+        if (values.length == 0) {
+            error("The result of this method call couldn't convert to its reported type.");
+            return escape();
+        }
+        if (shouldBeSingle.isTrue() && values.length > 1) {
+            error("The result of this method call was plural but was supposed return single.");
+            return escape();
         }
         this.keys = keys;
-        if (values == null) {
-            error("The result of this method call couldn't convert to its reported type.");
-        }
         return values;
     }
 

@@ -18,11 +18,13 @@ import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.fields.FieldValidator;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.methods.SkriptMethod;
+import com.novystxr.classysk.api.util.ConverterUtils;
 import com.novystxr.classysk.api.util.ExprUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.skriptlang.skript.lang.converter.Converters;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
@@ -96,18 +98,21 @@ public class ExprFieldAccess extends SimpleExpression<Object> implements KeyProv
         Object[] values = holder.getFieldValue(fieldName);
         String[] keys = holder.getFieldKeys(fieldName);
 
-        if (keys == null) {
-            values = validator.getSafeConverted(values, shouldBeSingle.isTrue());
-            this.toGenerate = values == null ? 0 : values.length;
-        } else {
-            values = validator.getConverted(values, shouldBeSingle.isTrue(), possibleTypes);
-            keys = ExprUtils.filterKeys(keys, values);
-            values = ArrayUtils.removeAllOccurrences(values, null);
+        if (values.length == 0) escape();
+
+        values = ConverterUtils.getConverted(values, bestReturnType, possibleTypes);
+        keys = ConverterUtils.filterKeys(keys, values);
+        values = ArrayUtils.removeAllOccurrences(values, null);
+
+        if (values.length == 0) {
+            error("The result of this field call couldn't convert to its reported type.");
+            return escape();
+        }
+        if (shouldBeSingle.isTrue() && values.length > 1) {
+            error("The result of this field call was plural but was supposed return single.");
+            return escape();
         }
         this.keys = keys;
-        if (values == null) {
-            error("The result of this field call couldn't convert to its reported type.");
-        }
         return values;
     }
 
