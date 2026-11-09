@@ -668,3 +668,40 @@ test "ClassySK - Optional Args":
 
 	{_test}::testOptional()
 	assert {-testOptional} is not set
+
+class KeyedMethods:
+	public not_keyed() :: integers:
+		return 1, 2, 3
+
+	public keyed() :: integers:
+		set {_data::one} to 1
+		set {_data::two} to 2
+		set {_data::three} to 3
+		return keyed {_data::*}
+		
+
+test "ClassySK - Keyed method tests":
+	set {_instance} to new KeyedMethods
+
+	# regression tests for indexes being set 0-2 instead of 1-3
+	set {_data::*} to keyed {_instance}::not_keyed()
+	assert {_data::1} is 1
+	assert {_data::2} is 2
+	assert {_data::3} is 3
+
+	set {_data::*} to {_instance}::not_keyed()
+	assert {_data::1} is 1
+	assert {_data::2} is 2
+	assert {_data::3} is 3
+
+	# check keys are not recommended
+	set {_data::*} to {_instance}::keyed()
+	assert {_data::one} is not set
+	assert {_data::two} is not set
+	assert {_data::three} is not set
+
+	# check it works when keys are explicitly requested
+	set {_data::*} to keyed {_instance}::keyed()
+	assert {_data::one} is 1
+	assert {_data::two} is 2
+	assert {_data::three} is 3
