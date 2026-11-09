@@ -5,7 +5,6 @@ import com.novystxr.classysk.api.Modifier;
 import com.novystxr.classysk.api.assignability.AssignabilityBridge;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.util.ReflectUtils;
-import org.skriptlang.skript.lang.converter.Converters;
 
 import java.util.*;
 
@@ -25,37 +24,28 @@ public class ClassManager {
 
     public static void revalidateFields(SkriptClass skriptClass) {
         // static fields
-        skriptClass.fieldValues().entrySet().removeIf(entry -> {
-            SkriptField field = skriptClass.getField(entry.getKey());
-
+        for (String fieldName : skriptClass.activeFieldNames()) {
+            SkriptField field = skriptClass.getField(fieldName);
             // if field no longer exists or constant, remove it
             if (field == null || !field.isStatic() || field.hasModifier(Modifier.CONST)) {
-                return true;
+                skriptClass.removeField(fieldName);
+                continue;
             }
-            Object[] converted = Converters.convert(entry.getValue(), field.type());
-            if (converted.length == 0) {
-                return true;
-            }
-            skriptClass.fieldValues().put(field.name, converted);
-            return false;
-
-        });
+            skriptClass.convertFieldInPlace(fieldName, field.type, false);
+        }
         skriptClass.setDefaults();
 
-        // attempt to convert non-static fields to the new structure
+        // attempt to convert non-static fields to the new class
         for (ClassInstance instance : skriptClass.instances()) {
-            for (var entry : instance.fieldValues.entrySet()) {
-                SkriptField field = skriptClass.getField(entry.getKey());
+            for (String fieldName : instance.activeFieldNames()) {
+                SkriptField field = skriptClass.getField(fieldName);
 
                 // if field no longer exists, skip it
                 if (field == null || field.isStatic()) {
                     continue;
                 }
                 // attempt to convert, if failed the field is left in an illegal state which may have limited access.
-                Object[] converted = Converters.convert(entry.getValue(), field.type());
-                if (converted.length != 0) {
-                    instance.fieldValues.put(field.name, converted);
-                }
+                instance.convertFieldInPlace(fieldName, field.type(), true);
             }
         }
     }
