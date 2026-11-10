@@ -85,15 +85,17 @@ public class ExprMethodCall extends SimpleExpression<Object> implements KeyProvi
 
     @Override
     protected Object @Nullable [] get(Event event) {
+        keys = null; toGenerate = 0;
         ClassInstance instance = isStatic ? null : validator.getValidInstance(event);
-        if (!isStatic && instance == null) return escape();
+        if (!isStatic && instance == null) return null;
 
-        MethodEvent result = validator.product().run(event, new MethodEvent(instance), validator.getArgs());
+        MethodEvent methodEvent = new MethodEvent(instance);
+        validator.product().run(event, methodEvent, validator.getArgs());
 
-        Object[] values = result.returnValues;
-        String[] keys = result.returnKeys;
+        Object[] values = methodEvent.returnValues;
+        String[] keys = methodEvent.returnKeys;
 
-        if (values == null || values.length == 0) return escape();
+        if (values == null || values.length == 0) return null;
 
         values = ConverterUtils.getConverted(values, bestReturnType, possibleTypes);
         keys = ConverterUtils.filterKeys(keys, values);
@@ -101,23 +103,17 @@ public class ExprMethodCall extends SimpleExpression<Object> implements KeyProvi
 
         if (values.length == 0) {
             error("The result of this method call couldn't convert to its reported type.");
-            return escape();
+            return null;
         }
         if (shouldBeSingle.isTrue() && values.length > 1) {
             error("The result of this method call was plural but was supposed return single.");
-            return escape();
+            return null;
         }
         if (keys == null) {
             toGenerate = values.length;
         }
         this.keys = keys;
         return values;
-    }
-
-    private Object @Nullable [] escape() {
-        this.keys = null;
-        this.toGenerate = 0;
-        return null;
     }
 
     @Override

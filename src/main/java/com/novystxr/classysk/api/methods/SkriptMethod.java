@@ -66,8 +66,8 @@ public class SkriptMethod implements AccessModifiable {
 
     }
 
-    public MethodEvent run(Event contextEvent, MethodEvent methodEvent, @NotNull Expression<?>[] args) {
-        if (trigger == null) return null;
+    public void run(Event contextEvent, MethodEvent methodEvent, @NotNull Expression<?>[] args) {
+        if (trigger == null) return;
         for (int i = 0; i < args.length; i++) {
             MethodArgument arg = this.arguments[i];
             Expression<?> expr = args[i];
@@ -86,7 +86,7 @@ public class SkriptMethod implements AccessModifiable {
                 Variables.setVariable(key, expr.getSingle(contextEvent), methodEvent, true);
             }
         }
-        return trigger.execute(methodEvent) ? methodEvent : null;
+        trigger.execute(methodEvent);
     }
 
     public SkriptClass getOrigin() {

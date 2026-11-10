@@ -91,13 +91,14 @@ public class ExprFieldAccess extends SimpleExpression<Object> implements KeyProv
 
     @Override
     protected Object @Nullable [] get(Event event) {
+        keys = null; toGenerate = 0;
         FieldHolder holder = isStatic ? skriptClass : validator.getValidInstance(event);
-        if (holder == null) return escape();
+        if (holder == null) return null;
 
         Object[] values = holder.getFieldValue(fieldName);
         String[] keys = holder.getFieldKeys(fieldName);
 
-        if (values.length == 0) return escape();
+        if (values.length == 0) return null;
 
         values = ConverterUtils.getConverted(values, bestReturnType, possibleTypes);
         keys = ConverterUtils.filterKeys(keys, values);
@@ -105,23 +106,17 @@ public class ExprFieldAccess extends SimpleExpression<Object> implements KeyProv
 
         if (values.length == 0) {
             error("The result of this field call couldn't convert to its reported type.");
-            return escape();
+            return null;
         }
         if (shouldBeSingle.isTrue() && values.length > 1) {
             error("The result of this field call was plural but was supposed return single.");
-            return escape();
+            return null;
         }
         if (keys == null) {
             toGenerate = values.length;
         }
         this.keys = keys;
         return values;
-    }
-
-    private Object @Nullable [] escape() {
-        this.keys = null;
-        this.toGenerate = 0;
-        return null;
     }
 
     @Override
