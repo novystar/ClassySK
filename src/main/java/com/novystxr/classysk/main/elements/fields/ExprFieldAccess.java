@@ -24,7 +24,6 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.skriptlang.skript.lang.converter.Converters;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
@@ -98,7 +97,7 @@ public class ExprFieldAccess extends SimpleExpression<Object> implements KeyProv
         Object[] values = holder.getFieldValue(fieldName);
         String[] keys = holder.getFieldKeys(fieldName);
 
-        if (values.length == 0) escape();
+        if (values.length == 0) return escape();
 
         values = ConverterUtils.getConverted(values, bestReturnType, possibleTypes);
         keys = ConverterUtils.filterKeys(keys, values);
