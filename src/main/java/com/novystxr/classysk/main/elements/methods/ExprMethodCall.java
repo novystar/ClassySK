@@ -109,6 +109,9 @@ public class ExprMethodCall extends SimpleExpression<Object> implements KeyProvi
             error("The result of this method call was plural but was supposed return single.");
             return escape();
         }
+        if (keys == null) {
+            toGenerate = values.length;
+        }
         this.keys = keys;
         return values;
     }
