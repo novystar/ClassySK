@@ -85,8 +85,6 @@ public class ExprMethodCall extends SimpleExpression<Object> implements KeyProvi
 
     @Override
     protected Object @Nullable [] get(Event event) {
-        this.keys = null;
-
         ClassInstance instance = isStatic ? null : validator.getValidInstance(event);
         if (!isStatic && instance == null) return escape();
 
