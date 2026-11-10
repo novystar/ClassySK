@@ -43,6 +43,13 @@ public class ExprMethodCall extends SimpleExpression<Object> implements KeyProvi
     private MethodValidator validator;
     private boolean isStatic;
 
+    private Kleenean shouldBeSingle;
+    private Class<?>[] possibleTypes;
+    private Class<?> bestReturnType;
+
+    private String[] keys;
+    private int toGenerate;
+
     @Override
     @SuppressWarnings("unchecked")
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result) {
@@ -64,24 +71,16 @@ public class ExprMethodCall extends SimpleExpression<Object> implements KeyProvi
                 Skript.error("Class '%s' does not exist", titleCase(className));
                 return false;
             }
-            return validator.validateStatic(skriptClass) && postInit();
-        }
-        return validator.validateExpression((Expression<ClassInstance>) exprs[0]) && postInit();
-    }
+            if (!validator.validateStatic(skriptClass))
+                return false;
+        } else if (!validator.validateExpression((Expression<ClassInstance>) exprs[0]))
+            return false;
 
-    private Kleenean shouldBeSingle;
-    private Class<?>[] possibleTypes;
-    private Class<?> bestReturnType;
-
-    private boolean postInit() {
         shouldBeSingle = validator.shouldBeSingle();
         possibleTypes = validator.possibleTypes();
         bestReturnType = Validator.bestReturnType(possibleTypes);
         return true;
     }
-
-    private String[] keys;
-    private int toGenerate;
 
     @Override
     protected Object @Nullable [] get(Event event) {

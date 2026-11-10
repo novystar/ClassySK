@@ -49,8 +49,11 @@ public class ExprFieldAccess extends SimpleExpression<Object> implements KeyProv
     private String fieldName;
 
     private SkriptClass skriptClass;
-
     private Variable<?> variable;
+
+    private Kleenean shouldBeSingle;
+    private Class<?>[] possibleTypes;
+    private Class<?> bestReturnType;
 
     private String[] keys;
     private int toGenerate;
@@ -70,19 +73,15 @@ public class ExprFieldAccess extends SimpleExpression<Object> implements KeyProv
                 Skript.error("Class '%s' does not exist", titleCase(className));
                 return false;
             }
-            return validator.validateStatic(skriptClass) && postInit();
-        }
-        if (exprs[0].getSource() instanceof Variable<?> var) {
-            variable = var;
-        }
-        return validator.validateExpression((Expression<ClassInstance>) exprs[0]) && postInit();
-    }
+            if (!validator.validateStatic(skriptClass))
+                return false;
+        } else {
+            if (!validator.validateExpression((Expression<ClassInstance>) exprs[0]))
+                return false;
 
-    private Kleenean shouldBeSingle;
-    private Class<?>[] possibleTypes;
-    private Class<?> bestReturnType;
-
-    private boolean postInit() {
+            if (exprs[0].getSource() instanceof Variable<?> var)
+                variable = var;
+        }
         possibleTypes = validator.possibleTypes();
         bestReturnType = Validator.bestReturnType(possibleTypes);
         shouldBeSingle = validator.shouldBeSingle();
