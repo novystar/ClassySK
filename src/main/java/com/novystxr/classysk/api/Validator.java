@@ -143,7 +143,7 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
      * UNKNOWN if the correct class could not be determined at parse time
      */
     public final Kleenean shouldBeSingle() {
-        if (product != null) return Kleenean.get(!product().isPlural());
+        if (product != null) return Kleenean.get(!product.isPlural());
         if (guesses.isEmpty()) return Kleenean.UNKNOWN;
 
         boolean single = false; boolean plural = false;
