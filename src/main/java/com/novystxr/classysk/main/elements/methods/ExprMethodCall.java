@@ -96,7 +96,7 @@ public class ExprMethodCall extends SimpleExpression<Object> implements KeyProvi
 
         if (values == null || values.length == 0) return null;
 
-        values = ConverterUtils.getConverted(values, bestReturnType, possibleTypes);
+        values = ConverterUtils.getConverted(values, bestReturnType);
         keys = ConverterUtils.filterKeys(keys, values);
         values = ArrayUtils.removeAllOccurrences(values, null);
 
