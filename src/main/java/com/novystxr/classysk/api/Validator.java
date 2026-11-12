@@ -146,14 +146,15 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
         if (product != null) return Kleenean.get(!product().isPlural());
         if (guesses.isEmpty()) return Kleenean.UNKNOWN;
 
-        boolean hasSingle = false;
-        boolean hasPlural = false;
+        boolean single = false; boolean plural = false;
         for (T guess : guesses) {
-            if (guess.isPlural()) hasPlural = true;
-            else hasSingle = true;
+            if (guess.isPlural()) plural = true;
+            else single = true;
+
+            if (plural && single)
+                return Kleenean.UNKNOWN;
         }
-        if (hasSingle != hasPlural) return Kleenean.get(hasSingle);
-        return Kleenean.UNKNOWN;
+        return Kleenean.get(single);
     }
 
     /**
