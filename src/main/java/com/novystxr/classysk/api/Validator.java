@@ -8,22 +8,18 @@ import ch.njol.skript.log.LogEntry;
 import ch.njol.skript.util.Utils;
 import ch.njol.skript.variables.HintManager;
 import ch.njol.util.Kleenean;
-import ch.njol.util.coll.CollectionUtils;
 import com.novystxr.classysk.api.assignability.AssignabilityBridge;
 import com.novystxr.classysk.api.classes.ClassContextHolder;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
-import com.novystxr.classysk.api.util.ConverterUtils;
 import com.novystxr.classysk.api.util.SimpleErrorHandler;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.skriptlang.skript.lang.converter.Converters;
 import org.skriptlang.skript.log.runtime.ErrorSource;
 import org.skriptlang.skript.log.runtime.RuntimeErrorProducer;
 
-import java.lang.reflect.Array;
 import java.util.*;
 
 public abstract class Validator<T extends AccessModifiable> implements RuntimeErrorProducer {
@@ -87,13 +83,13 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
             return List.of(holder.getContextClass());
         }
         List<SkriptClass> possibleClasses = new ArrayList<>();
-        Class<?>[] possibleTypes;
+        Collection<Class<?>> possibleTypes;
 
         HintManager hintManager = ParserInstance.get().getHintManager();
         if (hintManager.isActive() && expr instanceof Variable<?> variable && HintManager.canUseHints(variable)) {
-            possibleTypes = hintManager.get(variable).toArray(Class[]::new);
+            possibleTypes = hintManager.get(variable);
         } else {
-            possibleTypes = expr.possibleReturnTypes();
+            possibleTypes = List.of(expr.possibleReturnTypes());
         }
         for (Class<?> type : possibleTypes) {
             if (type == ClassInstance.class || type == Object.class) {
