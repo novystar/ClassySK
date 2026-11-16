@@ -46,7 +46,7 @@ public class MethodParser {
         Expression<?> expr
     ) {}
 
-    public record MethodReference(
+    public record ParsedMethodReference(
         String name,
         ReferenceArgument[] args,
         boolean isStatic
@@ -71,7 +71,7 @@ public class MethodParser {
 
     }
 
-    public static @Nullable MethodReference parseReference(String name, @Nullable String args, boolean isStatic) {
+    public static @Nullable MethodParser.ParsedMethodReference parseReference(String name, @Nullable String args, boolean isStatic) {
         List<ReferenceArgument> result = new ArrayList<>();
         for (String arg : new ArgumentIterator(args)) {
             if (arg == null) {
@@ -95,7 +95,7 @@ public class MethodParser {
             }
             result.add(new ReferenceArgument(argName, expr));
         }
-        return new MethodReference(name, result.toArray(ReferenceArgument[]::new), isStatic);
+        return new ParsedMethodReference(name, result.toArray(ReferenceArgument[]::new), isStatic);
     }
 
     public static @Nullable MethodArgument[] parseArguments(@Nullable String args) {

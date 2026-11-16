@@ -6,9 +6,10 @@ import ch.njol.skript.registrations.Classes;
 import com.novystxr.classysk.api.Validator;
 import com.novystxr.classysk.api.classes.ClassInstance;
 import com.novystxr.classysk.api.classes.SkriptClass;
-import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
+import com.novystxr.classysk.api.methods.MethodParser.ParsedMethodReference;
 import com.novystxr.classysk.api.methods.MethodParser.ReferenceArgument;
 import com.novystxr.classysk.api.methods.SkriptMethod.MethodArgument;
+import com.novystxr.classysk.api.methods.SkriptMethod.MethodReference;
 import com.novystxr.classysk.main.elements.methods.ExprSuper;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
@@ -18,52 +19,43 @@ import java.util.*;
 
 import static com.novystxr.classysk.api.Modifier.*;
 
-public class MethodValidator extends Validator<SkriptMethod> {
+public class MethodValidator extends Validator<MethodReference> {
 
-    private final MethodReference reference;
+    private final ParsedMethodReference parsedReference;
     private final boolean expectsReturn;
     private final boolean isSuper;
 
-    private Expression<?>[] args;
-
-    public @NotNull Expression<?>[] getArgs() {
-        return args;
-    }
-
-    public MethodValidator(ErrorSource errorSource, SkriptClass contextClass, @NotNull MethodReference reference, boolean expectsReturn, boolean isSuper) {
+    public MethodValidator(ErrorSource errorSource, SkriptClass contextClass, @NotNull MethodParser.ParsedMethodReference reference, boolean expectsReturn, boolean isSuper) {
         super(errorSource, contextClass);
 
-        this.reference = reference;
+        this.parsedReference = reference;
         this.expectsReturn = expectsReturn;
         this.isSuper = isSuper;
     }
 
     @Override
-    protected @Nullable SkriptMethod getProductFromClass(SkriptClass skriptClass) {
+    protected @Nullable MethodReference getProductFromClass(SkriptClass skriptClass) {
         if (isSuper) skriptClass = skriptClass.getExtends();
 
-        SkriptMethod[] candidates = skriptClass.getCandidates(reference);
+        SkriptMethod[] candidates = skriptClass.getCandidates(parsedReference);
         if (candidates.length == 0) {
-            Skript.error("Could not identify method %s", reference);
+            Skript.error("Could not identify method %s", parsedReference);
             return null;
         }
-        SkriptMethod method;
         if (candidates.length == 1) {
-             args = validateArgs(candidates[0].arguments, true);
-             method = candidates[0];
+             Expression<?>[] args = validateArgs(candidates[0].arguments, true);
+             if (args == null) return null;
+             return new MethodReference(candidates[0], args);
         } else {
-            method = resolveOverload(candidates);
-            if (method == null) {
-                Skript.error("Could not identify method %s out of %s overloads", reference, candidates.length);
-                return null;
-            }
+            MethodReference reference = validateOverload(candidates);
+            if (reference == null) Skript.error("Could not identify method %s out of %s overloads", parsedReference, candidates.length);
+            return reference;
         }
-        return args == null ? null : method;
     }
 
     @Override
-    protected @Nullable SkriptMethod getProductFromInstance(ClassInstance instance) {
-        SkriptMethod product = product(); SkriptClass parent = parent();
+    protected @Nullable MethodReference getProductFromInstance(ClassInstance instance) {
+        MethodReference product = product(); SkriptClass parent = parent();
 
         // full validation if exact method is not yet known, or it can't possibly assign to this instance's concrete type
         if (product == null || !parent.inherits(product.getOrigin())) {
@@ -72,17 +64,17 @@ public class MethodValidator extends Validator<SkriptMethod> {
         // if we are at this validation stage the parent class isn't identical but still assignable
         // so we try to shortcut to the new method using information from the previous known one
         SkriptClass target = isSuper ? contextClass().getExtends() : parent;
-        SkriptMethod method = target.getExactMethod(product.identifier);
+        SkriptMethod method = target.getExactMethod(product.method().identifier);
 
         if (method == null) { // if that failed completely re-validate
             return getProductFromClass(parent);
         }
 
-        return method;
+        return new MethodReference(method, product.args());
     }
 
     @Override
-    protected boolean validate(SkriptMethod method, SkriptClass contextClass) {
+    protected boolean validate(MethodReference method, SkriptClass contextClass) {
         SkriptClass origin = method.getOrigin();
         if (expectsReturn && method.type() == null) {
             Skript.error("This method can't return anything");
@@ -103,31 +95,30 @@ public class MethodValidator extends Validator<SkriptMethod> {
         return true;
     }
 
+    private MethodReference validateOverload(SkriptMethod[] candidates) {
+        MethodReference overload = null;
+        for (SkriptMethod candidate : candidates) {
+            Expression<?>[] args = validateArgs(candidate.arguments, false);
+            if (args != null) {
+                // if already found a valid candidate and this is also valid we can't determine which one to target
+                if (overload != null) return null;
+
+                overload = new MethodReference(candidate, args);
+            }
+        }
+        return overload;
+    }
+
     @Override
     public boolean validateExpression(Expression<ClassInstance> expr) {
         if (isSuper) expr = ExprSuper.newInstance();
         return expr != null && super.validateExpression(expr);
     }
 
-    private @Nullable SkriptMethod resolveOverload(SkriptMethod[] candidates) {
-        SkriptMethod overload = null;
-        for (SkriptMethod candidate : candidates) {
-            Expression<?>[] result = validateArgs(candidate.arguments, false);
-            if (result != null) {
-                // if already found a valid candidate and this is also valid we can't determine which one to target
-                if (overload != null) return null;
-
-                overload = candidate;
-                args = result;
-            }
-        }
-        return overload;
-    }
-
     private @Nullable Expression<?>[] validateArgs(MethodArgument[] targetArgs, boolean printErrors) {
         List<String> targetNames = null;
 
-        ReferenceArgument[] refArgs = reference.args();
+        ReferenceArgument[] refArgs = parsedReference.args();
         Expression<?>[] result = new Expression<?>[targetArgs.length];
 
         for (int i = 0; i < refArgs.length; i++) {

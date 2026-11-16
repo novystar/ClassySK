@@ -137,4 +137,27 @@ public class SkriptMethod implements AccessModifiable {
         }
         return null;
     }
+
+    public record MethodReference(SkriptMethod method, Expression<?>[] args) implements AccessModifiable {
+        @Override
+        public boolean isPlural() {
+            return method.isPlural;
+        }
+        @Override
+        public Class<?> type() {
+            return method.type;
+        }
+        @Override
+        public SkriptClass getOrigin() {
+            return method.getOrigin();
+        }
+        @Override
+        public Modifier[] modifiers() {
+            return method.modifiers();
+        }
+
+        public void run(Event contextEvent, MethodEvent methodEvent) {
+            method.run(contextEvent, methodEvent, args);
+        }
+    }
 }

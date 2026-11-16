@@ -178,10 +178,10 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
         try (var handler = new SimpleErrorHandler().start()) {
             for (SkriptClass skriptClass : getPossibleClasses(expr)) {
                 T product = getProductFromClass(skriptClass);
-                if (product == null || !validate(product, contextClass()))
-                    continue;
-                guesses.add(product);
-                lastGuessedClass = skriptClass;
+                if (product != null && validate(product, contextClass())) {
+                    guesses.add(product);
+                    lastGuessedClass = skriptClass;
+                }
             }
             error = handler.getLastError();
         }
@@ -229,24 +229,24 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
             error("Target instance has no parent class");
             return false;
         }
-        if (parent == this.parent) // if the parent is still the same object, assume nothing has changed
-            return true;
+        if (parent == this.parent && this.product != null)
+            return true; // if the parent is still the same object, assume nothing has changed
 
         this.parent = parent;
 
         LogEntry error;
         try (var handler = new SimpleErrorHandler().start()) {
-            this.product = getProductFromInstance(newInstance);
-            if (product != null) {
-                if (validate(product, contextClass())) {
-                    return true;
-                }
+            T product = getProductFromInstance(newInstance);
+            if (product != null && validate(product, contextClass())) {
+                this.product = product;
+                return true;
             }
             error = handler.getLastError();
         }
         if (error != null) {
             error(error.getMessage());
         }
+        this.product = null;
         return false;
     }
 

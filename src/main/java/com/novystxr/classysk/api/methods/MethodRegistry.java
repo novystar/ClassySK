@@ -1,7 +1,7 @@
 package com.novystxr.classysk.api.methods;
 
 import com.novystxr.classysk.api.Modifier;
-import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
+import com.novystxr.classysk.api.methods.MethodParser.ParsedMethodReference;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -39,7 +39,7 @@ public class MethodRegistry {
             .mapMulti((a, b) -> a.values().forEach(b));
     }
 
-    public List<SkriptMethod> getOverloadCandidates(MethodReference reference) {
+    public List<SkriptMethod> getOverloadCandidates(ParsedMethodReference reference) {
         List<SkriptMethod> candidates = new ArrayList<>();
         Map<?, SkriptMethod> map = registry.get(reference.name());
         if (map != null) {

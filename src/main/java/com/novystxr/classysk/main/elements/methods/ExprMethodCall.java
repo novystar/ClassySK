@@ -13,7 +13,7 @@ import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.methods.MethodEvent;
 import com.novystxr.classysk.api.methods.MethodParser;
-import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
+import com.novystxr.classysk.api.methods.MethodParser.ParsedMethodReference;
 import com.novystxr.classysk.api.methods.MethodValidator;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import com.novystxr.classysk.api.util.ConverterUtils;
@@ -60,7 +60,7 @@ public class ExprMethodCall extends SimpleExpression<Object> implements KeyProvi
         String args = result.regexes.size() > pattern + 1
             ? result.regexes.get(pattern + 1).group() : null;
 
-        MethodReference reference = MethodParser.parseReference(methodName, args, isStatic);
+        ParsedMethodReference reference = MethodParser.parseReference(methodName, args, isStatic);
         if (reference == null) return false;
 
         validator = new MethodValidator(getErrorSource(), contextClass, reference, true, result.hasTag("super"));
@@ -89,7 +89,7 @@ public class ExprMethodCall extends SimpleExpression<Object> implements KeyProvi
         if (!isStatic && instance == null) return null;
 
         MethodEvent methodEvent = new MethodEvent(instance);
-        validator.product().run(event, methodEvent, validator.getArgs());
+        validator.product().run(event, methodEvent);
 
         Object[] values = methodEvent.returnValues;
         String[] keys = methodEvent.returnKeys;
