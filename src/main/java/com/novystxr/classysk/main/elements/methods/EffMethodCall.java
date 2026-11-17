@@ -11,7 +11,7 @@ import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.methods.MethodEvent;
 import com.novystxr.classysk.api.methods.MethodParser;
-import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
+import com.novystxr.classysk.api.methods.MethodParser.ParsedMethodReference;
 import com.novystxr.classysk.api.methods.MethodValidator;
 import com.novystxr.classysk.api.methods.SkriptMethod;
 import org.bukkit.event.Event;
@@ -47,7 +47,7 @@ public class EffMethodCall extends Effect {
         String args = result.regexes.size() > pattern + 1
             ? result.regexes.get(pattern + 1).group() : null;
 
-        MethodReference reference = MethodParser.parseReference(methodName, args, isStatic);
+        ParsedMethodReference reference = MethodParser.parseReference(methodName, args, isStatic);
         if (reference == null) return false;
 
         validator = new MethodValidator(getErrorSource(), contextClass, reference, false, result.hasTag("super"));
@@ -68,7 +68,7 @@ public class EffMethodCall extends Effect {
         ClassInstance instance = isStatic ? null : validator.getValidInstance(event);
         if (!isStatic && instance == null) return;
 
-        validator.product().run(event, new MethodEvent(instance), validator.getArgs());
+        validator.product().run(event, new MethodEvent(instance));
     }
 
     @Override

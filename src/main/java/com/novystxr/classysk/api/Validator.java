@@ -17,11 +17,9 @@ import com.novystxr.classysk.api.util.SimpleErrorHandler;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.skriptlang.skript.lang.converter.Converters;
 import org.skriptlang.skript.log.runtime.ErrorSource;
 import org.skriptlang.skript.log.runtime.RuntimeErrorProducer;
 
-import java.lang.reflect.Array;
 import java.util.*;
 
 public abstract class Validator<T extends AccessModifiable> implements RuntimeErrorProducer {
@@ -68,53 +66,11 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
     protected abstract boolean validate(T product, @Nullable SkriptClass contextClass);
 
     protected abstract @Nullable T getProductFromClass(SkriptClass skriptClass);
+
     protected abstract @Nullable T getProductFromInstance(ClassInstance instance);
 
     protected SkriptClass contextClass() {
         return contextClass == null ? null : contextClass.refresh();
-    }
-
-    /**
-     *
-     * Assures that the resulting array can be safely returned from a syntax, given the product type and reported plurality.
-     * Attempts to convert to the product type if some values within did not match the target type.
-     *
-     * @param value The array to return
-     * @param isSingle If this syntax reports to be single or plural
-     * @return null if the conversion/validation failed, otherwise the safe converted array
-     */
-    public Object @Nullable [] getSafeConverted(Object @NotNull [] value, boolean isSingle) {
-        Class<?> convertTo = product().type();
-
-        if (!Arrays.stream(value).allMatch(convertTo::isInstance)) {
-            value = Converters.convert(value, product().type());
-
-            if (value.length == 0) { // failed to convert any values, error
-                return null;
-            }
-        }
-
-        if (isSingle && value.length > 1) {
-            return null;
-        }
-        return value;
-    }
-
-    /**
-     *
-     * Provides some assurances of {@link getSafeConverted(Object[], boolean)} but without creating a new array.
-     * The resulting array is not safe to return but inconvertible values will be null.
-     * @see ch.njol.skript.lang.function.ExprFunctionCall
-     * @see org.apache.commons.lang3.ArrayUtils#removeAllOccurrences(Object[], Object)
-     */
-    @SuppressWarnings("unchecked")
-    public <To> @Nullable Object @Nullable [] getConverted(Object @NotNull [] value, boolean isSingle, Class<?>[] possibleTypes) {
-        if (isSingle && value.length > 1)
-            return null;
-
-        To[] convertTo = (To[]) Array.newInstance(product().type(), value.length);
-        Converters.convert(value, convertTo, possibleTypes);
-        return value;
     }
 
     /**
@@ -127,13 +83,13 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
             return List.of(holder.getContextClass());
         }
         List<SkriptClass> possibleClasses = new ArrayList<>();
-        Class<?>[] possibleTypes;
+        Collection<Class<?>> possibleTypes;
 
         HintManager hintManager = ParserInstance.get().getHintManager();
         if (hintManager.isActive() && expr instanceof Variable<?> variable && HintManager.canUseHints(variable)) {
-            possibleTypes = hintManager.get(variable).toArray(Class[]::new);
+            possibleTypes = hintManager.get(variable);
         } else {
-            possibleTypes = expr.possibleReturnTypes();
+            possibleTypes = List.of(expr.possibleReturnTypes());
         }
         for (Class<?> type : possibleTypes) {
             if (type == ClassInstance.class || type == Object.class) {
@@ -187,17 +143,18 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
      * UNKNOWN if the correct class could not be determined at parse time
      */
     public final Kleenean shouldBeSingle() {
-        if (product != null) return Kleenean.get(!product().isPlural());
+        if (product != null) return Kleenean.get(!product.isPlural());
         if (guesses.isEmpty()) return Kleenean.UNKNOWN;
 
-        boolean hasSingle = false;
-        boolean hasPlural = false;
+        boolean single = false; boolean plural = false;
         for (T guess : guesses) {
-            if (guess.isPlural()) hasPlural = true;
-            else hasSingle = true;
+            if (guess.isPlural()) plural = true;
+            else single = true;
+
+            if (plural && single)
+                return Kleenean.UNKNOWN;
         }
-        if (hasSingle != hasPlural) return Kleenean.get(hasSingle);
-        return Kleenean.UNKNOWN;
+        return Kleenean.get(single);
     }
 
     /**
@@ -221,10 +178,10 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
         try (var handler = new SimpleErrorHandler().start()) {
             for (SkriptClass skriptClass : getPossibleClasses(expr)) {
                 T product = getProductFromClass(skriptClass);
-                if (product == null || !validate(product, contextClass()))
-                    continue;
-                guesses.add(product);
-                lastGuessedClass = skriptClass;
+                if (product != null && validate(product, contextClass())) {
+                    guesses.add(product);
+                    lastGuessedClass = skriptClass;
+                }
             }
             error = handler.getLastError();
         }
@@ -272,24 +229,24 @@ public abstract class Validator<T extends AccessModifiable> implements RuntimeEr
             error("Target instance has no parent class");
             return false;
         }
-        if (parent == this.parent) // if the parent is still the same object, assume nothing has changed
-            return true;
+        if (parent == this.parent && this.product != null)
+            return true; // if the parent is still the same object, assume nothing has changed
 
         this.parent = parent;
 
         LogEntry error;
         try (var handler = new SimpleErrorHandler().start()) {
-            this.product = getProductFromInstance(newInstance);
-            if (product != null) {
-                if (validate(product, contextClass())) {
-                    return true;
-                }
+            T product = getProductFromInstance(newInstance);
+            if (product != null && validate(product, contextClass())) {
+                this.product = product;
+                return true;
             }
             error = handler.getLastError();
         }
         if (error != null) {
             error(error.getMessage());
         }
+        this.product = null;
         return false;
     }
 

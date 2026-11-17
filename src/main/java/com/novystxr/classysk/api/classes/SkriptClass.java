@@ -8,7 +8,7 @@ import com.novystxr.classysk.api.ModifierHolder;
 import com.novystxr.classysk.api.assignability.AssignabilityBridge;
 import com.novystxr.classysk.api.fields.FieldHolder;
 import com.novystxr.classysk.api.fields.SkriptField;
-import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
+import com.novystxr.classysk.api.methods.MethodParser.ParsedMethodReference;
 import com.novystxr.classysk.api.methods.MethodRegistry;
 import com.novystxr.classysk.api.methods.MethodRegistry.MethodIdentifier;
 import com.novystxr.classysk.api.methods.SkriptMethod;
@@ -53,8 +53,13 @@ public class SkriptClass implements FieldHolder, ModifierHolder {
             .anyMatch(target -> target == otherClass);
     }
     @Override
-    public Map<String, Object[]> fieldValueMap() {
-        return ClassManager.staticFieldMaps.computeIfAbsent(name, key -> new HashMap<>());
+    public Map<String, Object[]> fieldValues() {
+        return ClassManager.staticFieldValues.computeIfAbsent(name, key -> new HashMap<>());
+    }
+
+    @Override
+    public Map<String, String[]> fieldKeys() {
+        return ClassManager.staticFieldKeys.computeIfAbsent(name, key -> new HashMap<>());
     }
 
     @Override
@@ -97,7 +102,7 @@ public class SkriptClass implements FieldHolder, ModifierHolder {
             .findFirst().orElse(null);
     }
 
-    public SkriptMethod[] getCandidates(MethodReference reference) {
+    public SkriptMethod[] getCandidates(ParsedMethodReference reference) {
         List<SkriptMethod> result = methodRegistry.getOverloadCandidates(reference);
         if (!reference.isStatic()) {
             Set<MethodIdentifier> seen = new HashSet<>();

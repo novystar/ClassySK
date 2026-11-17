@@ -13,9 +13,11 @@ import com.novystxr.classysk.api.classes.ClassManager;
 import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.methods.MethodEvent;
 import com.novystxr.classysk.api.methods.MethodParser;
-import com.novystxr.classysk.api.methods.MethodParser.MethodReference;
+import com.novystxr.classysk.api.methods.MethodParser.ParsedMethodReference;
 import com.novystxr.classysk.api.methods.MethodValidator;
 import com.novystxr.classysk.api.methods.SkriptMethod;
+import com.novystxr.classysk.api.util.ConverterUtils;
+import com.novystxr.classysk.api.util.ExprUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.NotNull;
@@ -41,6 +43,13 @@ public class ExprMethodCall extends SimpleExpression<Object> implements KeyProvi
     private MethodValidator validator;
     private boolean isStatic;
 
+    private Kleenean shouldBeSingle;
+    private Class<?>[] possibleTypes;
+    private Class<?> bestReturnType;
+
+    private String[] keys;
+    private int toGenerate;
+
     @Override
     @SuppressWarnings("unchecked")
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result) {
@@ -51,7 +60,7 @@ public class ExprMethodCall extends SimpleExpression<Object> implements KeyProvi
         String args = result.regexes.size() > pattern + 1
             ? result.regexes.get(pattern + 1).group() : null;
 
-        MethodReference reference = MethodParser.parseReference(methodName, args, isStatic);
+        ParsedMethodReference reference = MethodParser.parseReference(methodName, args, isStatic);
         if (reference == null) return false;
 
         validator = new MethodValidator(getErrorSource(), contextClass, reference, true, result.hasTag("super"));
@@ -62,51 +71,48 @@ public class ExprMethodCall extends SimpleExpression<Object> implements KeyProvi
                 Skript.error("Class '%s' does not exist", titleCase(className));
                 return false;
             }
-            return validator.validateStatic(skriptClass) && postInit();
-        }
-        return validator.validateExpression((Expression<ClassInstance>) exprs[0]) && postInit();
-    }
+            if (!validator.validateStatic(skriptClass))
+                return false;
+        } else if (!validator.validateExpression((Expression<ClassInstance>) exprs[0]))
+            return false;
 
-    private Kleenean shouldBeSingle;
-    private Class<?>[] possibleTypes;
-    private Class<?> bestReturnType;
-
-    private boolean postInit() {
         shouldBeSingle = validator.shouldBeSingle();
         possibleTypes = validator.possibleTypes();
         bestReturnType = Validator.bestReturnType(possibleTypes);
         return true;
     }
 
-    private String[] keys;
-
     @Override
     protected Object @Nullable [] get(Event event) {
-        this.keys = null;
-
+        keys = null; toGenerate = 0;
         ClassInstance instance = isStatic ? null : validator.getValidInstance(event);
         if (!isStatic && instance == null) return null;
 
-        MethodEvent result = validator.product().run(event, new MethodEvent(instance), validator.getArgs());
+        MethodEvent methodEvent = new MethodEvent(instance);
+        validator.product().run(event, methodEvent);
 
-        Object[] values = result.returnValues;
-        String[] keys = result.returnKeys;
+        Object[] values = methodEvent.returnValues;
+        String[] keys = methodEvent.returnKeys;
 
-        if (values == null) return null;
+        if (values == null || values.length == 0) return null;
 
-        boolean isSingle = shouldBeSingle.isTrue();
-        if (keys == null) {
-            values = validator.getSafeConverted(values, isSingle);
-            if (values == null) {
-                error("The result of this method call couldn't convert to its reported type.");
-            }
-            this.keys = generateNumericalKeys(values == null ? 0 : values.length);
-            return values;
-        } else {
-            values = validator.getConverted(values, isSingle, possibleTypes);
-            this.keys = ArrayUtils.removeAllOccurrences(keys, null);
-            return ArrayUtils.removeAllOccurrences(values, null);
+        values = ConverterUtils.getConverted(values, bestReturnType);
+        keys = ConverterUtils.filterKeys(keys, values);
+        values = ArrayUtils.removeAllOccurrences(values, null);
+
+        if (values.length == 0) {
+            error("The result of this method call couldn't convert to its reported type.");
+            return null;
         }
+        if (shouldBeSingle.isTrue() && values.length > 1) {
+            error("The result of this method call was plural but was supposed return single.");
+            return null;
+        }
+        if (keys == null) {
+            toGenerate = values.length;
+        }
+        this.keys = keys;
+        return values;
     }
 
     @Override
@@ -116,15 +122,7 @@ public class ExprMethodCall extends SimpleExpression<Object> implements KeyProvi
 
     @Override
     public @NotNull String @NotNull [] getArrayKeys(Event event) throws IllegalStateException {
-        return keys == null ? new String[0] : keys;
-    }
-
-    private String[] generateNumericalKeys(int length) {
-        String[] keys = new String[length];
-        for (int i = 0; i < length; i++) {
-            keys[i] = String.valueOf(i);
-        }
-        return keys;
+        return keys != null ? keys : ExprUtils.generateNumericalKeys(toGenerate);
     }
 
     @Override

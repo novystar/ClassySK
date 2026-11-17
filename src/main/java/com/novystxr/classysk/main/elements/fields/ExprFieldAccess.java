@@ -3,11 +3,12 @@ package com.novystxr.classysk.main.elements.fields;
 import ch.njol.skript.Skript;
 import ch.njol.skript.classes.Changer.ChangeMode;
 import ch.njol.skript.lang.Expression;
+import ch.njol.skript.lang.KeyProviderExpression;
+import ch.njol.skript.lang.KeyReceiverExpression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.Variable;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
-import ch.njol.util.coll.CollectionUtils;
 import com.novystxr.classysk.Classysk;
 import com.novystxr.classysk.api.Validator;
 import com.novystxr.classysk.api.fields.FieldHolder;
@@ -17,19 +18,23 @@ import com.novystxr.classysk.api.classes.SkriptClass;
 import com.novystxr.classysk.api.fields.FieldValidator;
 import com.novystxr.classysk.api.fields.SkriptField;
 import com.novystxr.classysk.api.methods.SkriptMethod;
+import com.novystxr.classysk.api.util.ConverterUtils;
 import com.novystxr.classysk.api.util.ExprUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.bukkit.event.Event;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.registration.DefaultSyntaxInfos;
 import org.skriptlang.skript.registration.SyntaxRegistry;
 
 import static ch.njol.skript.classes.Changer.ChangeMode.*;
+import static ch.njol.util.coll.CollectionUtils.array;
 import static com.novystxr.classysk.Classysk.CLASSNAME_PATTERN;
 import static com.novystxr.classysk.Classysk.NAME_PATTERN;
 import static com.novystxr.classysk.api.Modifier.CONST;
 import static com.novystxr.classysk.api.util.StringUtils.*;
 
-public class ExprFieldAccess extends SimpleExpression<Object> {
+public class ExprFieldAccess extends SimpleExpression<Object> implements KeyProviderExpression<Object>, KeyReceiverExpression<Object> {
     public static void register(SyntaxRegistry registry) {
         registry.register(SyntaxRegistry.EXPRESSION,
             DefaultSyntaxInfos.Expression.builder(ExprFieldAccess.class, Object.class)
@@ -46,6 +51,13 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
     private SkriptClass skriptClass;
     private Variable<?> variable;
 
+    private Kleenean shouldBeSingle;
+    private Class<?>[] possibleTypes;
+    private Class<?> bestReturnType;
+
+    private String[] keys;
+    private int toGenerate;
+
     @Override
     @SuppressWarnings("unchecked")
     public boolean init(Expression<?>[] exprs, int pattern, Kleenean isDelayed, ParseResult result) {
@@ -61,19 +73,15 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
                 Skript.error("Class '%s' does not exist", titleCase(className));
                 return false;
             }
-            return validator.validateStatic(skriptClass) && postInit();
-        }
-        if (exprs[0].getSource() instanceof Variable<?> var) {
-            variable = var;
-        }
-        return validator.validateExpression((Expression<ClassInstance>) exprs[0]) && postInit();
-    }
+            if (!validator.validateStatic(skriptClass))
+                return false;
+        } else {
+            if (!validator.validateExpression((Expression<ClassInstance>) exprs[0]))
+                return false;
 
-    private Kleenean shouldBeSingle;
-    private Class<?>[] possibleTypes;
-    private Class<?> bestReturnType;
-
-    private boolean postInit() {
+            if (exprs[0].getSource() instanceof Variable<?> var)
+                variable = var;
+        }
         possibleTypes = validator.possibleTypes();
         bestReturnType = Validator.bestReturnType(possibleTypes);
         shouldBeSingle = validator.shouldBeSingle();
@@ -82,14 +90,37 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
 
     @Override
     protected Object @Nullable [] get(Event event) {
+        keys = null; toGenerate = 0;
         FieldHolder holder = isStatic ? skriptClass : validator.getValidInstance(event);
         if (holder == null) return null;
 
-        Object[] value = validator.getSafeConverted(holder.getFieldValue(fieldName), shouldBeSingle.isTrue());
-        if (value == null) {
+        Object[] values = holder.getFieldValue(fieldName);
+        String[] keys = holder.getFieldKeys(fieldName);
+
+        if (values.length == 0) return null;
+
+        values = ConverterUtils.getConverted(values, bestReturnType);
+        keys = ConverterUtils.filterKeys(keys, values);
+        values = ArrayUtils.removeAllOccurrences(values, null);
+
+        if (values.length == 0) {
             error("The result of this field call couldn't convert to its reported type.");
+            return null;
         }
-        return value;
+        if (shouldBeSingle.isTrue() && values.length > 1) {
+            error("The result of this field call was plural but was supposed return single.");
+            return null;
+        }
+        if (keys == null) {
+            toGenerate = values.length;
+        }
+        this.keys = keys;
+        return values;
+    }
+
+    @Override
+    public @NotNull String @NotNull [] getArrayKeys(Event event) throws IllegalStateException {
+        return keys != null ? keys : ExprUtils.generateNumericalKeys(toGenerate);
     }
 
     @Override
@@ -100,14 +131,14 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
             return null;
         }
         if (mode == DELETE || mode == RESET) {
-            return new Class[]{};
+            return new Class[0];
         }
         Class<?> type = validator.exactTypeOr(Object.class);
         boolean isPlural = !canBeSingle();
         if (isPlural) {
             type = type.arrayType();
         }
-        Class<?>[] typeArray = CollectionUtils.array(type);
+        Class<?>[] typeArray = array(type);
 
         if ((mode == REMOVE_ALL && isPlural) || mode == SET || mode == ADD || mode == REMOVE) {
             return typeArray;
@@ -117,6 +148,11 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
 
     @Override
     public void change(Event event, Object @Nullable [] delta, ChangeMode mode) {
+        change(event, delta, mode, null);
+    }
+
+    @Override
+    public void change(Event event, Object @Nullable [] delta, ChangeMode mode, @NotNull String @Nullable [] keys) {
         FieldHolder holder = isStatic ? skriptClass : validator.getValidInstance(event);
         if (holder == null) return;
 
@@ -125,8 +161,12 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
             error("Constant fields can't be changed after definition");
             return;
         }
+
         switch (mode) {
-            case SET -> setValueAndSave(delta, holder, event);
+            case SET -> {
+                holder.setFieldValue(fieldName, delta, keys);
+                save(event);
+            }
             case DELETE -> {
                 holder.removeField(fieldName);
                 save(event);
@@ -140,20 +180,18 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
                 Object[] initialValue = holder.getFieldValue(fieldName);
 
                 if (field.isPlural()) {
-                    ExprUtils.mutatePlural(initialValue, delta, mode, result ->
-                        setValueAndSave(result, holder, event));
+                    ExprUtils.mutatePlural(initialValue, delta, mode, result -> {
+                       holder.setFieldValue(fieldName, result, keys);
+                       save(event);
+                    });
                 } else {
                     Object singleValue = initialValue.length == 1 ? initialValue[0] : null;
-                    ExprUtils.mutateSingle(singleValue, delta, mode, value ->
-                        setValueAndSave(new Object[]{value}, holder, event));
+                    ExprUtils.mutateSingle(singleValue, delta, mode, value -> {
+                       holder.setFieldValue(fieldName, array(value), keys);
+                       save(event);
+                    });
                 }
             }
-        }
-    }
-
-    private void setValueAndSave(Object[] value, FieldHolder holder, Event event) {
-        if (holder.setFieldValue(fieldName, value)) {
-            save(event);
         }
     }
 
@@ -162,6 +200,11 @@ public class ExprFieldAccess extends SimpleExpression<Object> {
             // set variable to the same value it is to trigger serialization
             variable.changeInPlace(event, value -> value);
         }
+    }
+
+    @Override
+    public boolean areKeysRecommended() {
+        return false;
     }
 
     @Override

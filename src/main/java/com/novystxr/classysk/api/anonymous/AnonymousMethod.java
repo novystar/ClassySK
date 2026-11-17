@@ -12,9 +12,9 @@ public class AnonymousMethod extends SkriptMethod {
     }
 
     @Override
-    public MethodEvent run(Event contextEvent, MethodEvent runEvent, @NotNull Expression<?>[] args) {
+    public void run(Event contextEvent, MethodEvent runEvent, @NotNull Expression<?>[] args) {
         // assume not null because anonymous methods can't be static
         ((AnonymousInstance) runEvent.instance).setLocalVariables(runEvent);
-        return super.run(contextEvent, runEvent, args);
+       super.run(contextEvent, runEvent, args);
     }
 }

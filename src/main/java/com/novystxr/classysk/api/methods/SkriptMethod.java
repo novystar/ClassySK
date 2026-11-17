@@ -66,8 +66,8 @@ public class SkriptMethod implements AccessModifiable {
 
     }
 
-    public MethodEvent run(Event contextEvent, MethodEvent methodEvent, @NotNull Expression<?>[] args) {
-        if (trigger == null) return null;
+    public void run(Event contextEvent, MethodEvent methodEvent, @NotNull Expression<?>[] args) {
+        if (trigger == null) return;
         for (int i = 0; i < args.length; i++) {
             MethodArgument arg = this.arguments[i];
             Expression<?> expr = args[i];
@@ -86,7 +86,7 @@ public class SkriptMethod implements AccessModifiable {
                 Variables.setVariable(key, expr.getSingle(contextEvent), methodEvent, true);
             }
         }
-        return trigger.execute(methodEvent) ? methodEvent : null;
+        trigger.execute(methodEvent);
     }
 
     public SkriptClass getOrigin() {
@@ -129,12 +129,45 @@ public class SkriptMethod implements AccessModifiable {
     @Override
     public Class<?> type() { return type; }
 
-    public static SkriptClass getContextClass(ParserInstance parser) {
-        if (parser.getCurrentStructure() instanceof SectionSkriptEvent secSkriptEvent) {
-            if (secSkriptEvent.getSection() instanceof SecMethod secMethod) {
-                return secMethod.contextClass;
+    public static SecMethod getMethodSection(ParserInstance parser) {
+        if (parser.getCurrentStructure() instanceof  SectionSkriptEvent sectionSkriptEvent) {
+            if (sectionSkriptEvent.getSection() instanceof SecMethod secMethod) {
+                return secMethod;
             }
         }
         return null;
+    }
+
+    public static SkriptMethod getContextMethod(ParserInstance parser) {
+        SecMethod secMethod = getMethodSection(parser);
+        return secMethod == null ? null : secMethod.result;
+    }
+
+    public static SkriptClass getContextClass(ParserInstance parser) {
+        SecMethod secMethod = getMethodSection(parser);
+        return secMethod == null ? null : secMethod.contextClass;
+    }
+
+    public record MethodReference(SkriptMethod method, Expression<?>[] args) implements AccessModifiable {
+        @Override
+        public boolean isPlural() {
+            return method.isPlural;
+        }
+        @Override
+        public Class<?> type() {
+            return method.type;
+        }
+        @Override
+        public SkriptClass getOrigin() {
+            return method.getOrigin();
+        }
+        @Override
+        public Modifier[] modifiers() {
+            return method.modifiers();
+        }
+
+        public void run(Event contextEvent, MethodEvent methodEvent) {
+            method.run(contextEvent, methodEvent, args);
+        }
     }
 }

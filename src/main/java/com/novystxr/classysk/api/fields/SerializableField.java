@@ -4,16 +4,21 @@ import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.yggdrasil.Fields;
 import ch.njol.yggdrasil.YggdrasilSerializable.YggdrasilExtendedSerializable;
+import com.novystxr.classysk.api.util.ConverterUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.skriptlang.skript.lang.converter.Converters;
 
 import java.io.StreamCorruptedException;
 
 public class SerializableField implements YggdrasilExtendedSerializable {
     public Object[] value;
+    public String @Nullable [] keys;
 
-    public SerializableField(Object[] value) {
+    public SerializableField(Object[] value, String @Nullable [] keys) {
         this.value = value;
+        this.keys = keys;
     }
 
     public SerializableField() {}
@@ -22,12 +27,18 @@ public class SerializableField implements YggdrasilExtendedSerializable {
     public Fields serialize() {
         Fields fields = new Fields();
         fields.putObject("value", value);
+        if (keys != null) {
+            fields.putObject("keys", keys);
+        }
         return fields;
     }
 
     @Override
     public void deserialize(@NotNull Fields fields) throws StreamCorruptedException {
         value = fields.getObject("value", Object[].class);
+        if (fields.hasField("keys")) {
+            keys = fields.getObject("keys", String[].class);
+        }
     }
 
     public boolean canBeSaved() {
@@ -46,10 +57,11 @@ public class SerializableField implements YggdrasilExtendedSerializable {
                 newValue[i] = value[i];
             }
             if (classInfo.getSerializer() == null) {
-                return false;
+                newValue[i] = null;
             }
         }
-        value = newValue;
-        return true;
+        this.keys = ConverterUtils.filterKeys(keys, newValue);
+        this.value = ArrayUtils.removeAllOccurrences(newValue, null);
+        return value.length != 0;
     }
 }
