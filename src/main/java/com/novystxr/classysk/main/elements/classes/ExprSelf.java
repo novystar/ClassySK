@@ -1,9 +1,11 @@
 package com.novystxr.classysk.main.elements.classes;
 
+import ch.njol.skript.Skript;
 import ch.njol.skript.doc.*;
 import ch.njol.skript.lang.EventRestrictedSyntax;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser;
+import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import ch.njol.util.coll.CollectionUtils;
@@ -46,7 +48,15 @@ public class ExprSelf extends SimpleExpression<Object> implements EventRestricte
 
     @Override
     public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, SkriptParser.ParseResult parseResult) {
-        this.skriptClass = SkriptMethod.getContextClass(getParser());
+        ParserInstance parser = getParser();
+
+        this.skriptClass = SkriptMethod.getContextClass(parser);
+        SkriptMethod method = SkriptMethod.getContextMethod(parser);
+
+        if (method != null && method.isStatic()) {
+            Skript.error("This expression can't be used from a static context");
+            return false;
+        }
         return skriptClass != null;
     }
 

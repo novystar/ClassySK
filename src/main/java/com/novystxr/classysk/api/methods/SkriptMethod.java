@@ -129,13 +129,23 @@ public class SkriptMethod implements AccessModifiable {
     @Override
     public Class<?> type() { return type; }
 
-    public static SkriptClass getContextClass(ParserInstance parser) {
-        if (parser.getCurrentStructure() instanceof SectionSkriptEvent secSkriptEvent) {
-            if (secSkriptEvent.getSection() instanceof SecMethod secMethod) {
-                return secMethod.contextClass;
+    public static SecMethod getMethodSection(ParserInstance parser) {
+        if (parser.getCurrentStructure() instanceof  SectionSkriptEvent sectionSkriptEvent) {
+            if (sectionSkriptEvent.getSection() instanceof SecMethod secMethod) {
+                return secMethod;
             }
         }
         return null;
+    }
+
+    public static SkriptMethod getContextMethod(ParserInstance parser) {
+        SecMethod secMethod = getMethodSection(parser);
+        return secMethod == null ? null : secMethod.result;
+    }
+
+    public static SkriptClass getContextClass(ParserInstance parser) {
+        SecMethod secMethod = getMethodSection(parser);
+        return secMethod == null ? null : secMethod.contextClass;
     }
 
     public record MethodReference(SkriptMethod method, Expression<?>[] args) implements AccessModifiable {
